@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Shapefiles</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .file-input-wrapper {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 10px 12px;
+            background: #f0f0f0;
+            border: 1px dashed #999;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            transition: all 0.2s;
+        }
+
+        .file-input-label:hover {
+            background: #e8e8e8;
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .layers-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+
+        .layers-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .layers-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .layers-container::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .layers-container::-webkit-scrollbar-thumb:hover {
+            background: #999;
+        }
+
+        .layer-group {
+            margin-bottom: 12px;
+            background: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+        }
+
+        .layer-group-header {
+            padding: 10px 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 500;
+            font-size: 13px;
+        }
+
+        .layer-group-header:hover {
+            background: #efefef;
+        }
+
+        .layer-group-header .toggle {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            line-height: 16px;
+            text-align: center;
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+
+        .layer-group-header.collapsed .toggle {
+            transform: rotate(-90deg);
+        }
+
+        .layer-group-content {
+            padding: 0;
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .layer-group-header.collapsed ~ .layer-group-content {
+            max-height: 0;
+        }
+
+        .layer-item {
+            padding: 8px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+        }
+
+        .layer-item:last-child {
+            border-bottom: none;
+        }
+
+        .layer-item input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .layer-item label {
+            flex: 1;
+            cursor: pointer;
+            user-select: none;
+            color: #333;
+        }
+
+        .layer-item .feature-count {
+            font-size: 11px;
+            color: #999;
+            margin-left: auto;
+        }
+
+        .info-panel {
+            padding: 12px;
+            border-top: 1px solid #e0e0e0;
+            background: #f9f9f9;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .info-panel h3 {
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #333;
+            text-transform: uppercase;
+        }
+
+        .info-item {
+            margin-bottom: 6px;
+            padding: 4px;
+            background: white;
+            border-radius: 3px;
+            border-left: 2px solid #667eea;
+            padding-left: 8px;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .zoom-controls {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 400;
+            display: none;
+        }
+
+        .zoom-controls button {
+            padding: 8px 12px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            color: #667eea;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .zoom-controls button:last-child {
+            border-bottom: none;
+        }
+
+        .zoom-controls button:hover {
+            background: #f5f5f5;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 12px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size: 12px;
+            z-index: 400;
+            max-width: 200px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            border: 1px solid #ccc;
+        }
+
+        .no-data {
+            padding: 40px 16px;
+            text-align: center;
+            color: #999;
+        }
+
+        .no-data p {
+            margin: 8px 0;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>📍 Visor de Shapefiles</h1>
+                <p>Carga archivos GeoJSON para visualizar</p>
+            </div>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="fileInput" multiple accept=".geojson,.json" />
+                <label for="fileInput" class="file-input-label">
+                    📁 Selecciona archivos GeoJSON
+                </label>
+            </div>
+
+            <div class="layers-container" id="layersContainer">
+                <div class="no-data">
+                    <p>Carga archivos GeoJSON</p>
+                    <p>para verlos en el mapa</p>
+                </div>
+            </div>
+
+            <div class="info-panel" id="infoPanel" style="display: none;">
+                <h3>Información</h3>
+                <div id="infoContent"></div>
+            </div>
+        </div>
+
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="zoom-controls" id="zoomControls">
+                <button onclick="map.zoomIn()">+</button>
+                <button onclick="map.zoomOut()">−</button>
+            </div>
+            <div class="legend" id="legend" style="display: none;">
+                <div style="font-weight: 600; margin-bottom: 8px;">Tipos de geometría:</div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3498db;"></div>
+                    <span>Puntos</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #2ecc71;"></div>
+                    <span>Líneas</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>Polígonos</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar mapa
+        const map = L.map('map').setView([40.4168, -3.7038], 12); // Centrado en Madrid
+
+        // Añadir capa base
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19,
+            className: 'map-tiles'
+        }).addTo(map);
+
+        // Variables globales
+        let layers = new Map(); // Almacenar layers por nombre
+        let currentSelection = null;
+
+        // Funciones de color según tipo de geometría
+        function getColorByType(type) {
+            const colors = {
+                'Point': '#3498db',
+                'LineString': '#2ecc71',
+                'Polygon': '#e74c3c',
+                'MultiPoint': '#3498db',
+                'MultiLineString': '#2ecc71',
+                'MultiPolygon': '#e74c3c'
+            };
+            return colors[type] || '#999';
+        }
+
+        // Crear estilo para features
+        function getFeatureStyle(feature) {
+            const type = feature.geometry.type;
+            const color = getColorByType(type);
+
+            return {
+                color: color,
+                weight: type.includes('Polygon') ? 2 : 3,
+                opacity: 0.7,
+                fillOpacity: type.includes('Polygon') ? 0.3 : 0,
+                fillColor: color,
+                radius: type.includes('Point') ? 5 : undefined
+            };
+        }
+
+        // Cargar y procesar GeoJSON
+        function loadGeoJSON(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const geojson = JSON.parse(e.target.result);
+                    const fileName = file.name.replace('.geojson', '').replace('.json', '');
+
+                    // Crear grupo de capas
+                    const featureGroup = L.featureGroup();
+                    const geoJsonLayer = L.geoJSON(geojson, {
+                        style: getFeatureStyle,
+                        pointToLayer: (feature, latlng) => {
+                            const color = getColorByType(feature.geometry.type);
+                            return L.circleMarker(latlng, {
+                                radius: 6,
+                                fillColor: color,
+                                color: '#fff',
+                                weight: 2,
+                                opacity: 0.8,
+                                fillOpacity: 0.7
+                            });
+                        },
+                        onEachFeature: (feature, layer) => {
+                            // Popup con información
+                            let popupContent = `<div style="max-width: 300px;">`;
+                            popupContent += `<strong>${fileName}</strong><br>`;
+                            popupContent += `Tipo: ${feature.geometry.type}<br>`;
+
+                            if (feature.properties) {
+                                popupContent += `<hr style="margin: 8px 0;">`;
+                                for (let key in feature.properties) {
+                                    const value = feature.properties[key];
+                                    popupContent += `<strong>${key}:</strong> ${value}<br>`;
+                                }
+                            }
+                            popupContent += `</div>`;
+
+                            layer.bindPopup(popupContent);
+
+                            // Click para mostrar info
+                            layer.on('click', () => {
+                                showLayerInfo(fileName, feature);
+                            });
+                        }
+                    });
+
+                    featureGroup.addLayer(geoJsonLayer);
+                    layers.set(fileName, {
+                        group: featureGroup,
+                        geojson: geojson,
+                        visible: true,
+                        count: geojson.features ? geojson.features.length : 0
+                    });
+
+                    updateLayersList();
+                    showLegend();
+
+                } catch (error) {
+                    alert(`Error al cargar ${file.name}: ${error.message}`);
+                }
+            };
+
+            reader.readAsText(file);
+        }
+
+        // Actualizar lista de capas en el sidebar
+        function updateLayersList() {
+            const container = document.getElementById('layersContainer');
+
+            if (layers.size === 0) {
+                container.innerHTML = `
+                    <div class="no-data">
+                        <p>Carga archivos GeoJSON</p>
+                        <p>para verlos en el mapa</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            let currentGroup = null;
+
+            // Agrupar por prefijo
+            const grouped = {};
+            layers.forEach((layer, name) => {
+                const parts = name.split('_');
+                const group = parts.slice(0, -1).join('_') || name;
+                if (!grouped[group]) grouped[group] = [];
+                grouped[group].push({ name, ...layer });
+            });
+
+            // Renderizar grupos
+            for (const group in grouped) {
+                const items = grouped[group];
+                html += `
+                    <div class="layer-group">
+                        <div class="layer-group-header" onclick="toggleGroup(this)">
+                            <span class="toggle">▼</span>
+                            <span>${group}</span>
+                            <span style="font-weight: normal; font-size: 11px;">(${items.length})</span>
+                        </div>
+                        <div class="layer-group-content">
+                `;
+
+                items.forEach(item => {
+                    html += `
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-${item.name}" 
+                                   ${item.visible ? 'checked' : ''} 
+                                   onchange="toggleLayer('${item.name}')">
+                            <label for="layer-${item.name}">${item.name}</label>
+                            <span class="feature-count">${item.count}</span>
+                        </div>
+                    `;
+                });
+
+                html += `
+                        </div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Toggle visibilidad de capa
+        function toggleLayer(name) {
+            const layerData = layers.get(name);
+            if (!layerData) return;
+
+            layerData.visible = !layerData.visible;
+
+            if (layerData.visible) {
+                map.addLayer(layerData.group);
+            } else {
+                map.removeLayer(layerData.group);
+            }
+        }
+
+        // Toggle grupo
+        function toggleGroup(header) {
+            header.classList.toggle('collapsed');
+        }
+
+        // Mostrar información de feature
+        function showLayerInfo(layerName, feature) {
+            const infoPanel = document.getElementById('infoPanel');
+            const infoContent = document.getElementById('infoContent');
+
+            let html = `
+                <div class="info-item">
+                    <strong>Capa:</strong> ${layerName}
+                </div>
+                <div class="info-item">
+                    <strong>Tipo:</strong> ${feature.geometry.type}
+                </div>
+            `;
+
+            if (feature.properties) {
+                for (let key in feature.properties) {
+                    const value = feature.properties[key];
+                    html += `
+                        <div class="info-item">
+                            <strong>${key}:</strong><br>
+                            <span style="word-break: break-all;">${value}</span>
+                        </div>
+                    `;
+                }
+            }
+
+            infoContent.innerHTML = html;
+            infoPanel.style.display = 'block';
+        }
+
+        // Mostrar leyenda
+        function showLegend() {
+            document.getElementById('legend').style.display = 'block';
+            document.getElementById('zoomControls').style.display = 'flex';
+            document.getElementById('zoomControls').style.flexDirection = 'column';
+        }
+
+        // Manejador de input de archivos
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            Array.from(e.target.files).forEach(file => {
+                loadGeoJSON(file);
+            });
+        });
+
+        // Drag and drop
+        const mapContainer = document.querySelector('.map-container');
+        mapContainer.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            mapContainer.style.opacity = '0.8';
+        });
+
+        mapContainer.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            mapContainer.style.opacity = '1';
+        });
+
+        mapContainer.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            mapContainer.style.opacity = '1';
+
+            Array.from(e.dataTransfer.files).forEach(file => {
+                if (file.name.endsWith('.geojson') || file.name.endsWith('.json')) {
+                    loadGeoJSON(file);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
