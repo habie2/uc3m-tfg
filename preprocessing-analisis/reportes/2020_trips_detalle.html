@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis de Datos · 26/04/2026 17:57</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #141720;
+      --border: #1f2535;
+      --accent: #4fffb0;
+      --accent2: #ff6b6b;
+      --text: #e2e8f0;
+      --dim: #64748b;
+      --header-h: 60px;
+      --sidebar-w: 260px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      background: rgba(13,15,20,0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; padding: 0 2rem; gap: 1rem;
+    }
+    .header-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .header-logo span { color: var(--dim); font-weight: 400; }
+    .header-stats { margin-left: auto; display: flex; gap: 1.5rem; }
+    .h-stat { font-size: 0.72rem; color: var(--dim); }
+    .h-stat strong { color: var(--text); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: flex;
+      margin-top: var(--header-h);
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100vh - var(--header-h));
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .sidebar-label {
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--dim); padding: 0 1.25rem 0.75rem;
+    }
+    aside ul { list-style: none; }
+    .sidebar-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.55rem 1.25rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover {
+      color: var(--text);
+      border-left-color: var(--accent);
+      background: rgba(79,255,176,0.04);
+    }
+    .sidebar-count {
+      font-size: 0.65rem;
+      background: var(--border);
+      padding: 1px 6px; border-radius: 99px;
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1; padding: 2rem 2.5rem; overflow: hidden;
+    }
+
+    /* ── ALERT ── */
+    .alert-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .alert-title {
+      font-weight: 600; margin-bottom: 0.5rem;
+      color: #fca5a5; font-size: 0.85rem;
+    }
+    .alert-box ul { list-style: none; }
+    .alert-box li { font-size: 0.78rem; color: var(--dim); padding: 2px 0; }
+    .alert-box code {
+      background: var(--border); padding: 1px 5px;
+      border-radius: 3px; color: var(--text);
+    }
+
+    /* ── FILE SECTION ── */
+    .file-section {
+      margin-bottom: 3rem;
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .file-header {
+      display: flex; align-items: flex-start; gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .file-icon { font-size: 1.8rem; line-height: 1; margin-top: 3px; }
+    .file-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .file-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+    .meta-pill {
+      font-size: 0.7rem;
+      background: var(--border);
+      color: var(--dim);
+      padding: 2px 10px; border-radius: 99px;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    thead { background: var(--surface); }
+    th {
+      text-align: left;
+      padding: 0.65rem 1rem;
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .col-name {
+      font-weight: 600; color: var(--accent);
+      white-space: nowrap; max-width: 200px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .dim { color: var(--dim); }
+    .small { font-size: 0.72rem; }
+    .high-card { color: #fb923c; }
+    .low-card { color: #a78bfa; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px;
+      color: #fff; white-space: nowrap;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2.5rem;
+      color: var(--dim); font-size: 0.72rem;
+      display: flex; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">data<span>/</span>inspector</div>
+  <div class="header-stats">
+    <div class="h-stat"><strong>12</strong> archivos</div>
+    <div class="h-stat"><strong>132</strong> columnas</div>
+    <div class="h-stat">muestra <strong>10,000,000</strong> filas</div>
+    <div class="h-stat">generado <strong>26/04/2026 17:57</strong></div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-label">Archivos analizados</div>
+    <ul><li><a href="#file-0" class="sidebar-link">📦 202001.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-1" class="sidebar-link">📦 202002.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-2" class="sidebar-link">📦 202003.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-3" class="sidebar-link">📦 202004.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-4" class="sidebar-link">📦 202005.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-5" class="sidebar-link">📦 202006.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-6" class="sidebar-link">📦 202007.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-7" class="sidebar-link">📦 202008.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-8" class="sidebar-link">📦 202009.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-9" class="sidebar-link">📦 202010.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-10" class="sidebar-link">📦 202011.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-11" class="sidebar-link">📦 202012.json<span class="sidebar-count">11 cols</span></a></li></ul>
+  </aside>
+
+  <main>
+    
+    
+    <section class="file-section" id="file-0">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202001.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">272,875 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">272,875 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5eeb03e42ea8f656fc95f2a4 (1)<br>5eeb03e42ea8f656fc95f2a7 (1)<br>5eeb03e42ea8f656fc95f2aa (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">155,501 <span class="dim">(57.0%)</span></td>
+      <td class="dim small">034bf7065e3ef64c4d4455c45fb435e1495eec6a143a6ef7d99829164c555b94 (131)<br>11770e48c981871a3a8bcabaa08ae499449a6eb6178cb6beb72b4713b3d781c1 (124)<br>85b2d84388d0d4a2bc54321b58024321da67a5d217a6e36b9310a04f7b7f7ac9 (120)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17523)<br>2 (16147)<br>3 (14879)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2083</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (249537)<br>3 (22693)<br>2 (645)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1687</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17435)<br>2 (16103)<br>3 (14809)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.1822</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,246 <span class="dim">(3.0%)</span></td>
+      <td class="dim small">8 (620)<br>9 (598)<br>7 (524)</td>
+      <td class="dim small">min 0.0 · max 4563358.0 · media 1122.0289</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">210 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (3740)<br>43 (3674)<br>57 (3075)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 106.3668</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (118379)<br>4 (75327)<br>5 (61718)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.4166</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">210 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (3748)<br>175 (3741)<br>83 (3068)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 106.073</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">744 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2020-01-31T14:00:00Z (1160)<br>2020-01-10T14:00:00Z (1144)<br>2020-01-29T17:00:00Z (1113)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">398 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (134903)<br>28005 (15237)<br>28007 (11825)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-1">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202002.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">341,972 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">341,972 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5eec5853a9c1ca8c51e9546d (1)<br>5eec5853a9c1ca8c51e9546f (1)<br>5eec5853a9c1ca8c51e95475 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">193,169 <span class="dim">(56.5%)</span></td>
+      <td class="dim small">e0cfa67ae42f2d61cdfd81f3e3c6b7b6ce64c70e86de700553e46dddeaa2a76e (200)<br>35b9905827ce09cac2d4733b56b921f15bf3f81d3b842e4704f93601d7e281a7 (149)<br>17e3f1ae18a412c731981132c83adde11069bb6c0971da48002cadf67bad043b (113)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (21395)<br>2 (20265)<br>3 (18479)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2293</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (314216)<br>3 (25238)<br>2 (2518)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.155</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (21273)<br>2 (20244)<br>3 (18466)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2179</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,663 <span class="dim">(2.5%)</span></td>
+      <td class="dim small">8 (635)<br>7 (549)<br>9 (530)</td>
+      <td class="dim small">min 0.0 · max 9078479.0 · media 1274.0527</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (4566)<br>43 (4482)<br>57 (3993)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 107.1669</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (154238)<br>4 (93021)<br>5 (73802)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.3468</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (4573)<br>43 (4554)<br>57 (3882)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 107.013</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">696 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2020-02-24T17:00:00Z (1329)<br>2020-02-26T17:00:00Z (1328)<br>2020-02-19T17:00:00Z (1315)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">407 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (172888)<br>28005 (18162)<br>28012 (14182)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-2">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202003.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">148,262 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">148,262 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5eec7adaab5a682756456d1d (1)<br>5eec7adaab5a682756456d1f (1)<br>5eec7adaab5a682756456d20 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">82,932 <span class="dim">(55.9%)</span></td>
+      <td class="dim small">f91a5743188271575e0c9b92b4cc8bd5b3946320049deef54802b7d91093b703 (284)<br>2f662434f3fed8f707a307e38e9b5fae73a4339645caca2404ca6d6640438a5c (215)<br>fefdb127c88caf3f8becb2a9abb5b0ea9e4aea05835b5df38da213a14df1bd1d (207)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (9031)<br>2 (8259)<br>3 (7731)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3028</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (134717)<br>3 (12570)<br>2 (975)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1761</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (9038)<br>2 (8219)<br>3 (7733)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.287</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7,029 <span class="dim">(4.7%)</span></td>
+      <td class="dim small">8 (505)<br>9 (445)<br>7 (403)</td>
+      <td class="dim small">min 0.0 · max 7867858.0 · media 10904.1493</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (2044)<br>43 (1842)<br>57 (1840)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 108.3426</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (68529)<br>4 (38442)<br>5 (32498)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.305</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (2064)<br>43 (1885)<br>57 (1837)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 108.4282</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">399 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2020-03-09T17:00:00Z (1336)<br>2020-03-04T17:00:00Z (1319)<br>2020-03-04T07:00:00Z (1296)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">349 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (76897)<br>28005 (7681)<br>28012 (6182)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-3">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202004.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">10,447 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">10,447 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5eec867f2e452ed85a99d4a5 (1)<br>5eec867f2e452ed85a99d4a6 (1)<br>5eec867f2e452ed85a99d4a7 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">5,243 <span class="dim">(50.2%)</span></td>
+      <td class="dim small">c57b73db4e1f3db3a0562b99352c9b9c8fae6d3f30f418bbb8b331a4b821381f (143)<br>c5e2677c7ff64099f8cf15499a3922cb2847a25c2c64be5d9ead158bd0842e4a (120)<br>e50b6e4e8df010b62d3d2efcc05db96c4b5db5f5dac95ffdc60c47b94df88b1b (113)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2 (675)<br>1 (642)<br>4 (523)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2227</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (8312)<br>3 (2120)<br>2 (15)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.4073</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2 (637)<br>1 (602)<br>4 (514)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0858</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">2,815 <span class="dim">(26.9%)</span></td>
+      <td class="dim small">10 (130)<br>9 (126)<br>8 (118)</td>
+      <td class="dim small">min 1.0 · max 3793974.0 · media 2838.0439</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(2.0%)</span></td>
+      <td class="dim small">160 (211)<br>65 (191)<br>67 (171)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 110.9237</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">0 (4306)<br>5 (2838)<br>4 (2419)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.468</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(2.0%)</span></td>
+      <td class="dim small">65 (183)<br>67 (163)<br>160 (156)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 110.9135</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">233 <span class="dim">(2.2%)</span></td>
+      <td class="dim small">2020-04-27T06:00:00Z (239)<br>2020-04-27T08:00:00Z (168)<br>2020-04-27T07:00:00Z (166)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">88 <span class="dim">(0.8%)</span></td>
+      <td class="dim small"> (5837)<br>28005 (504)<br>28004 (400)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-4">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202005.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">259,579 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">259,579 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5eec86f22e452ed85a9a03e5 (1)<br>5eec86f22e452ed85a9a03e7 (1)<br>5eec86f22e452ed85a9a03ee (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">153,085 <span class="dim">(59.0%)</span></td>
+      <td class="dim small">c2bc6160e0e5521c8c05c6c8e859fb75c933b2689d16e6af9523aafe8542c2f2 (271)<br>4c9421a690821aab91cc7c7a920a067b9441e9cfa4ccbd81d69abf4f963033ff (247)<br>265a2ccf4bff580139a4d2cea3872c2c1b6c9d906e84e7696aff6a869197f014 (229)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (14482)<br>2 (14267)<br>3 (13508)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.013</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (231520)<br>3 (21565)<br>2 (6494)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1912</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (14407)<br>2 (14225)<br>3 (13534)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0067</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">10,572 <span class="dim">(4.1%)</span></td>
+      <td class="dim small">8 (1443)<br>7 (1142)<br>9 (1141)</td>
+      <td class="dim small">min 0.0 · max 2535956.0 · media 1840.43</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">214 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (3611)<br>43 (3165)<br>149 (2798)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 116.0446</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (147949)<br>4 (48229)<br>5 (47351)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.8355</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">214 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (3644)<br>43 (3232)<br>149 (2829)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 116.2088</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">744 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2020-05-23T18:00:00Z (2798)<br>2020-05-17T18:00:00Z (2792)<br>2020-05-24T18:00:00Z (2783)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">321 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (163920)<br>28005 (8376)<br>28004 (7701)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-5">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202006.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">210,555 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">210,555 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5eec97ff56e7da5357690b33 (1)<br>5eec97ff56e7da5357690b35 (1)<br>5eec97ff56e7da5357690b36 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">119,858 <span class="dim">(56.9%)</span></td>
+      <td class="dim small">3630ac3429fca7ca9de6afa531c23868dae2f1fbbc4c969f9d0cd4e76e40845f (246)<br>55e60468c8a9c08588cef0887b8e22b042932ce0cc26a16e8e10012931af7de9 (159)<br>d63c2d292b5383afed6576c28dc99fddfa18c177f215c8e24e854ee979b39410 (123)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (12156)<br>2 (11852)<br>3 (10990)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.1236</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (198186)<br>3 (10445)<br>2 (1924)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1084</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (12131)<br>2 (11868)<br>3 (10983)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.118</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,683 <span class="dim">(4.1%)</span></td>
+      <td class="dim small">8 (505)<br>7 (493)<br>9 (416)</td>
+      <td class="dim small">min 0.0 · max 918433.0 · media 1310.4852</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (3102)<br>43 (2824)<br>132 (2576)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 113.6528</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (121486)<br>4 (41853)<br>5 (34958)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.7974</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">213 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (3067)<br>43 (2859)<br>132 (2586)</td>
+      <td class="dim small">min 1.0 · max 219.0 · media 113.5873</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">358 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2020-06-05T18:00:00Z (1736)<br>2020-06-02T18:00:00Z (1620)<br>2020-06-03T18:00:00Z (1563)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">320 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (131263)<br>28005 (7531)<br>28012 (7007)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-6">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202007.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">431,130 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">431,130 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5f024d791b913148f0c5edbf (1)<br>5f024d791b913148f0c5edc2 (1)<br>5f024d791b913148f0c5edc6 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">233,038 <span class="dim">(54.1%)</span></td>
+      <td class="dim small">146df8fe88ead50a406ec0c875b1d51e1b1a8e7174f3477fa206300301e60f62 (261)<br>bc6189185f102d49486c75efc3ff361c891b0acc8366df8e1b8b071c6e492d33 (235)<br>cee86fae85e6ead22e5d30cd2682ade5b1baa26442d9de92f7c35b557f1858ae (233)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (24320)<br>2 (23562)<br>3 (22345)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2278</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (407980)<br>3 (20729)<br>2 (2421)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1018</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (24306)<br>2 (23542)<br>3 (22323)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2178</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,464 <span class="dim">(2.2%)</span></td>
+      <td class="dim small">8 (1217)<br>9 (1066)<br>7 (914)</td>
+      <td class="dim small">min -39466.0 · max 7852929.0 · media 1150.009</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">215 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5976)<br>175 (5728)<br>57 (5461)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 111.1732</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (243573)<br>4 (89312)<br>5 (73692)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.8419</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">215 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (6013)<br>175 (5763)<br>57 (5479)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 111.1534</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">742 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2020-07-01T17:00:00Z (1481)<br>2020-07-02T18:00:00Z (1453)<br>2020-07-14T17:00:00Z (1440)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">370 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (264946)<br>28005 (16831)<br>28012 (15509)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-7">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202008.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">296,403 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">296,403 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5f2b2bf51b913144288b9322 (1)<br>5f2b2bf51b913144288b932d (1)<br>5f2b2bf51b913144288b9338 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">161,852 <span class="dim">(54.6%)</span></td>
+      <td class="dim small">3a365fa7c4e1a4017ffeef1ab0206347667919ba2453e9c886207e084e4c22f0 (227)<br>4efaa600dd4c50198600ce91d15c9190e059885714d66dfa06cf92227238eb0d (220)<br>0c08ff207fdef84363ffeed021e4ccd6ae1275fee67545f8d54db5878f4900af (205)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">2 (16365)<br>1 (16033)<br>3 (15559)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2316</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (281861)<br>3 (11962)<br>2 (2580)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.0894</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">2 (16330)<br>1 (15934)<br>3 (15485)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.2251</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,367 <span class="dim">(2.8%)</span></td>
+      <td class="dim small">8 (1082)<br>7 (996)<br>9 (824)</td>
+      <td class="dim small">min -13946.0 · max 7073953.0 · media 1240.5929</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">216 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">57 (4300)<br>175 (4208)<br>43 (4162)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 110.1093</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (176267)<br>4 (58935)<br>5 (46596)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.7264</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">216 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">57 (4279)<br>175 (4237)<br>43 (4205)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 110.2105</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">744 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2020-08-31T17:00:00Z (1130)<br>2020-08-25T17:00:00Z (1031)<br>2020-08-27T17:00:00Z (1030)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">336 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (188998)<br>28005 (11275)<br>28012 (10682)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-8">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202009.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">435,075 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">435,075 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5f540a6f1b913134947c93b9 (1)<br>5f540a6f1b913134947c93bc (1)<br>5f540a6f1b913134947c93be (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">246,461 <span class="dim">(56.6%)</span></td>
+      <td class="dim small">e39b1fb611cfcd6356674bc76f097da1a38383ddee09377c315160c20869ee25 (250)<br>3ec5f3c7e4c0378c9dc01c59d6232114f0eafc6fc6bd8b431e09fce4a82e2cd8 (248)<br>3b2cf718bcf3aceec6bc5b9899b7b4b305e1dc936177e318e15a8ed6e2dc9099 (236)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (23898)<br>2 (23729)<br>3 (22527)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3137</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (417666)<br>3 (13568)<br>6 (2259)</td>
+      <td class="dim small">min 1.0 · max 6.0 · media 1.092</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (23901)<br>2 (23676)<br>3 (22548)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3071</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,061 <span class="dim">(2.1%)</span></td>
+      <td class="dim small">8 (885)<br>9 (765)<br>7 (707)</td>
+      <td class="dim small">min 0.0 · max 5827673.0 · media 1150.7226</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">217 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5854)<br>175 (5519)<br>57 (5291)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 111.5415</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (252809)<br>4 (86096)<br>5 (73220)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.7846</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">218 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (5883)<br>175 (5560)<br>57 (5262)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 111.7324</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">720 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2020-09-16T17:00:00Z (1734)<br>2020-09-10T17:00:00Z (1609)<br>2020-09-09T17:00:00Z (1587)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">401 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (269614)<br>28005 (17001)<br>28012 (15857)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-9">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202010.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">399,313 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">399,313 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5f7b97721b91312c2858a0a7 (1)<br>5f7b97721b91312c2858a0a9 (1)<br>5f7b97721b91312c2858a0ab (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">235,106 <span class="dim">(58.9%)</span></td>
+      <td class="dim small">b12db9b010902894d9ef0b491827fe8506dd4229185e0b4ffab2344433dbbe0e (188)<br>c609f17f1c002faf0adf3638d4a1490d45877487afe6e179eca279699037332c (171)<br>b7ebdf21340ab58b90fa30da3f1ee713483dd874aabcf3ef98cb326ef697e28e (136)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (23044)<br>2 (21872)<br>3 (20877)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3027</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">5 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (386338)<br>3 (9721)<br>6 (2115)</td>
+      <td class="dim small">min 1.0 · max 7.0 · media 1.078</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (23019)<br>2 (21711)<br>3 (20859)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.293</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,867 <span class="dim">(2.2%)</span></td>
+      <td class="dim small">8 (637)<br>9 (558)<br>7 (516)</td>
+      <td class="dim small">min -3395.0 · max 4031432.0 · media 1120.8175</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">219 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (5428)<br>175 (5103)<br>57 (4916)</td>
+      <td class="dim small">min 1.0 · max 225.0 · media 111.7387</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (232713)<br>4 (79591)<br>5 (66847)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.7829</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">219 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (5507)<br>175 (5119)<br>57 (4864)</td>
+      <td class="dim small">min 1.0 · max 225.0 · media 111.9527</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">743 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2020-10-07T17:00:00Z (1551)<br>2020-10-08T17:00:00Z (1517)<br>2020-10-01T17:00:00Z (1490)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">369 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (246566)<br>28005 (16616)<br>28012 (13895)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-10">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202011.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">308,929 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">308,929 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5fa4d8731b91313c60c84583 (1)<br>5fa4d8731b91313c60c84598 (1)<br>5fa4d8731b91313c60c845a4 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">188,443 <span class="dim">(61.0%)</span></td>
+      <td class="dim small">a69e40bb6e0d691882a53e1ad96582f1d73bc8af1b78509a9b13d67960aa7f25 (186)<br>e0d63aadff97f911e9ab7dfa899b7744ce69782118f4dae4a149ae84b46bc14f (170)<br>d7bc15990350d01c5f7937b75df03c7325d2c86c2875c6b8a11cde0469f1a440 (164)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17519)<br>2 (16827)<br>3 (15910)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3322</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">5 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (297016)<br>3 (9843)<br>6 (1468)</td>
+      <td class="dim small">min 1.0 · max 7.0 · media 1.0896</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17409)<br>2 (16663)<br>3 (15795)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3273</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,157 <span class="dim">(2.6%)</span></td>
+      <td class="dim small">8 (810)<br>9 (701)<br>7 (594)</td>
+      <td class="dim small">min 0.0 · max 3158920.0 · media 1121.523</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">223 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">57 (3764)<br>175 (3471)<br>46 (3246)</td>
+      <td class="dim small">min 1.0 · max 229.0 · media 112.2577</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (175848)<br>4 (62999)<br>5 (53944)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.8452</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">223 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">57 (3757)<br>175 (3491)<br>46 (3222)</td>
+      <td class="dim small">min 1.0 · max 229.0 · media 112.7725</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">720 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2020-11-13T14:00:00Z (1212)<br>2020-11-20T13:00:00Z (1187)<br>2020-11-11T17:00:00Z (1139)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">365 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (188393)<br>28005 (13145)<br>28012 (10768)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-11">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">202012.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">265,261 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">265,261 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5fcc10fc1b91315b982817bd (1)<br>5fcc10fc1b91315b982817be (1)<br>5fcc10fc1b91315b982817c0 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">161,600 <span class="dim">(60.9%)</span></td>
+      <td class="dim small">ddd9cb40c75ad118b32842b36abc29cbea8a18f2303fb44c15f3b1b5e144e0d7 (163)<br>8971726b505e556a9b5c1c42d016603e04c7a0b1104db57ac573893ee375849a (143)<br>ff290a0fb469b6c3e71abcb33b579d03b8a250610a510c564d1244893aae8e67 (142)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (14495)<br>2 (14321)<br>3 (13681)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3929</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">5 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (255154)<br>3 (8314)<br>6 (1345)</td>
+      <td class="dim small">min 1.0 · max 7.0 · media 1.0898</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (14450)<br>2 (14221)<br>3 (13686)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.381</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7,825 <span class="dim">(2.9%)</span></td>
+      <td class="dim small">8 (714)<br>9 (635)<br>7 (579)</td>
+      <td class="dim small">min 0.0 · max 1335665.0 · media 1035.0665</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">264 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">57 (3234)<br>43 (3221)<br>46 (2949)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 113.9491</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (144033)<br>4 (56279)<br>5 (49799)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 1.9528</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">265 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (3260)<br>57 (3251)<br>46 (2890)</td>
+      <td class="dim small">min 1.0 · max 3000.0 · media 114.1349</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">743 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2020-12-01T17:00:00Z (1003)<br>2020-12-04T14:00:00Z (1003)<br>2020-12-01T13:00:00Z (995)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">357 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (154344)<br>28005 (12177)<br>28007 (10311)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <span>analizar_datos.py · pandas 3.0.2</span>
+  <span>muestra máx: 10,000,000 filas por archivo</span>
+</footer>
+
+</body>
+</html>

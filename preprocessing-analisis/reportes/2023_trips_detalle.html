@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis de Datos · 26/04/2026 18:00</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #141720;
+      --border: #1f2535;
+      --accent: #4fffb0;
+      --accent2: #ff6b6b;
+      --text: #e2e8f0;
+      --dim: #64748b;
+      --header-h: 60px;
+      --sidebar-w: 260px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      background: rgba(13,15,20,0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; padding: 0 2rem; gap: 1rem;
+    }
+    .header-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .header-logo span { color: var(--dim); font-weight: 400; }
+    .header-stats { margin-left: auto; display: flex; gap: 1.5rem; }
+    .h-stat { font-size: 0.72rem; color: var(--dim); }
+    .h-stat strong { color: var(--text); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: flex;
+      margin-top: var(--header-h);
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100vh - var(--header-h));
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .sidebar-label {
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--dim); padding: 0 1.25rem 0.75rem;
+    }
+    aside ul { list-style: none; }
+    .sidebar-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.55rem 1.25rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover {
+      color: var(--text);
+      border-left-color: var(--accent);
+      background: rgba(79,255,176,0.04);
+    }
+    .sidebar-count {
+      font-size: 0.65rem;
+      background: var(--border);
+      padding: 1px 6px; border-radius: 99px;
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1; padding: 2rem 2.5rem; overflow: hidden;
+    }
+
+    /* ── ALERT ── */
+    .alert-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .alert-title {
+      font-weight: 600; margin-bottom: 0.5rem;
+      color: #fca5a5; font-size: 0.85rem;
+    }
+    .alert-box ul { list-style: none; }
+    .alert-box li { font-size: 0.78rem; color: var(--dim); padding: 2px 0; }
+    .alert-box code {
+      background: var(--border); padding: 1px 5px;
+      border-radius: 3px; color: var(--text);
+    }
+
+    /* ── FILE SECTION ── */
+    .file-section {
+      margin-bottom: 3rem;
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .file-header {
+      display: flex; align-items: flex-start; gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .file-icon { font-size: 1.8rem; line-height: 1; margin-top: 3px; }
+    .file-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .file-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+    .meta-pill {
+      font-size: 0.7rem;
+      background: var(--border);
+      color: var(--dim);
+      padding: 2px 10px; border-radius: 99px;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    thead { background: var(--surface); }
+    th {
+      text-align: left;
+      padding: 0.65rem 1rem;
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .col-name {
+      font-weight: 600; color: var(--accent);
+      white-space: nowrap; max-width: 200px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .dim { color: var(--dim); }
+    .small { font-size: 0.72rem; }
+    .high-card { color: #fb923c; }
+    .low-card { color: #a78bfa; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px;
+      color: #fff; white-space: nowrap;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2.5rem;
+      color: var(--dim); font-size: 0.72rem;
+      display: flex; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">data<span>/</span>inspector</div>
+  <div class="header-stats">
+    <div class="h-stat"><strong>2</strong> archivos</div>
+    <div class="h-stat"><strong>36</strong> columnas</div>
+    <div class="h-stat">muestra <strong>10,000,000</strong> filas</div>
+    <div class="h-stat">generado <strong>26/04/2026 18:00</strong></div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-label">Archivos analizados</div>
+    <ul><li><a href="#file-0" class="sidebar-link">📋 202301.csv<span class="sidebar-count">18 cols</span></a></li><li><a href="#file-1" class="sidebar-link">📋 202302.csv<span class="sidebar-count">18 cols</span></a></li></ul>
+  </aside>
+
+  <main>
+    
+        <div class="alert-box">
+          <div class="alert-title">⚠️ Columnas con más del 50% de nulos</div>
+          <ul><li><strong>202301.csv</strong> › <code>station_unlock</code>: 50.1% nulos</li><li><strong>202301.csv</strong> › <code>dock_unlock</code>: 50.1% nulos</li><li><strong>202301.csv</strong> › <code>unlock_station_name</code>: 50.1% nulos</li><li><strong>202301.csv</strong> › <code>station_lock</code>: 50.2% nulos</li><li><strong>202301.csv</strong> › <code>dock_lock</code>: 50.2% nulos</li><li><strong>202301.csv</strong> › <code>lock_station_name</code>: 50.2% nulos</li><li><strong>202302.csv</strong> › <code>station_unlock</code>: 50.1% nulos</li><li><strong>202302.csv</strong> › <code>dock_unlock</code>: 50.1% nulos</li><li><strong>202302.csv</strong> › <code>unlock_station_name</code>: 50.1% nulos</li><li><strong>202302.csv</strong> › <code>station_lock</code>: 50.1% nulos</li></ul>
+        </div>
+    
+    <section class="file-section" id="file-0">
+      <div class="file-header">
+        <span class="file-icon">📋</span>
+        <div>
+          <h2 class="file-title">202301.csv</h2>
+          <div class="file-meta">
+            <span class="meta-pill">591,846 filas analizadas</span>
+            <span class="meta-pill">18 columnas</span>
+            <span class="meta-pill">.csv</span>
+            <span class="badge" style="background:#ef4444">295,994 filas duplicadas</span>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">fecha</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">31 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">2023-01-12 (13362)<br>2023-01-13 (12829)<br>2023-01-10 (12613)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idBike</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">3,204 <span class="dim">(0.5%)</span></td>
+      <td class="dim small">7613.0 (438)<br>6358.0 (341)<br>7949.0 (336)</td>
+      <td class="dim small">min 1.0 · max 8090.0 · media 5979.0704</td>
+    </tr>
+    <tr>
+      <td class="col-name">fleet</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">2 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1.0 (294199)<br>2.0 (1724)</td>
+      <td class="dim small">min 1.0 · max 2.0 · media 1.0058</td>
+    </tr>
+    <tr>
+      <td class="col-name">trip_minutes</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">5,084 <span class="dim">(0.9%)</span></td>
+      <td class="dim small">0.23 (7218)<br>0.25 (5742)<br>0.27 (5588)</td>
+      <td class="dim small">min 0.0 · max 40327.08 · media 23.8062</td>
+    </tr>
+    <tr>
+      <td class="col-name">geolocation_unlock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">957 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">{'type': 'Point', 'coordinates': [-3.7007111, 40.4083061]} (3752)<br>{'type': 'Point', 'coordinates': [-3.7088337, 40.4112744]} (3657)<br>{'type': 'Point', 'coordinates': [-3.717487, 40.413736]} (2832)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">address_unlock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">675 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">'Calle Valencia nº 1' (3752)<br>'Plaza de la Cebada nº 16 ' (3657)<br>'Calle Princesa nº 5' (3389)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">unlock_date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="">272,094 <span class="dim">(46.0%)</span></td>
+      <td class="dim small">2023-01-13T15:06:55 (7)<br>2023-01-04T18:41:09 (5)<br>2023-01-13T20:06:27 (5)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">locktype</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">2 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">STATION (294959)<br>FREE (964)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">unlocktype</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">2 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">STATION (295132)<br>FREE (791)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">geolocation_lock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">1,164 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">{'type': 'Point', 'coordinates': [-3.7007111, 40.4083061]} (3759)<br>{'type': 'Point', 'coordinates': [-3.7088337, 40.4112744]} (3698)<br>{'type': 'Point', 'coordinates': [-3.717487, 40.413736]} (2906)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">address_lock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">843 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">'Calle Valencia nº 1' (3759)<br>'Plaza de la Cebada nº 16 ' (3698)<br>'Calle Princesa nº 5' (3458)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">lock_date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="">272,218 <span class="dim">(46.0%)</span></td>
+      <td class="dim small">2023-01-30T12:45:03 (6)<br>2023-01-30T12:45:04 (6)<br>2023-01-03T18:25:18 (5)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">station_unlock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">261 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">57.0 (3752)<br>43.0 (3657)<br>175.0 (2832)</td>
+      <td class="dim small">min 1.0 · max 889.0 · media 128.4751</td>
+    </tr>
+    <tr>
+      <td class="col-name">dock_unlock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1.0 (17022)<br>2.0 (15773)<br>3.0 (15317)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3781</td>
+    </tr>
+    <tr>
+      <td class="col-name">unlock_station_name</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">261 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">53 - Plaza de Lavapiés (3752)<br>39 - Plaza de la Cebada (3657)<br>167 - Segovia 45 (2832)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">station_lock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.2% nulos</span></td>
+      <td class="low-card">261 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">57.0 (3759)<br>43.0 (3698)<br>175.0 (2906)</td>
+      <td class="dim small">min 1.0 · max 889.0 · media 128.4801</td>
+    </tr>
+    <tr>
+      <td class="col-name">dock_lock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.2% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1.0 (17150)<br>2.0 (15819)<br>3.0 (15384)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.3976</td>
+    </tr>
+    <tr>
+      <td class="col-name">lock_station_name</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.2% nulos</span></td>
+      <td class="low-card">261 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">53 - Plaza de Lavapiés (3759)<br>39 - Plaza de la Cebada (3698)<br>167 - Segovia 45 (2906)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-1">
+      <div class="file-header">
+        <span class="file-icon">📋</span>
+        <div>
+          <h2 class="file-title">202302.csv</h2>
+          <div class="file-meta">
+            <span class="meta-pill">336,988 filas analizadas</span>
+            <span class="meta-pill">18 columnas</span>
+            <span class="meta-pill">.csv</span>
+            <span class="badge" style="background:#ef4444">168,550 filas duplicadas</span>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">fecha</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">18 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">2023-02-01 (11442)<br>2023-02-02 (11069)<br>2023-02-09 (10814)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idBike</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">3,134 <span class="dim">(0.9%)</span></td>
+      <td class="dim small">7949.0 (178)<br>7670.0 (166)<br>7166.0 (161)</td>
+      <td class="dim small">min 1.0 · max 8090.0 · media 6004.1495</td>
+    </tr>
+    <tr>
+      <td class="col-name">fleet</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">2 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1.0 (167692)<br>2.0 (802)</td>
+      <td class="dim small">min 1.0 · max 2.0 · media 1.0048</td>
+    </tr>
+    <tr>
+      <td class="col-name">trip_minutes</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">4,148 <span class="dim">(1.2%)</span></td>
+      <td class="dim small">0.23 (2929)<br>0.25 (2552)<br>0.27 (2435)</td>
+      <td class="dim small">min -53.25 · max 15849.53 · media 19.19</td>
+    </tr>
+    <tr>
+      <td class="col-name">geolocation_unlock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">622 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">{'type': 'Point', 'coordinates': [-3.7088337, 40.4112744]} (2189)<br>{'type': 'Point', 'coordinates': [-3.7007111, 40.4083061]} (1789)<br>{'type': 'Point', 'coordinates': [-3.7110513, 40.4070358]} (1542)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">address_unlock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">518 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">'Plaza de la Cebada nº 16 ' (2189)<br>'Calle Princesa nº 5' (1922)<br>'Calle Valencia nº 1' (1789)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">unlock_date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="">155,334 <span class="dim">(46.1%)</span></td>
+      <td class="dim small">2023-02-02T08:18:16 (5)<br>2023-02-01T08:01:06 (4)<br>2023-02-01T08:37:01 (4)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">locktype</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">2 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">STATION (168018)<br>FREE (476)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">unlocktype</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">2 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">STATION (168114)<br>FREE (380)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">geolocation_lock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">723 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">{'type': 'Point', 'coordinates': [-3.7088337, 40.4112744]} (2245)<br>{'type': 'Point', 'coordinates': [-3.7007111, 40.4083061]} (1735)<br>{'type': 'Point', 'coordinates': [-3.716591, 40.398247]} (1606)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">address_lock</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="low-card">608 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">'Plaza de la Cebada nº 16 ' (2245)<br>'Calle Princesa nº 5' (1985)<br>'Calle Valencia nº 1' (1735)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">lock_date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.0% nulos</span></td>
+      <td class="">155,007 <span class="dim">(46.0%)</span></td>
+      <td class="dim small">2023-02-07T07:57:05 (8)<br>2023-02-03T08:48:23 (6)<br>2023-02-04T08:54:04 (5)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">station_unlock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">258 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43.0 (2189)<br>57.0 (1789)<br>49.0 (1542)</td>
+      <td class="dim small">min 1.0 · max 270.0 · media 128.2142</td>
+    </tr>
+    <tr>
+      <td class="col-name">dock_unlock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1.0 (9465)<br>2.0 (9369)<br>3.0 (8815)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.4267</td>
+    </tr>
+    <tr>
+      <td class="col-name">unlock_station_name</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">258 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">39 - Plaza de la Cebada (2189)<br>53 - Plaza de Lavapiés (1789)<br>45 - Puerta de Toledo (1542)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">station_lock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">258 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43.0 (2245)<br>57.0 (1735)<br>220.0 (1606)</td>
+      <td class="dim small">min 1.0 · max 270.0 · media 128.641</td>
+    </tr>
+    <tr>
+      <td class="col-name">dock_lock</td>
+      <td><span class="badge" style="background:#6366f1">decimal</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1.0 (9564)<br>2.0 (9437)<br>3.0 (8860)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.4279</td>
+    </tr>
+    <tr>
+      <td class="col-name">lock_station_name</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">50.1% nulos</span></td>
+      <td class="low-card">258 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">39 - Plaza de la Cebada (2245)<br>53 - Plaza de Lavapiés (1735)<br>212 - Marqués de Vadillo (1606)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <span>analizar_datos.py · pandas 3.0.2</span>
+  <span>muestra máx: 10,000,000 filas por archivo</span>
+</footer>
+
+</body>
+</html>

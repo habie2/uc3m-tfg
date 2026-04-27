@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis de Datos · 26/04/2026 17:48</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #141720;
+      --border: #1f2535;
+      --accent: #4fffb0;
+      --accent2: #ff6b6b;
+      --text: #e2e8f0;
+      --dim: #64748b;
+      --header-h: 60px;
+      --sidebar-w: 260px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      background: rgba(13,15,20,0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; padding: 0 2rem; gap: 1rem;
+    }
+    .header-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .header-logo span { color: var(--dim); font-weight: 400; }
+    .header-stats { margin-left: auto; display: flex; gap: 1.5rem; }
+    .h-stat { font-size: 0.72rem; color: var(--dim); }
+    .h-stat strong { color: var(--text); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: flex;
+      margin-top: var(--header-h);
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100vh - var(--header-h));
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .sidebar-label {
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--dim); padding: 0 1.25rem 0.75rem;
+    }
+    aside ul { list-style: none; }
+    .sidebar-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.55rem 1.25rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover {
+      color: var(--text);
+      border-left-color: var(--accent);
+      background: rgba(79,255,176,0.04);
+    }
+    .sidebar-count {
+      font-size: 0.65rem;
+      background: var(--border);
+      padding: 1px 6px; border-radius: 99px;
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1; padding: 2rem 2.5rem; overflow: hidden;
+    }
+
+    /* ── ALERT ── */
+    .alert-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .alert-title {
+      font-weight: 600; margin-bottom: 0.5rem;
+      color: #fca5a5; font-size: 0.85rem;
+    }
+    .alert-box ul { list-style: none; }
+    .alert-box li { font-size: 0.78rem; color: var(--dim); padding: 2px 0; }
+    .alert-box code {
+      background: var(--border); padding: 1px 5px;
+      border-radius: 3px; color: var(--text);
+    }
+
+    /* ── FILE SECTION ── */
+    .file-section {
+      margin-bottom: 3rem;
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .file-header {
+      display: flex; align-items: flex-start; gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .file-icon { font-size: 1.8rem; line-height: 1; margin-top: 3px; }
+    .file-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .file-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+    .meta-pill {
+      font-size: 0.7rem;
+      background: var(--border);
+      color: var(--dim);
+      padding: 2px 10px; border-radius: 99px;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    thead { background: var(--surface); }
+    th {
+      text-align: left;
+      padding: 0.65rem 1rem;
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .col-name {
+      font-weight: 600; color: var(--accent);
+      white-space: nowrap; max-width: 200px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .dim { color: var(--dim); }
+    .small { font-size: 0.72rem; }
+    .high-card { color: #fb923c; }
+    .low-card { color: #a78bfa; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px;
+      color: #fff; white-space: nowrap;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2.5rem;
+      color: var(--dim); font-size: 0.72rem;
+      display: flex; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">data<span>/</span>inspector</div>
+  <div class="header-stats">
+    <div class="h-stat"><strong>9</strong> archivos</div>
+    <div class="h-stat"><strong>113</strong> columnas</div>
+    <div class="h-stat">muestra <strong>10,000,000</strong> filas</div>
+    <div class="h-stat">generado <strong>26/04/2026 17:48</strong></div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-label">Archivos analizados</div>
+    <ul><li><a href="#file-0" class="sidebar-link">📦 201704.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-1" class="sidebar-link">📦 201705.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-2" class="sidebar-link">📦 201706.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-3" class="sidebar-link">📦 201707.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-4" class="sidebar-link">📦 201708.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-5" class="sidebar-link">📦 201709.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-6" class="sidebar-link">📦 201710.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-7" class="sidebar-link">📦 201711.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-8" class="sidebar-link">📦 201712.json<span class="sidebar-count">11 cols</span></a></li></ul>
+  </aside>
+
+  <main>
+    
+        <div class="alert-box">
+          <div class="alert-title">⚠️ Columnas con más del 50% de nulos</div>
+          <ul><li><strong>201710.json</strong> › <code>track__type</code>: 60.5% nulos</li><li><strong>201710.json</strong> › <code>track__features</code>: 60.5% nulos</li></ul>
+        </div>
+    
+    <section class="file-section" id="file-0">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201704.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">253,519 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">253,519 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">58e5e5e7865e9c221ca45898 (1)<br>58e5e5e7865e9c221ca458a7 (1)<br>58e5e5e7865e9c221ca458b2 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">144,579 <span class="dim">(57.0%)</span></td>
+      <td class="dim small">49ca6ac59b9d85ff2c3e81d3a3fe4cbaff9ee8b5f479357332a873ff4a9e3ab0 (118)<br>abb4a4725145ff1ff407e8ae8b52c9a7783d526c10a2dfe33010331779cfe5ae (117)<br>72bc148bcdb54cf71ef97e513055a2461c57bafe522c2271b3bd4d51267cc376 (112)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (16497)<br>2 (15322)<br>3 (14650)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.629</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (215397)<br>3 (23330)<br>0 (10214)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.1618</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (15996)<br>2 (14969)<br>3 (14495)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.6549</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,610 <span class="dim">(3.8%)</span></td>
+      <td class="dim small">9 (1059)<br>8 (1058)<br>10 (800)</td>
+      <td class="dim small">min 1.0 · max 829188.0 · media 1156.5887</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (3891)<br>57 (3565)<br>163 (3399)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 87.8258</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (123356)<br>5 (57080)<br>3 (36347)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 3.6025</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (4088)<br>57 (3617)<br>129 (3551)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 87.7838</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">719 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2017-04-18T19:00:00.000+0200 (987)<br>2017-04-19T19:00:00.000+0200 (955)<br>2017-04-18T18:00:00.000+0200 (953)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">645 <span class="dim">(0.3%)</span></td>
+      <td class="dim small"> (48425)<br>28005 (18889)<br>28012 (18010)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">41.0% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (149702)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">41.0% nulos</span></td>
+      <td class="">149,702 <span class="dim">(59.0%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.70870729972222, 40.425555]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE NOVICIADO 7,Madrid", "speed": 5.52, "secondsfromstart": 132}}, {"geometry": {"type": "Point", "coordinates": [-3.71201159972222, 40.426343]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE MANUEL 7,Madrid", "speed": 2.19, "secondsfromstart": 72}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7009045, 40.408265]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE VALENCIA 4,Madrid", "speed": 0.47, "secondsfromstart": 384}}, {"geometry": {"type": "Point", "coordinates": [-3.70216799972222, 40.4094258]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE LAVAPIES 48,Madrid", "speed": 6.77, "secondsfromstart": 324}}, {"geometry": {"type": "Point", "coordinates": [-3.7025573, 40.4185209997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE MONTERA 25,Madrid", "speed": 2.94, "secondsfromstart": 84}}, {"geometry": {"type": "Point", "coordinates": [-3.7018553, 40.4199708]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE GRAN VIA 25,Madrid", "speed": 1.13, "secondsfromstart": 24}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.70804979972222, 40.4117335997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE TOLEDO 53,Madrid", "speed": 2.36, "secondsfromstart": 355}}, {"geometry": {"type": "Point", "coordinates": [-3.70740949972222, 40.4142548]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE TOLEDO 13,Madrid", "speed": 5, "secondsfromstart": 296}}, {"geometry": {"type": "Point", "coordinates": [-3.70229179972222, 40.4185787997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE MONTERA 24,Madrid", "speed": 2.91, "secondsfromstart": 117}}] (1)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-1">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201705.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">337,692 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">337,692 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5912f020865e9c2bbc57517d (1)<br>5912f020865e9c2bbc57518d (1)<br>5912f021865e9c2bbc575190 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">184,842 <span class="dim">(54.7%)</span></td>
+      <td class="dim small">63fbe1ba55098701c09d0a5585bd495f5655f11634a8d98192cb2b928d0b3e6a (191)<br>db86fa9b849b6c3908133c00e2bb7a1bb34a495b497296f81f905afd39e83181 (177)<br>3652997ad48603b6d5746d9cd7948d34fd09f2c614161cded54e06f5e6c42cb4 (167)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (21664)<br>2 (20591)<br>3 (19136)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.69</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">45.2% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (185084)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">45.2% nulos</span></td>
+      <td class="">185,084 <span class="dim">(54.8%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.6941581, 40.3972735997222]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,CALLE TOMAS BRETON 18,Madrid", "speed": 0, "secondsfromstart": 217}}, {"geometry": {"type": "Point", "coordinates": [-3.693883, 40.3988498]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,PASEO DELICIAS 63F,Madrid", "speed": 2.05, "secondsfromstart": 157}}, {"geometry": {"type": "Point", "coordinates": [-3.69401959972222, 40.4006917997222]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,PASEO DELICIAS 61,Madrid", "speed": 2.75, "secondsfromstart": 98}}, {"geometry": {"type": "Point", "coordinates": [-3.6938363, 40.4028761]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,PASEO DELICIAS 47,Madrid", "speed": 3.58, "secondsfromstart": 38}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.67512749972222, 40.4213493]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,CALLE O'DONNELL 30,Madrid", "speed": 0.94, "secondsfromstart": 702}}, {"geometry": {"type": "Point", "coordinates": [-3.67767979972222, 40.4216699997222]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,CALLE O'DONNELL 23,Madrid", "speed": 5.08, "secondsfromstart": 642}}, {"geometry": {"type": "Point", "coordinates": [-3.68172159972222, 40.4213617997222]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,CALLE O'DONNELL,Madrid", "speed": 5.72, "secondsfromstart": 582}}, {"geometry": {"type": "Point", "coordinates": [-3.6857638, 40.4205037997222]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,CALLE ALCALA,Madrid", "speed": 5.97, "secondsfromstart": 522}}, {"geometry": {"type": "Point", "coordinates": [-3.6885835, 40.4187344997222]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE ALFONSO XII,Madrid", "speed": 5.66, "secondsfromstart": 462}}, {"geometry": {"type": "Point", "coordinates": [-3.68871409972222, 40.4131603]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE ALFONSO XII,Madrid", "speed": 4.27, "secondsfromstart": 341}}, {"geometry": {"type": "Point", "coordinates": [-3.6886211, 40.4103483]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE ALFONSO XII,Madrid", "speed": 6.08, "secondsfromstart": 281}}, {"geometry": {"type": "Point", "coordinates": [-3.68958999972222, 40.4072048]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,AVDA CIUDAD DE BARCELONA,Madrid", "speed": 0.41, "secondsfromstart": 161}}, {"geometry": {"type": "Point", "coordinates": [-3.69147509972222, 40.4083347997222]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,AVDA CIUDAD DE BARCELONA 2D,Madrid", "speed": 3.94, "secondsfromstart": 101}}, {"geometry": {"type": "Point", "coordinates": [-3.6932128, 40.4081703]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE SANTA ISABEL,Madrid", "speed": 2.11, "secondsfromstart": 41}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.71218579972222, 40.407411]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,AVDA GRAN VIA DE SAN FRANCISCO 5,Madrid", "speed": 9.77, "secondsfromstart": 541}}, {"geometry": {"type": "Point", "coordinates": [-3.71344699972222, 40.4091571]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,AVDA GRAN VIA DE SAN FRANCISCO 13,Madrid", "speed": 1.55, "secondsfromstart": 482}}, {"geometry": {"type": "Point", "coordinates": [-3.71385899972222, 40.4117345]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE BAILEN 43,Madrid", "speed": 7.36, "secondsfromstart": 422}}, {"geometry": {"type": "Point", "coordinates": [-3.71353679972222, 40.4153185997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE BAILEN,Madrid", "speed": 6.86, "secondsfromstart": 362}}, {"geometry": {"type": "Point", "coordinates": [-3.7129981, 40.4191204997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE BAILEN,Madrid", "speed": 7.25, "secondsfromstart": 302}}, {"geometry": {"type": "Point", "coordinates": [-3.71387959972222, 40.4226207997222]}, "type": "Feature", "properties": {"var": "28008,ES,Madrid,Madrid,CALLE FERRAZ,Madrid", "speed": 7, "secondsfromstart": 243}}, {"geometry": {"type": "Point", "coordinates": [-3.7182556, 40.4255327997222]}, "type": "Feature", "properties": {"var": "28008,ES,Madrid,Madrid,PASEO PINTOR ROSALES 12,Madrid", "speed": 6.13, "secondsfromstart": 183}}, {"geometry": {"type": "Point", "coordinates": [-3.7213231, 40.4282526]}, "type": "Feature", "properties": {"var": "28008,ES,Madrid,Madrid,PASEO PINTOR ROSALES 44,Madrid", "speed": 7.61, "secondsfromstart": 123}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (288357)<br>3 (31637)<br>0 (13450)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.1601</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (20961)<br>2 (20177)<br>3 (18903)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.7089</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">10,000 <span class="dim">(3.0%)</span></td>
+      <td class="dim small">8 (2022)<br>9 (1696)<br>7 (1312)</td>
+      <td class="dim small">min 0.0 · max 9755123.0 · media 1221.7085</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (5177)<br>135 (4713)<br>57 (4700)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.1337</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (157114)<br>5 (74297)<br>3 (46419)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 3.4645</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (5379)<br>135 (4986)<br>57 (4681)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.2245</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">743 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2017-05-31T18:00:00.000+0200 (1204)<br>2017-05-31T19:00:00.000+0200 (1198)<br>2017-05-30T18:00:00.000+0200 (1190)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">683 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (75824)<br>28005 (24211)<br>28012 (24047)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-2">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201706.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">381,999 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">381,999 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">593663142f3843150cc4554a (1)<br>593663142f3843150cc45561 (1)<br>593663142f3843150cc45567 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">205,266 <span class="dim">(53.7%)</span></td>
+      <td class="dim small">e2e4d77c8c8b980b0b1cc2a41e5156f9ef0bd0a837c3d255f507b4d8fd9c2797 (164)<br>61450039a88dbf7bd984e12d7603166d14ed0e726ccbf4cd4338c251d1134323 (164)<br>3a73f147845f94ab441dbcf357e0ae074233471297ac42bbb3ec373a94b884f5 (134)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (25187)<br>2 (22828)<br>3 (21844)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.6675</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (328127)<br>3 (32417)<br>0 (19013)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.1263</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (24384)<br>2 (22730)<br>3 (21200)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.684</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,708 <span class="dim">(2.5%)</span></td>
+      <td class="dim small">8 (1863)<br>9 (1683)<br>10 (1255)</td>
+      <td class="dim small">min 0.0 · max 5961326.0 · media 1186.8925</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">174 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5787)<br>57 (5293)<br>163 (5014)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 88.47</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (171308)<br>5 (80973)<br>0 (65534)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 3.3162</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">174 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5897)<br>57 (5247)<br>163 (5111)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 88.6737</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">719 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2017-06-21T19:00:00.000+0200 (1285)<br>2017-06-28T19:00:00.000+0200 (1239)<br>2017-06-27T19:00:00.000+0200 (1237)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">657 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (97317)<br>28005 (27591)<br>28012 (26902)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">29.7% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (268710)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">29.7% nulos</span></td>
+      <td class="">268,710 <span class="dim">(70.3%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.7079933, 40.4339174997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE FERNANDO EL CATOLICO 15,Madrid", "speed": 5.22, "secondsfromstart": 333}}, {"geometry": {"type": "Point", "coordinates": [-3.70442049972222, 40.4337349997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,GTA QUEVEDO,Madrid", "speed": 5.94, "secondsfromstart": 273}}, {"geometry": {"type": "Point", "coordinates": [-3.700387, 40.4345959997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE ELOY GONZALO 27,Madrid", "speed": 6.58, "secondsfromstart": 213}}, {"geometry": {"type": "Point", "coordinates": [-3.6960761, 40.435099]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,PASEO GENERAL MARTINEZ CAMPOS 17,Madrid", "speed": 4.47, "secondsfromstart": 153}}, {"geometry": {"type": "Point", "coordinates": [-3.69150009972222, 40.4351368]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,PASEO GENERAL MARTINEZ CAMPOS 46,Madrid", "speed": 5.83, "secondsfromstart": 93}}, {"geometry": {"type": "Point", "coordinates": [-3.6893745, 40.4352753]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA 43,Madrid", "speed": 3.88, "secondsfromstart": 34}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7014363, 40.4086727997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,PLAZA LAVAPIES 8,Madrid", "speed": 5.16, "secondsfromstart": 290}}, {"geometry": {"type": "Point", "coordinates": [-3.70320099972222, 40.4102308]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE AMPARO 24,Madrid", "speed": 2.36, "secondsfromstart": 229}}, {"geometry": {"type": "Point", "coordinates": [-3.70553409972222, 40.4115625]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE MESON DE PAREDES 2,Madrid", "speed": 3.3, "secondsfromstart": 169}}, {"geometry": {"type": "Point", "coordinates": [-3.7081021, 40.4109228]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE MALDONADAS 7,Madrid", "speed": 3.72, "secondsfromstart": 109}}, {"geometry": {"type": "Point", "coordinates": [-3.71006709972222, 40.411441]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,PLAZA CEBADA 10,Madrid", "speed": 3.75, "secondsfromstart": 49}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7015353, 40.4266120997222]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE VELARDE,Madrid", "speed": 0.94, "secondsfromstart": 441}}, {"geometry": {"type": "Point", "coordinates": [-3.70131329972222, 40.4264065997222]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE FUENCARRAL 87,Madrid", "speed": 1, "secondsfromstart": 381}}, {"geometry": {"type": "Point", "coordinates": [-3.70227709972222, 40.4283483]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE FUENCARRAL 103,Madrid", "speed": 5.5, "secondsfromstart": 322}}, {"geometry": {"type": "Point", "coordinates": [-3.70358059972222, 40.4319196]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE FUENCARRAL 140,Madrid", "speed": 4.63, "secondsfromstart": 262}}, {"geometry": {"type": "Point", "coordinates": [-3.70605999972222, 40.4331634997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE ARAPILES 8,Madrid", "speed": 6.36, "secondsfromstart": 202}}, {"geometry": {"type": "Point", "coordinates": [-3.71020109972222, 40.4329453]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE MELENDEZ VALDES 18,Madrid", "speed": 6.91, "secondsfromstart": 142}}, {"geometry": {"type": "Point", "coordinates": [-3.71383699972222, 40.4330505]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE MELENDEZ VALDES 44,Madrid", "speed": 5.11, "secondsfromstart": 82}}, {"geometry": {"type": "Point", "coordinates": [-3.7177875, 40.4335129997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE ARCIPRESTE DE HITA 1,Madrid", "speed": 5.16, "secondsfromstart": 23}}] (1)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-3">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201707.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">351,289 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">351,289 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">595e02532f38431438cda811 (1)<br>595e02532f38431438cda81a (1)<br>595e02532f38431438cda81b (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">184,696 <span class="dim">(52.6%)</span></td>
+      <td class="dim small">fe34bb19903a62b4c1a81febbb373b362fb0607841fee0c9c03c57ada5fbbdf6 (235)<br>8b9987fc93afec5fe3a0fde5068190180ae140943279b806b4292fa81e30f36c (158)<br>16d0e1630187c92d0b8ea376a327fdc0d4f889cc0b4018aa2cb58f8c4f58e62e (151)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (22041)<br>2 (20735)<br>3 (19503)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.6941</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">28.1% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (252583)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">28.1% nulos</span></td>
+      <td class="">252,583 <span class="dim">(71.9%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.71083829972222, 40.4290074997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE SANTA CRUZ DE MARCENADO 23,Madrid", "speed": 2.69, "secondsfromstart": 188}}, {"geometry": {"type": "Point", "coordinates": [-3.7093303, 40.4283361]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE SAN HERMENEGILDO 31,Madrid", "speed": 2.08, "secondsfromstart": 128}}, {"geometry": {"type": "Point", "coordinates": [-3.70666779972222, 40.4282333]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE SAN HERMENEGILDO 4,Madrid", "speed": 4.69, "secondsfromstart": 69}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7015535, 40.4135089997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE ATOCHA 28,Madrid", "speed": 1.66, "secondsfromstart": 207}}, {"geometry": {"type": "Point", "coordinates": [-3.6992856, 40.4126655]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE LEON 37,Madrid", "speed": 5.86, "secondsfromstart": 147}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6893321, 40.4167837997222]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE ANTONIO MAURA 13,Madrid", "speed": 0.63, "secondsfromstart": 290}}, {"geometry": {"type": "Point", "coordinates": [-3.68916729972222, 40.4153554997222]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE FELIPE IV 28,Madrid", "speed": 7.22, "secondsfromstart": 230}}, {"geometry": {"type": "Point", "coordinates": [-3.6890353, 40.4109423]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE ALFONSO XII 52,Madrid", "speed": 5.69, "secondsfromstart": 169}}, {"geometry": {"type": "Point", "coordinates": [-3.68878999972222, 40.4083480997222]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE ALFONSO XII 64,Madrid", "speed": 5.02, "secondsfromstart": 109}}, {"geometry": {"type": "Point", "coordinates": [-3.68991349972222, 40.4072345]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,AVDA CIUDAD DE BARCELONA 2D,Madrid", "speed": 2.13, "secondsfromstart": 49}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (304056)<br>3 (36876)<br>2 (5280)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.2105</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (21795)<br>2 (20142)<br>3 (19028)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.709</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,607 <span class="dim">(2.7%)</span></td>
+      <td class="dim small">8 (1921)<br>9 (1809)<br>10 (1399)</td>
+      <td class="dim small">min 0.0 · max 7436378.0 · media 1244.7695</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">172 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5491)<br>163 (5070)<br>57 (4853)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.3202</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (158278)<br>5 (71593)<br>0 (69120)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 3.2191</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5521)<br>163 (5099)<br>57 (4826)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.477</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">743 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2017-07-05T19:00:00.000+0200 (1214)<br>2017-07-12T19:00:00.000+0200 (1119)<br>2017-07-04T19:00:00.000+0200 (1103)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">612 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (103886)<br>28005 (24368)<br>28012 (23040)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-4">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201708.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">298,332 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">298,332 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">598640fc2f384307b4a9031e (1)<br>598640fc2f384307b4a90328 (1)<br>598640fc2f384307b4a90329 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">147,230 <span class="dim">(49.4%)</span></td>
+      <td class="dim small">978d3b90b8182c5af94f219479c937bca8bd51180ea644b050c512beb5fb46dd (259)<br>1b1381a69fdbd22dcd8e944d8dbffcc796c9a935cd7afc328400e505ffbaa0f6 (247)<br>9a7b5b4197cfcb08add223d91892a5c1a8ec72ef8d97868043d56889f0cdf0d1 (245)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (18332)<br>2 (16867)<br>3 (16191)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.7264</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (247386)<br>3 (43456)<br>2 (7490)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.3164</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (18022)<br>2 (16732)<br>3 (16147)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.7252</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,402 <span class="dim">(3.2%)</span></td>
+      <td class="dim small">8 (2384)<br>9 (2302)<br>7 (1807)</td>
+      <td class="dim small">min 0.0 · max 3716797.0 · media 1192.1532</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">163 (4115)<br>135 (3919)<br>129 (3826)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 87.2436</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (125644)<br>0 (74239)<br>5 (53666)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.9674</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">163 (4190)<br>135 (4050)<br>129 (3881)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 87.3306</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">743 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2017-08-30T19:00:00.000+0200 (1029)<br>2017-08-31T18:00:00.000+0200 (1028)<br>2017-08-31T19:00:00.000+0200 (997)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">537 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (109828)<br>28005 (19244)<br>28012 (17701)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">28.9% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (212002)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">28.9% nulos</span></td>
+      <td class="">212,002 <span class="dim">(71.1%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.7175826, 40.4342724997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE FERNANDO EL CATOLICO 77,Madrid", "speed": 4.05, "secondsfromstart": 280}}, {"geometry": {"type": "Point", "coordinates": [-3.7170288, 40.4324255]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE HILARION ESLAVA 5,Madrid", "speed": 3.25, "secondsfromstart": 220}}, {"geometry": {"type": "Point", "coordinates": [-3.7165816, 40.4311383]}, "type": "Feature", "properties": {"var": "28008,ES,Madrid,Madrid,CALLE PRINCESA 64,Madrid", "speed": 5.47, "secondsfromstart": 160}}, {"geometry": {"type": "Point", "coordinates": [-3.7147765, 40.4304760997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE ALBERTO AGUILERA,Madrid", "speed": 3.61, "secondsfromstart": 100}}, {"geometry": {"type": "Point", "coordinates": [-3.71353709972222, 40.4304111]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE GUZMAN EL BUENO,Madrid", "speed": 1.36, "secondsfromstart": 40}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.71773579972222, 40.4343305]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE FERNANDO EL CATOLICO 77,Madrid", "speed": 0, "secondsfromstart": 322}}, {"geometry": {"type": "Point", "coordinates": [-3.7166431, 40.4329055997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE HILARION ESLAVA 6,Madrid", "speed": 2.16, "secondsfromstart": 262}}, {"geometry": {"type": "Point", "coordinates": [-3.71681049972222, 40.4313119997222]}, "type": "Feature", "properties": {"var": "28008,ES,Madrid,Madrid,CALLE PRINCESA 65,Madrid", "speed": 0, "secondsfromstart": 202}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7139201, 40.4105224997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,PLAZA SAN FRANCISCO,Madrid", "speed": 5.05, "secondsfromstart": 378}}, {"geometry": {"type": "Point", "coordinates": [-3.7127393, 40.4081236]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,AVDA GRAN VIA DE SAN FRANCISCO 9,Madrid", "speed": 3.44, "secondsfromstart": 318}}, {"geometry": {"type": "Point", "coordinates": [-3.7103055, 40.40657]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,RONDA TOLEDO 1,Madrid", "speed": 4.69, "secondsfromstart": 258}}, {"geometry": {"type": "Point", "coordinates": [-3.70629909972222, 40.4058127997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,RONDA TOLEDO 9,Madrid", "speed": 6.36, "secondsfromstart": 198}}, {"geometry": {"type": "Point", "coordinates": [-3.70304279972222, 40.405258]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,GTA EMBAJADORES,Madrid", "speed": 0, "secondsfromstart": 138}}, {"geometry": {"type": "Point", "coordinates": [-3.701036, 40.4067002997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE MIGUEL SERVET 11,Madrid", "speed": 5.22, "secondsfromstart": 79}}] (1)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-5">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201709.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">413,333 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">413,333 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">59af78732f3843184cad53ed (1)<br>59af78732f3843184cad53ef (1)<br>59af78732f3843184cad53f7 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">217,755 <span class="dim">(52.7%)</span></td>
+      <td class="dim small">9205e9e942e85cd89e24020724ac84b43681ed6905192dbd11132eb7f274f579 (248)<br>7747b5db0708cff4812e3b3c8ed5b5fc0cc76b9000aa5c3a3ba9efbeccec7b54 (213)<br>0bb346c9ac42749da8de1f72345fa3c2179ba462e9a38a162777be38964daec1 (201)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (26909)<br>2 (24079)<br>3 (23213)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.6598</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">29.1% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (293044)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">29.1% nulos</span></td>
+      <td class="">293,044 <span class="dim">(70.9%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.70888209972222, 40.4108422997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE TOLEDO 56,Madrid", "speed": 4.72, "secondsfromstart": 109}}, {"geometry": {"type": "Point", "coordinates": [-3.7110338, 40.4079108]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE TOLEDO 115,Madrid", "speed": 5.13, "secondsfromstart": 49}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.68029429972222, 40.4050543]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,AVDA MENENDEZ PELAYO 38,Madrid", "speed": 0.3, "secondsfromstart": 222}}, {"geometry": {"type": "Point", "coordinates": [-3.67842499972222, 40.408247]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE POETA ESTEBAN DE VILLEGAS 20,Madrid", "speed": 10.11, "secondsfromstart": 162}}, {"geometry": {"type": "Point", "coordinates": [-3.67683459972222, 40.4124868]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,AVDA MENENDEZ PELAYO 67,Madrid", "speed": 2.91, "secondsfromstart": 102}}, {"geometry": {"type": "Point", "coordinates": [-3.677505, 40.4146598]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,AVDA MENENDEZ PELAYO 65,Madrid", "speed": 4.77, "secondsfromstart": 42}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.69466259972222, 40.4555472997222]}, "type": "Feature", "properties": {"var": "28020,ES,Madrid,Madrid,CALLE ORENSE 40,Madrid", "speed": 5.19, "secondsfromstart": 251}}, {"geometry": {"type": "Point", "coordinates": [-3.69446049972222, 40.4589502997222]}, "type": "Feature", "properties": {"var": "28020,ES,Madrid,Madrid,CALLE ORENSE 69,Madrid", "speed": 5.72, "secondsfromstart": 191}}, {"geometry": {"type": "Point", "coordinates": [-3.68953499972222, 40.4592347997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PLAZA CUZCO,Madrid", "speed": 0.41, "secondsfromstart": 10}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (353400)<br>3 (40650)<br>0 (14857)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.1715</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (26729)<br>2 (23966)<br>3 (23067)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.6655</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,897 <span class="dim">(2.4%)</span></td>
+      <td class="dim small">8 (2384)<br>9 (2082)<br>7 (1841)</td>
+      <td class="dim small">min 0.0 · max 3195531.0 · media 1153.54</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (6064)<br>135 (5751)<br>163 (5726)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.6715</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (165890)<br>0 (107776)<br>5 (80764)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.9668</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (6232)<br>135 (5980)<br>163 (5796)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.6074</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">719 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2017-09-26T18:00:00.000+0200 (1415)<br>2017-09-13T19:00:00.000+0200 (1401)<br>2017-09-13T18:00:00.000+0200 (1365)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">625 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (143226)<br>28005 (26560)<br>28012 (23902)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-6">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201710.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">409,884 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">409,884 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">59dcc1132f384315bc01f80e (1)<br>59dcc1132f384315bc01f814 (1)<br>59dcc1132f384315bc01f819 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">224,996 <span class="dim">(54.9%)</span></td>
+      <td class="dim small">a16e59ec3d2613bc92c30bcbbce43ec63b1e41a0dd69612f3ee34f190059ea81 (197)<br>5640cd4c572ca459f9de2e28ba04f55e5055c0f3ab51ed4ecb9b100c1163c640 (161)<br>ee8f4506225d7b6b4b2d86fe31e384d727d74e43954799e949dda1b3fc16e12f (153)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (26318)<br>2 (24611)<br>3 (22660)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.7148</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (336779)<br>0 (41260)<br>3 (29271)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.0484</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (26173)<br>2 (24590)<br>3 (22510)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.7143</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">10,035 <span class="dim">(2.4%)</span></td>
+      <td class="dim small">8 (1206)<br>9 (1201)<br>10 (957)</td>
+      <td class="dim small">min -3434.0 · max 1705929.0 · media 1142.9064</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5843)<br>163 (5686)<br>135 (5526)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 89.2756</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (149443)<br>0 (132360)<br>5 (76785)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.7384</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">43 (5935)<br>163 (5736)<br>135 (5683)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 89.2166</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">743 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2017-10-04T19:00:00.000+0200 (1392)<br>2017-10-26T19:00:00.000+0200 (1372)<br>2017-10-05T19:00:00.000+0200 (1353)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">625 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (161121)<br>28005 (24578)<br>28012 (22315)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">60.5% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (161711)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">60.5% nulos</span></td>
+      <td class="">161,711 <span class="dim">(39.5%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.7002915, 40.4123115]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE AVE MARIA 2,Madrid", "speed": 8, "secondsfromstart": 283}}, {"geometry": {"type": "Point", "coordinates": [-3.7047945, 40.4125956]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,PLAZA TIRSO DE MOLINA 15,Madrid", "speed": 5.91, "secondsfromstart": 223}}, {"geometry": {"type": "Point", "coordinates": [-3.70778879972222, 40.4126054997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE TOLEDO 40,Madrid", "speed": 2.94, "secondsfromstart": 162}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6945063, 40.4242166]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE GENERAL CASTAÑOS,Madrid", "speed": 0, "secondsfromstart": 391}}, {"geometry": {"type": "Point", "coordinates": [-3.6907618, 40.4234610997222]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,PASEO RECOLETOS 22,Madrid", "speed": 7.8, "secondsfromstart": 332}}, {"geometry": {"type": "Point", "coordinates": [-3.6879575, 40.4243854997222]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,CALLE SERRANO 28,Madrid", "speed": 4.66, "secondsfromstart": 272}}, {"geometry": {"type": "Point", "coordinates": [-3.68516729972222, 40.4254135997222]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,CALLE LAGASCA 35D,Madrid", "speed": 6.72, "secondsfromstart": 212}}, {"geometry": {"type": "Point", "coordinates": [-3.6800888, 40.4251361]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,CALLE PRINCIPE DE VERGARA 22,Madrid", "speed": 8, "secondsfromstart": 152}}, {"geometry": {"type": "Point", "coordinates": [-3.67501949972222, 40.4252342997222]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,CALLE ALCALA 153,Madrid", "speed": 6.97, "secondsfromstart": 93}}, {"geometry": {"type": "Point", "coordinates": [-3.6741263, 40.4261352997222]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE ALCANTARA 4,Madrid", "speed": 1, "secondsfromstart": 33}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.672823, 40.4032575]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,CALLE DOCTOR ESQUERDO,Madrid", "speed": 0, "secondsfromstart": 334}}, {"geometry": {"type": "Point", "coordinates": [-3.67049629972222, 40.4063974997222]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,PLAZA CONDE DE CASAL,Madrid", "speed": 8.44, "secondsfromstart": 274}}, {"geometry": {"type": "Point", "coordinates": [-3.67014299972222, 40.4070037997222]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,CALLE DOCTOR ESQUERDO 130,Madrid", "speed": 1.63, "secondsfromstart": 215}}, {"geometry": {"type": "Point", "coordinates": [-3.67004699972222, 40.4089296]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,CALLE DOCTOR ESQUERDO 112,Madrid", "speed": 9.16, "secondsfromstart": 155}}, {"geometry": {"type": "Point", "coordinates": [-3.66987709972222, 40.4116208]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,CALLE DOCTOR ESQUERDO,Madrid", "speed": 0, "secondsfromstart": 95}}, {"geometry": {"type": "Point", "coordinates": [-3.66949179972222, 40.4154637997222]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,CALLE DOCTOR ESQUERDO 62,Madrid", "speed": 2, "secondsfromstart": 36}}] (1)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-7">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201711.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">345,333 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">345,333 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">59ff9db02f384333408268fc (1)<br>59ff9db02f384333408268fd (1)<br>59ff9db02f38433340826901 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">189,369 <span class="dim">(54.8%)</span></td>
+      <td class="dim small">de8589ed8435920e9327c8be326d1528727c942038a9023206b48e300b151295 (152)<br>8b5bbd414d4c46eb8e50e243abc20e714cf026b26264317e23d4dc2b84297d99 (150)<br>f7956c36e37d0e00c68442d50c9e10c18e9fb3ad6f22ee59763f254b9d18b126 (143)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (22293)<br>2 (20307)<br>3 (19345)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.8035</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (303417)<br>3 (36514)<br>2 (5104)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.2254</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (22186)<br>2 (20245)<br>3 (19340)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.7975</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,174 <span class="dim">(2.7%)</span></td>
+      <td class="dim small">8 (2448)<br>9 (2193)<br>7 (1987)</td>
+      <td class="dim small">min 0.0 · max 2517843.0 · media 1209.6623</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">174 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (4752)<br>163 (4642)<br>129 (4618)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.0192</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (131405)<br>0 (94637)<br>5 (70560)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.9078</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">174 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (4820)<br>129 (4765)<br>163 (4688)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.0344</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">720 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2017-11-03T15:00:00.000+0100 (1253)<br>2017-11-02T18:00:00.000+0100 (1187)<br>2017-11-07T18:00:00.000+0100 (1170)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">570 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (128614)<br>28005 (21743)<br>28012 (19225)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-8">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201712.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">259,714 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">259,714 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5a300b652f38432284ee6d4b (1)<br>5a300b652f38432284ee6d51 (1)<br>5a300b652f38432284ee6d57 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">141,922 <span class="dim">(54.6%)</span></td>
+      <td class="dim small">ecf04a2ca62c9aa7e104188d5b0c2e14494ad678d545521f984c668c00a2ba50 (261)<br>094f0c1455c6c909742b729060accea056fb4498e41c8554538c2a4ab92a9ca5 (251)<br>877873050eff1db0ed308791439185cca3e258ba67bca96e128c8e87ecbd13de (216)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17267)<br>2 (15190)<br>3 (14781)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.8403</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (224992)<br>3 (30264)<br>2 (3517)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.243</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">27 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17235)<br>2 (15095)<br>3 (14680)</td>
+      <td class="dim small">min 1.0 · max 27.0 · media 11.8349</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,476 <span class="dim">(3.3%)</span></td>
+      <td class="dim small">8 (2418)<br>9 (2181)<br>7 (1990)</td>
+      <td class="dim small">min 0.0 · max 1723096.0 · media 1251.1161</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">171 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">129 (3660)<br>163 (3514)<br>135 (3397)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.655</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (97151)<br>0 (71008)<br>5 (54152)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.9015</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">170 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">129 (3722)<br>163 (3518)<br>135 (3488)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.6801</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">744 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2017-12-19T19:00:00.000+0100 (946)<br>2017-12-21T18:00:00.000+0100 (941)<br>2017-12-01T08:00:00.000+0100 (938)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">526 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (98397)<br>28005 (16573)<br>28007 (15677)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <span>analizar_datos.py · pandas 3.0.2</span>
+  <span>muestra máx: 10,000,000 filas por archivo</span>
+</footer>
+
+</body>
+</html>

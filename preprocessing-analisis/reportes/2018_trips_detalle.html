@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis de Datos · 26/04/2026 17:54</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #141720;
+      --border: #1f2535;
+      --accent: #4fffb0;
+      --accent2: #ff6b6b;
+      --text: #e2e8f0;
+      --dim: #64748b;
+      --header-h: 60px;
+      --sidebar-w: 260px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'IBM Plex Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: var(--header-h);
+      background: rgba(13,15,20,0.95);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; padding: 0 2rem; gap: 1rem;
+    }
+    .header-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.1rem;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+    }
+    .header-logo span { color: var(--dim); font-weight: 400; }
+    .header-stats { margin-left: auto; display: flex; gap: 1.5rem; }
+    .h-stat { font-size: 0.72rem; color: var(--dim); }
+    .h-stat strong { color: var(--text); }
+
+    /* ── LAYOUT ── */
+    .layout {
+      display: flex;
+      margin-top: var(--header-h);
+      min-height: calc(100vh - var(--header-h));
+    }
+
+    /* ── SIDEBAR ── */
+    aside {
+      width: var(--sidebar-w);
+      flex-shrink: 0;
+      position: sticky;
+      top: var(--header-h);
+      height: calc(100vh - var(--header-h));
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      padding: 1.5rem 0;
+    }
+    .sidebar-label {
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--dim); padding: 0 1.25rem 0.75rem;
+    }
+    aside ul { list-style: none; }
+    .sidebar-link {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.55rem 1.25rem;
+      color: var(--dim); text-decoration: none;
+      font-size: 0.78rem;
+      transition: all 0.15s;
+      border-left: 2px solid transparent;
+    }
+    .sidebar-link:hover {
+      color: var(--text);
+      border-left-color: var(--accent);
+      background: rgba(79,255,176,0.04);
+    }
+    .sidebar-count {
+      font-size: 0.65rem;
+      background: var(--border);
+      padding: 1px 6px; border-radius: 99px;
+    }
+
+    /* ── MAIN ── */
+    main {
+      flex: 1; padding: 2rem 2.5rem; overflow: hidden;
+    }
+
+    /* ── ALERT ── */
+    .alert-box {
+      background: rgba(239,68,68,0.08);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .alert-title {
+      font-weight: 600; margin-bottom: 0.5rem;
+      color: #fca5a5; font-size: 0.85rem;
+    }
+    .alert-box ul { list-style: none; }
+    .alert-box li { font-size: 0.78rem; color: var(--dim); padding: 2px 0; }
+    .alert-box code {
+      background: var(--border); padding: 1px 5px;
+      border-radius: 3px; color: var(--text);
+    }
+
+    /* ── FILE SECTION ── */
+    .file-section {
+      margin-bottom: 3rem;
+      animation: fadeUp 0.4s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .file-header {
+      display: flex; align-items: flex-start; gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .file-icon { font-size: 1.8rem; line-height: 1; margin-top: 3px; }
+    .file-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.2rem; font-weight: 700;
+      color: var(--text);
+      word-break: break-all;
+    }
+    .file-meta { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+    .meta-pill {
+      font-size: 0.7rem;
+      background: var(--border);
+      color: var(--dim);
+      padding: 2px 10px; border-radius: 99px;
+    }
+
+    /* ── TABLE ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+    table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+    thead { background: var(--surface); }
+    th {
+      text-align: left;
+      padding: 0.65rem 1rem;
+      font-size: 0.65rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--dim);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .col-name {
+      font-weight: 600; color: var(--accent);
+      white-space: nowrap; max-width: 200px;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .dim { color: var(--dim); }
+    .small { font-size: 0.72rem; }
+    .high-card { color: #fb923c; }
+    .low-card { color: #a78bfa; }
+
+    /* ── BADGES ── */
+    .badge {
+      display: inline-block;
+      font-size: 0.65rem; font-weight: 600;
+      padding: 2px 8px; border-radius: 4px;
+      color: #fff; white-space: nowrap;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 1.5rem 2.5rem;
+      color: var(--dim); font-size: 0.72rem;
+      display: flex; justify-content: space-between;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-logo">data<span>/</span>inspector</div>
+  <div class="header-stats">
+    <div class="h-stat"><strong>12</strong> archivos</div>
+    <div class="h-stat"><strong>148</strong> columnas</div>
+    <div class="h-stat">muestra <strong>10,000,000</strong> filas</div>
+    <div class="h-stat">generado <strong>26/04/2026 17:54</strong></div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-label">Archivos analizados</div>
+    <ul><li><a href="#file-0" class="sidebar-link">📦 201801.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-1" class="sidebar-link">📦 201802.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-2" class="sidebar-link">📦 201803.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-3" class="sidebar-link">📦 201804.json<span class="sidebar-count">11 cols</span></a></li><li><a href="#file-4" class="sidebar-link">📦 201805.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-5" class="sidebar-link">📦 201806.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-6" class="sidebar-link">📦 201807.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-7" class="sidebar-link">📦 201808.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-8" class="sidebar-link">📦 201809.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-9" class="sidebar-link">📦 201810.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-10" class="sidebar-link">📦 201811.json<span class="sidebar-count">13 cols</span></a></li><li><a href="#file-11" class="sidebar-link">📦 201812.json<span class="sidebar-count">13 cols</span></a></li></ul>
+  </aside>
+
+  <main>
+    
+        <div class="alert-box">
+          <div class="alert-title">⚠️ Columnas con más del 50% de nulos</div>
+          <ul><li><strong>201805.json</strong> › <code>track__type</code>: 58.1% nulos</li><li><strong>201805.json</strong> › <code>track__features</code>: 58.1% nulos</li></ul>
+        </div>
+    
+    <section class="file-section" id="file-0">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201801.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">263,702 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">263,702 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5a505acd2f384319304ed614 (1)<br>5a505acd2f384319304ed615 (1)<br>5a505acd2f384319304ed616 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">144,829 <span class="dim">(54.9%)</span></td>
+      <td class="dim small">c2ffe60f304a285ee6820f3f614a1b898c3cdcdfe3f603c3054d0e8faa332197 (196)<br>4fa75531c7a69299c7453466339ace1a986864696479356053ac8178ddc288f8 (183)<br>6ddc03802fd4c3dbb3c6ce0ca5e9117f3a84613e9bdd02bc08bd6e990ed081e0 (183)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17978)<br>2 (15904)<br>3 (15194)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.8247</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (231999)<br>3 (28824)<br>2 (2879)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.2295</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17863)<br>2 (15838)<br>3 (15041)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.8248</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,568 <span class="dim">(3.2%)</span></td>
+      <td class="dim small">8 (1631)<br>7 (1376)<br>9 (1283)</td>
+      <td class="dim small">min 1.0 · max 1651625.0 · media 1145.8239</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">172 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">129 (3687)<br>43 (3617)<br>57 (3582)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.6069</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (102091)<br>0 (71343)<br>5 (57835)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.9615</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">172 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">129 (3751)<br>43 (3675)<br>57 (3569)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.4357</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">744 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2018-01-19T15:00:00.000+0100 (1039)<br>2018-01-24T19:00:00.000+0100 (962)<br>2018-01-23T18:00:00.000+0100 (959)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">496 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (98427)<br>28005 (17468)<br>28012 (14880)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-1">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201802.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">232,103 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">232,103 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5a78e51c2f38433d0c83e0b9 (1)<br>5a78e51d2f38433d0c83e0c0 (1)<br>5a78e51d2f38433d0c83e0c7 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">132,758 <span class="dim">(57.2%)</span></td>
+      <td class="dim small">0d7a1d3f686946a95b4a3f1f82ea970b84e36058e8b971bad4cfaae8735ded87 (299)<br>be143e7115e237eee51bb9a7a5e010797f2f8bb4b8f1aeb4502267fdd83c0e36 (195)<br>d437893438d2ab0be01d42ee929325e0d211e65357cfbabd0a1ff77b9f6a550f (190)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (16374)<br>2 (14241)<br>3 (13490)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.7775</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (209013)<br>3 (20055)<br>2 (3035)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1859</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (16299)<br>2 (14177)<br>3 (13397)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.7669</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,314 <span class="dim">(3.6%)</span></td>
+      <td class="dim small">8 (375)<br>491 (315)<br>483 (312)</td>
+      <td class="dim small">min 2.0 · max 650828.0 · media 1104.7035</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">172 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (3308)<br>129 (3232)<br>57 (3208)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.8745</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (88970)<br>0 (66920)<br>5 (50610)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.9204</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">172 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (3314)<br>175 (3240)<br>129 (3229)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.7839</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">672 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2018-02-21T08:00:00.000+0100 (947)<br>2018-02-20T08:00:00.000+0100 (940)<br>2018-02-23T15:00:00.000+0100 (916)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">498 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (86027)<br>28005 (16046)<br>28012 (13233)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-2">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201803.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">215,693 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">215,693 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5a9dccff2f384336bc360a44 (1)<br>5a9dccff2f384336bc360a4d (1)<br>5a9dccff2f384336bc360a55 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">123,735 <span class="dim">(57.4%)</span></td>
+      <td class="dim small">5f8f4910dcf0097b214eb9feb25e631b6a96ee533de2827e9ef08d675354e171 (231)<br>384988e4ea5c0d5fea16f80832d484bca9a2d979b39abfaf71d6d1760aa5edec (210)<br>5abe8c0ab799c0ee58af2b7a30e33372d1fe8644f536174d830a5f994ab73478 (187)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (14754)<br>2 (13178)<br>3 (12389)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.7838</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (192189)<br>3 (20201)<br>2 (3303)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.2026</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (14747)<br>2 (13177)<br>3 (12278)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.7751</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">8,697 <span class="dim">(4.0%)</span></td>
+      <td class="dim small">8 (489)<br>7 (466)<br>9 (336)</td>
+      <td class="dim small">min 1.0 · max 1016975.0 · media 1176.1464</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">172 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (3152)<br>175 (3149)<br>129 (2926)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.426</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (81743)<br>0 (65628)<br>5 (45499)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.8552</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">172 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (3216)<br>175 (3144)<br>135 (2945)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 88.2713</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">743 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2018-03-08T18:00:00.000+0100 (985)<br>2018-03-13T19:00:00.000+0100 (959)<br>2018-03-08T19:00:00.000+0100 (935)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">468 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (83974)<br>28005 (14511)<br>28012 (12091)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-3">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201804.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">297,437 filas analizadas</span>
+            <span class="meta-pill">11 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">297,437 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5ac6a0e92f3843236c4732d2 (1)<br>5ac6a0e92f3843236c4732d6 (1)<br>5ac6a0e92f3843236c4732d9 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">166,096 <span class="dim">(55.8%)</span></td>
+      <td class="dim small">e25f4f6490fd029e02ec0397da5976861faaabd6c6f5fd162952da1954d72f36 (298)<br>f584e5d8c95b459bc1dc7a6e62978f74f537c20d8259c56bc49604f9c576bf45 (268)<br>3dfdd2033d3ac435136b90b5961b14699480a39e0bd7654c9c8bdf8a7e748bfd (260)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (20639)<br>2 (18486)<br>3 (17410)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.7757</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (266638)<br>3 (25070)<br>2 (5729)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1878</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (20619)<br>2 (18342)<br>3 (17288)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.7729</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,027 <span class="dim">(3.0%)</span></td>
+      <td class="dim small">8 (1279)<br>7 (1136)<br>9 (1064)</td>
+      <td class="dim small">min 1.0 · max 1071569.0 · media 1125.1978</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (4375)<br>135 (4121)<br>57 (3995)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.3952</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (106739)<br>0 (99035)<br>5 (61984)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.7572</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">173 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">43 (4458)<br>135 (4181)<br>129 (4014)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 89.2706</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">719 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-04-25T19:00:00.000+0200 (1291)<br>2018-04-24T19:00:00.000+0200 (1259)<br>2018-04-25T20:00:00.000+0200 (1256)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">530 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (119627)<br>28005 (18875)<br>28012 (16661)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-4">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201805.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">289,567 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">289,567 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5aee2cc42f384304942f1364 (1)<br>5aee2cc42f384304942f1372 (1)<br>5aee2cc42f384304942f1378 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">163,553 <span class="dim">(56.5%)</span></td>
+      <td class="dim small">0dde3b232f870f8fc8ebfd2927045af0d1b20705a0893af1451abf158a783df3 (270)<br>d5706777c82328a9fa7659a5cce168cbf75f2342c9a2092f8e446a20db2be611 (265)<br>cce5dcc04aaf76eb86826a81ede441fed7ecaeba60f28764eb416c2bde3b4c75 (170)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (20587)<br>2 (17982)<br>3 (16772)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.8099</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (264170)<br>3 (18280)<br>2 (7117)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1508</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (20527)<br>2 (17895)<br>3 (16771)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.7941</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,118 <span class="dim">(3.1%)</span></td>
+      <td class="dim small">610 (359)<br>530 (357)<br>534 (347)</td>
+      <td class="dim small">min 1.0 · max 482225.0 · media 1115.9815</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">170 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">135 (4720)<br>43 (4166)<br>163 (3873)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 90.0915</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">4 (102672)<br>0 (100076)<br>5 (60469)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.7218</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">170 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">135 (4820)<br>43 (4216)<br>163 (3890)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 89.925</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">604 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-05-17T18:00:00.000+0200 (1205)<br>2018-05-10T19:00:00.000+0200 (1191)<br>2018-05-16T19:00:00.000+0200 (1181)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">526 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (118008)<br>28005 (17784)<br>28012 (16006)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">58.1% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (121238)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#7f1d1d">58.1% nulos</span></td>
+      <td class="">121,238 <span class="dim">(41.9%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.683627, 40.4311803]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE VELAZQUEZ 73,Madrid", "speed": 0, "secondsfromstart": 50200}}, {"geometry": {"type": "Point", "coordinates": [-3.6837278, 40.4312978]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE VELAZQUEZ 75,Madrid", "speed": 0.36, "secondsfromstart": 50140}}, {"geometry": {"type": "Point", "coordinates": [-3.68358529972222, 40.4313789997222]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE VELAZQUEZ 86C,Madrid", "speed": 0.3, "secondsfromstart": 49960}}, {"geometry": {"type": "Point", "coordinates": [-3.68366529972222, 40.4312115997222]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE VELAZQUEZ 75,Madrid", "speed": 1.69, "secondsfromstart": 49900}}, {"geometry": {"type": "Point", "coordinates": [-3.6809611, 40.4305236]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE CASTELLO 74,Madrid", "speed": 2.97, "secondsfromstart": 49840}}, {"geometry": {"type": "Point", "coordinates": [-3.6797168, 40.4320829997222]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE PRINCIPE DE VERGARA 53,Madrid", "speed": 9.08, "secondsfromstart": 49780}}, {"geometry": {"type": "Point", "coordinates": [-3.6797928, 40.4352566]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE PRINCIPE DE VERGARA 79,Madrid", "speed": 1.47, "secondsfromstart": 49720}}, {"geometry": {"type": "Point", "coordinates": [-3.679151, 40.4394178]}, "type": "Feature", "properties": {"var": "28002,ES,Madrid,Madrid,CALLE PRINCIPE DE VERGARA 112,Madrid", "speed": 0, "secondsfromstart": 49660}}, {"geometry": {"type": "Point", "coordinates": [-3.67848459972222, 40.4422282997222]}, "type": "Feature", "properties": {"var": "28002,ES,Madrid,Madrid,CALLE PRINCIPE DE VERGARA 126,Madrid", "speed": 5.52, "secondsfromstart": 49540}}, {"geometry": {"type": "Point", "coordinates": [-3.6778596, 40.4497773]}, "type": "Feature", "properties": {"var": "28002,ES,Madrid,Madrid,CALLE PRINCIPE DE VERGARA 207,Madrid", "speed": 15.05, "secondsfromstart": 49480}}, {"geometry": {"type": "Point", "coordinates": [-3.676966, 40.4589683]}, "type": "Feature", "properties": {"var": "28016,ES,Madrid,Madrid,CALLE PRINCIPE DE VERGARA 285,Madrid", "speed": 15.77, "secondsfromstart": 49360}}, {"geometry": {"type": "Point", "coordinates": [-3.67577659972222, 40.464337]}, "type": "Feature", "properties": {"var": "28016,ES,Madrid,Madrid,AVDA PIO XII 39,Madrid", "speed": 0.5, "secondsfromstart": 49300}}, {"geometry": {"type": "Point", "coordinates": [-3.6741613, 40.4677993]}, "type": "Feature", "properties": {"var": "28016,ES,Madrid,Madrid,AVDA PIO XII 75,Madrid", "speed": 2, "secondsfromstart": 49240}}, {"geometry": {"type": "Point", "coordinates": [-3.6742373, 40.4717035997222]}, "type": "Feature", "properties": {"var": "28036,ES,Madrid,Madrid,AVDA PIO XII,Madrid", "speed": 14.86, "secondsfromstart": 49180}}, {"geometry": {"type": "Point", "coordinates": [-3.67899209972222, 40.4724854997222]}, "type": "Feature", "properties": {"var": "28036,ES,Madrid,Madrid,CALLE HIEDRA,Madrid", "speed": 0, "secondsfromstart": 49120}}, {"geometry": {"type": "Point", "coordinates": [-3.68405929972222, 40.4720429997222]}, "type": "Feature", "properties": {"var": "28036,ES,Madrid,Madrid,CALLE PADRE FRANCISCO PALAU Y QUER,Madrid", "speed": 7.94, "secondsfromstart": 49060}}, {"geometry": {"type": "Point", "coordinates": [-3.684492, 40.4758187997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 45D,Madrid", "speed": 10.13, "secondsfromstart": 49000}}, {"geometry": {"type": "Point", "coordinates": [-3.682405, 40.4766492997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.55, "secondsfromstart": 47260}}, {"geometry": {"type": "Point", "coordinates": [-3.6823863, 40.476582]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.69, "secondsfromstart": 47200}}, {"geometry": {"type": "Point", "coordinates": [-3.68205429972222, 40.4767142997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 46421}}, {"geometry": {"type": "Point", "coordinates": [-3.68200849972222, 40.47679]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 42822}}, {"geometry": {"type": "Point", "coordinates": [-3.6819511, 40.4767851]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 42762}}, {"geometry": {"type": "Point", "coordinates": [-3.6824488, 40.4767275997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 33469}}, {"geometry": {"type": "Point", "coordinates": [-3.6825065, 40.4767294997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.77, "secondsfromstart": 33289}}, {"geometry": {"type": "Point", "coordinates": [-3.68244909972222, 40.4768080997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.55, "secondsfromstart": 33109}}, {"geometry": {"type": "Point", "coordinates": [-3.6824856, 40.4767939997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.52, "secondsfromstart": 33049}}, {"geometry": {"type": "Point", "coordinates": [-3.68246099972222, 40.4765980997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 2.05, "secondsfromstart": 32989}}, {"geometry": {"type": "Point", "coordinates": [-3.6820268, 40.4769847997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 31850}}, {"geometry": {"type": "Point", "coordinates": [-3.68209359972222, 40.4770295]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.38, "secondsfromstart": 28255}}, {"geometry": {"type": "Point", "coordinates": [-3.6820438, 40.4770194997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.63, "secondsfromstart": 28195}}, {"geometry": {"type": "Point", "coordinates": [-3.6820865, 40.4770224997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 25500}}, {"geometry": {"type": "Point", "coordinates": [-3.68204609972222, 40.4770382997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 21906}}, {"geometry": {"type": "Point", "coordinates": [-3.68200729972222, 40.4770083]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 18313}}, {"geometry": {"type": "Point", "coordinates": [-3.68194679972222, 40.4770324997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 18253}}, {"geometry": {"type": "Point", "coordinates": [-3.6821533, 40.4771604997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.41, "secondsfromstart": 18073}}, {"geometry": {"type": "Point", "coordinates": [-3.68210779972222, 40.4771045997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 18013}}, {"geometry": {"type": "Point", "coordinates": [-3.6821008, 40.4771525]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 16935}}, {"geometry": {"type": "Point", "coordinates": [-3.6820018, 40.4770295]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 13341}}, {"geometry": {"type": "Point", "coordinates": [-3.6821136, 40.4770161]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 9747}}, {"geometry": {"type": "Point", "coordinates": [-3.6820243, 40.4770700997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 6153}}, {"geometry": {"type": "Point", "coordinates": [-3.682049, 40.4770305997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 2558}}, {"geometry": {"type": "Point", "coordinates": [-3.68202929972222, 40.4770253]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 85363}}, {"geometry": {"type": "Point", "coordinates": [-3.6820271, 40.4770079997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 81767}}, {"geometry": {"type": "Point", "coordinates": [-3.68196179972222, 40.4769647997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.88, "secondsfromstart": 81707}}, {"geometry": {"type": "Point", "coordinates": [-3.6820545, 40.4769830997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 79250}}, {"geometry": {"type": "Point", "coordinates": [-3.6820146, 40.4770334997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 75654}}, {"geometry": {"type": "Point", "coordinates": [-3.6820305, 40.4769764997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.33, "secondsfromstart": 72057}}, {"geometry": {"type": "Point", "coordinates": [-3.682049, 40.4770595997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 68461}}, {"geometry": {"type": "Point", "coordinates": [-3.6819755, 40.4769399997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.5, "secondsfromstart": 64863}}, {"geometry": {"type": "Point", "coordinates": [-3.682148, 40.4769775997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.3, "secondsfromstart": 64804}}, {"geometry": {"type": "Point", "coordinates": [-3.68184699972222, 40.4771734997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 64564}}, {"geometry": {"type": "Point", "coordinates": [-3.6819923, 40.4771955]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 64503}}, {"geometry": {"type": "Point", "coordinates": [-3.68205049972222, 40.4770700997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 62944}}, {"geometry": {"type": "Point", "coordinates": [-3.68216229972222, 40.4769815]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 59345}}, {"geometry": {"type": "Point", "coordinates": [-3.6821893, 40.4770648]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 1.05, "secondsfromstart": 55748}}, {"geometry": {"type": "Point", "coordinates": [-3.6820338, 40.4770916]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 55688}}, {"geometry": {"type": "Point", "coordinates": [-3.6819293, 40.477043]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 55628}}, {"geometry": {"type": "Point", "coordinates": [-3.68198349972222, 40.4770555997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 54728}}, {"geometry": {"type": "Point", "coordinates": [-3.6819373, 40.4770856]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 54669}}, {"geometry": {"type": "Point", "coordinates": [-3.6820533, 40.4769379997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 53889}}, {"geometry": {"type": "Point", "coordinates": [-3.6821231, 40.4770121]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 50290}}, {"geometry": {"type": "Point", "coordinates": [-3.6822108, 40.4770856]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.5, "secondsfromstart": 50231}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6907873, 40.4233885]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,PASEO RECOLETOS 22,Madrid", "speed": 0, "secondsfromstart": 8168}}, {"geometry": {"type": "Point", "coordinates": [-3.69096579972222, 40.4233185]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,PASEO RECOLETOS 22,Madrid", "speed": 2.19, "secondsfromstart": 8108}}, {"geometry": {"type": "Point", "coordinates": [-3.69181349972222, 40.4222321]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,PASEO RECOLETOS,Madrid", "speed": 4.8, "secondsfromstart": 8048}}, {"geometry": {"type": "Point", "coordinates": [-3.69241129972222, 40.4199472997222]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,PASEO RECOLETOS,Madrid", "speed": 9.19, "secondsfromstart": 7988}}, {"geometry": {"type": "Point", "coordinates": [-3.6930923, 40.4191718]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,PLAZA CIBELES,Madrid", "speed": 0, "secondsfromstart": 7928}}, {"geometry": {"type": "Point", "coordinates": [-3.69159399972222, 40.4224902997222]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,PASEO RECOLETOS,Madrid", "speed": 11.36, "secondsfromstart": 7868}}, {"geometry": {"type": "Point", "coordinates": [-3.69157959972222, 40.4232815]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE BARBARA DE BRAGANZA,Madrid", "speed": 0, "secondsfromstart": 7808}}, {"geometry": {"type": "Point", "coordinates": [-3.69125099972222, 40.4242196]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,PASEO RECOLETOS 37,Madrid", "speed": 8.27, "secondsfromstart": 7748}}, {"geometry": {"type": "Point", "coordinates": [-3.69022959972222, 40.4264803]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 9.27, "secondsfromstart": 7688}}, {"geometry": {"type": "Point", "coordinates": [-3.6892963, 40.4298256]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 0, "secondsfromstart": 7628}}, {"geometry": {"type": "Point", "coordinates": [-3.68910129972222, 40.4355547997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 1.41, "secondsfromstart": 7508}}, {"geometry": {"type": "Point", "coordinates": [-3.69098529972222, 40.4385382997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 10.69, "secondsfromstart": 7448}}, {"geometry": {"type": "Point", "coordinates": [-3.69167129972222, 40.444709]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA 63,Madrid", "speed": 11.38, "secondsfromstart": 7388}}, {"geometry": {"type": "Point", "coordinates": [-3.69146479972222, 40.4468176]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 0, "secondsfromstart": 7328}}, {"geometry": {"type": "Point", "coordinates": [-3.6908675, 40.452499]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 13.63, "secondsfromstart": 7268}}, {"geometry": {"type": "Point", "coordinates": [-3.6902783, 40.4567747997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 0.38, "secondsfromstart": 7208}}, {"geometry": {"type": "Point", "coordinates": [-3.68985129972222, 40.4611571]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 9.83, "secondsfromstart": 7148}}, {"geometry": {"type": "Point", "coordinates": [-3.6897673, 40.4621968]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 6.36, "secondsfromstart": 7088}}, {"geometry": {"type": "Point", "coordinates": [-3.6885743, 40.4693949997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA,Madrid", "speed": 13.69, "secondsfromstart": 7028}}, {"geometry": {"type": "Point", "coordinates": [-3.68743649972222, 40.4748154997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA 257,Madrid", "speed": 1.55, "secondsfromstart": 6968}}, {"geometry": {"type": "Point", "coordinates": [-3.6845821, 40.4749355]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 45I,Madrid", "speed": 6.88, "secondsfromstart": 6907}}, {"geometry": {"type": "Point", "coordinates": [-3.683777, 40.4764134997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.8, "secondsfromstart": 6848}}, {"geometry": {"type": "Point", "coordinates": [-3.68184349972222, 40.4768066]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 5167}}, {"geometry": {"type": "Point", "coordinates": [-3.6819098, 40.4767913]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 1565}}, {"geometry": {"type": "Point", "coordinates": [-3.68197229972222, 40.4768347997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 84362}}, {"geometry": {"type": "Point", "coordinates": [-3.6819068, 40.4767646]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 80760}}, {"geometry": {"type": "Point", "coordinates": [-3.68195029972222, 40.4767656]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 77159}}, {"geometry": {"type": "Point", "coordinates": [-3.68186429972222, 40.4767672997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 73557}}, {"geometry": {"type": "Point", "coordinates": [-3.68204559972222, 40.4767045997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 69955}}, {"geometry": {"type": "Point", "coordinates": [-3.6819361, 40.4767725997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 66353}}, {"geometry": {"type": "Point", "coordinates": [-3.68200849972222, 40.4767855997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 62751}}, {"geometry": {"type": "Point", "coordinates": [-3.6819231, 40.4767970997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 59148}}, {"geometry": {"type": "Point", "coordinates": [-3.68197049972222, 40.4768980997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 1.41, "secondsfromstart": 59088}}, {"geometry": {"type": "Point", "coordinates": [-3.68247649972222, 40.4766589997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 58187}}, {"geometry": {"type": "Point", "coordinates": [-3.682445, 40.4766673]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 54584}}, {"geometry": {"type": "Point", "coordinates": [-3.68204859972222, 40.4766981]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 3.05, "secondsfromstart": 54524}}, {"geometry": {"type": "Point", "coordinates": [-3.6824691, 40.4767316]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 54284}}, {"geometry": {"type": "Point", "coordinates": [-3.6824245, 40.4766875997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.33, "secondsfromstart": 54224}}, {"geometry": {"type": "Point", "coordinates": [-3.682474, 40.4767213]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 54104}}, {"geometry": {"type": "Point", "coordinates": [-3.6824113, 40.4767300997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.38, "secondsfromstart": 54044}}, {"geometry": {"type": "Point", "coordinates": [-3.68238559972222, 40.4767213]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 53864}}, {"geometry": {"type": "Point", "coordinates": [-3.6824881, 40.4768011]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.33, "secondsfromstart": 53804}}, {"geometry": {"type": "Point", "coordinates": [-3.68231209972222, 40.4766000997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 52063}}, {"geometry": {"type": "Point", "coordinates": [-3.6818715, 40.4770030997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 48460}}, {"geometry": {"type": "Point", "coordinates": [-3.6820561, 40.4769727997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 44857}}, {"geometry": {"type": "Point", "coordinates": [-3.68207249972222, 40.476989]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 41254}}, {"geometry": {"type": "Point", "coordinates": [-3.6819375, 40.4769553]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 37652}}, {"geometry": {"type": "Point", "coordinates": [-3.68206029972222, 40.4770250997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 34050}}, {"geometry": {"type": "Point", "coordinates": [-3.6820618, 40.4770072997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 30447}}, {"geometry": {"type": "Point", "coordinates": [-3.68207359972222, 40.4770074997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 26843}}, {"geometry": {"type": "Point", "coordinates": [-3.682087, 40.4770200997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 23241}}, {"geometry": {"type": "Point", "coordinates": [-3.6820471, 40.4769676]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 23181}}, {"geometry": {"type": "Point", "coordinates": [-3.68210829972222, 40.4770606]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 20239}}, {"geometry": {"type": "Point", "coordinates": [-3.6820751, 40.4769973]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 16636}}, {"geometry": {"type": "Point", "coordinates": [-3.6821043, 40.4770571]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 13035}}, {"geometry": {"type": "Point", "coordinates": [-3.68208149972222, 40.4769697997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 9433}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.69483149972222, 40.4547475997222]}, "type": "Feature", "properties": {"var": "28020,ES,Madrid,Madrid,CALLE ORENSE 43,Madrid", "speed": 0.97, "secondsfromstart": 6623}}, {"geometry": {"type": "Point", "coordinates": [-3.69490229972222, 40.454701]}, "type": "Feature", "properties": {"var": "28020,ES,Madrid,Madrid,CALLE ORENSE 43,Madrid", "speed": 0, "secondsfromstart": 6023}}, {"geometry": {"type": "Point", "coordinates": [-3.69440809972222, 40.458646]}, "type": "Feature", "properties": {"var": "28020,ES,Madrid,Madrid,CALLE ORENSE 69,Madrid", "speed": 6.13, "secondsfromstart": 5963}}, {"geometry": {"type": "Point", "coordinates": [-3.6938908, 40.4594955]}, "type": "Feature", "properties": {"var": "28020,ES,Madrid,Madrid,CALLE SOR ANGELA DE LA CRUZ 12,Madrid", "speed": 2.27, "secondsfromstart": 5903}}, {"geometry": {"type": "Point", "coordinates": [-3.69094979972222, 40.4597717997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA 141,Madrid", "speed": 8.27, "secondsfromstart": 5843}}, {"geometry": {"type": "Point", "coordinates": [-3.6901386, 40.4627251]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA 177,Madrid", "speed": 6.61, "secondsfromstart": 5783}}, {"geometry": {"type": "Point", "coordinates": [-3.68757359972222, 40.4741034997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,PASEO CASTELLANA 251,Madrid", "speed": 8.19, "secondsfromstart": 5663}}, {"geometry": {"type": "Point", "coordinates": [-3.6857095, 40.4750344997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,AVDA PIO XII 1,Madrid", "speed": 8.44, "secondsfromstart": 5603}}, {"geometry": {"type": "Point", "coordinates": [-3.682074, 40.4767115]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 3444}}, {"geometry": {"type": "Point", "coordinates": [-3.68191779972222, 40.4767676]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 86246}}, {"geometry": {"type": "Point", "coordinates": [-3.68216609972222, 40.4768655997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 82648}}, {"geometry": {"type": "Point", "coordinates": [-3.68206379972222, 40.476674]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0.41, "secondsfromstart": 82588}}, {"geometry": {"type": "Point", "coordinates": [-3.6818645, 40.4766521]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 81868}}, {"geometry": {"type": "Point", "coordinates": [-3.6820845, 40.4766874997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 78269}}, {"geometry": {"type": "Point", "coordinates": [-3.68197149972222, 40.4768118]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 74671}}, {"geometry": {"type": "Point", "coordinates": [-3.6820661, 40.4766552997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE 40A,Madrid", "speed": 0, "secondsfromstart": 71072}}, {"geometry": {"type": "Point", "coordinates": [-3.6819521, 40.4767915997222]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MAURICIO LEGENDRE,Madrid", "speed": 0, "secondsfromstart": 67474}}, {"geometry": {"type": "Point", "coordinates": [-3.681948, 40.476835]}, "type": "Feature", "properties": {"var": "28046,ES,Madrid,Madrid,CALLE MANUEL CALDEIRO 18,Madrid", "speed": 0, "secondsfromstart": 63876}}] (1)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-5">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201806.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">326,999 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">326,999 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5b170ba32f384331b413c69f (1)<br>5b170ba32f384331b413c6af (1)<br>5b170ba32f384331b413c6b7 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">182,989 <span class="dim">(56.0%)</span></td>
+      <td class="dim small">1965303f99852ded16b3008a766ef5997e3699ade8897d9924f102719797430a (151)<br>9520252a3b9e9f1dc6b5bfee20b556134332e47fbc34231f3af5e3b1d24cf220 (137)<br>88f61a3396176a8f01efc36b9a605deb65d9262afa364ff2a80a5ac358572e81 (114)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (22610)<br>2 (20351)<br>3 (18657)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.8293</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (299669)<br>3 (21469)<br>2 (5861)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1492</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (22622)<br>2 (20233)<br>3 (18639)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.8206</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,255 <span class="dim">(2.8%)</span></td>
+      <td class="dim small">473 (414)<br>530 (399)<br>496 (399)</td>
+      <td class="dim small">min 0.0 · max 875809.0 · media 1092.3759</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">171 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">135 (4836)<br>43 (4807)<br>57 (4638)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.2159</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (115685)<br>4 (113827)<br>5 (67452)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.6837</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">171 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">135 (4942)<br>43 (4839)<br>129 (4565)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.2285</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">634 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-06-20T19:00:00.000+0200 (1404)<br>2018-06-25T19:00:00.000+0200 (1320)<br>2018-06-13T19:00:00.000+0200 (1281)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">519 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (135386)<br>28005 (19557)<br>28012 (17528)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">22.2% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (254313)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">22.2% nulos</span></td>
+      <td class="">254,313 <span class="dim">(77.8%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.69591579972222, 40.4158809997222]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE MARQUES DE CUBAS 3,Madrid", "speed": 2.58, "secondsfromstart": 100}}, {"geometry": {"type": "Point", "coordinates": [-3.6914031, 40.4164241]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,CALLE ANTONIO MAURA 6,Madrid", "speed": 10.02, "secondsfromstart": 40}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7005823, 40.4209198]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE HORTALEZA 10,Madrid", "speed": 1.22, "secondsfromstart": 204}}, {"geometry": {"type": "Point", "coordinates": [-3.7007533, 40.4230494997222]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE FUENCARRAL 42,Madrid", "speed": 2.97, "secondsfromstart": 144}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6990725, 40.4027341]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE BERNARDINO OBREGON 26,Madrid", "speed": 8.36, "secondsfromstart": 194}}, {"geometry": {"type": "Point", "coordinates": [-3.70135179972222, 40.4060045]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE MESON DE PAREDES 83,Madrid", "speed": 0.33, "secondsfromstart": 134}}, {"geometry": {"type": "Point", "coordinates": [-3.70094259972222, 40.4083445997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE VALENCIA 2,Madrid", "speed": 4.58, "secondsfromstart": 74}}] (1)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-6">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201807.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">382,929 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">382,929 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5b3e9a872f38432028cd5d1e (1)<br>5b3e9a872f38432028cd5d1f (1)<br>5b3e9a872f38432028cd5d2b (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">206,514 <span class="dim">(53.9%)</span></td>
+      <td class="dim small">167f71f91955550f8b8a789c3c77270d878d5f008d5f995890b40b871fd384a4 (167)<br>fdd81cfa2c255b2d8d9fb48df8a0d67c5164203d4512209e347eaaee5dd3eceb (142)<br>21d4f32abbf5e8372c5af2aab7716fe51a24b0394a5e495a73541f7495500c53 (135)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (25644)<br>2 (23209)<br>3 (21718)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.8622</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">19.9% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (306638)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">19.9% nulos</span></td>
+      <td class="">306,638 <span class="dim">(80.1%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.6959653, 40.4236525]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE SAN LUCAS 13,Madrid", "speed": 1.63, "secondsfromstart": 262}}, {"geometry": {"type": "Point", "coordinates": [-3.69756829972222, 40.4229513]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,PLAZA CHUECA 6,Madrid", "speed": 1.25, "secondsfromstart": 202}}, {"geometry": {"type": "Point", "coordinates": [-3.6989051, 40.4234956]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE HORTALEZA 59,Madrid", "speed": 1.05, "secondsfromstart": 142}}, {"geometry": {"type": "Point", "coordinates": [-3.70085279972222, 40.4237917997222]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE COLON 1,Madrid", "speed": 0.66, "secondsfromstart": 82}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.69724979972222, 40.4031195997222]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,PASEO SANTA MARIA DE LA CABEZA 39,Madrid", "speed": 8.33, "secondsfromstart": 127}}, {"geometry": {"type": "Point", "coordinates": [-3.69392109972222, 40.4068730997222]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,PASEO SANTA MARIA DE LA CABEZA 3,Madrid", "speed": 4.44, "secondsfromstart": 68}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6989708, 40.4114519997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE SANTA ISABEL 16,Madrid", "speed": 5.08, "secondsfromstart": 321}}, {"geometry": {"type": "Point", "coordinates": [-3.70262309972222, 40.4124290997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE MAGDALENA 8,Madrid", "speed": 5.88, "secondsfromstart": 261}}, {"geometry": {"type": "Point", "coordinates": [-3.7065518, 40.4131254997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE COLEGIATA 12,Madrid", "speed": 6.52, "secondsfromstart": 201}}, {"geometry": {"type": "Point", "coordinates": [-3.7099038, 40.4136822997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE SEGOVIA 4,Madrid", "speed": 3.41, "secondsfromstart": 141}}, {"geometry": {"type": "Point", "coordinates": [-3.712301, 40.4138769997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE SEGOVIA 22,Madrid", "speed": 6.13, "secondsfromstart": 81}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (347040)<br>3 (28517)<br>2 (7372)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1682</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (25540)<br>2 (23185)<br>3 (21716)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.8528</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,759 <span class="dim">(2.5%)</span></td>
+      <td class="dim small">8 (482)<br>428 (474)<br>489 (472)</td>
+      <td class="dim small">min 1.0 · max 2755282.0 · media 1129.1863</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">170 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">135 (5602)<br>43 (5554)<br>163 (5356)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 91.0029</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (144143)<br>4 (125223)<br>5 (79162)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.5858</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">170 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">135 (5775)<br>43 (5596)<br>163 (5397)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 90.9477</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">744 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-07-10T19:00:00.000+0200 (1325)<br>2018-07-03T19:00:00.000+0200 (1212)<br>2018-07-11T19:00:00.000+0200 (1169)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">498 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (165558)<br>28005 (21909)<br>28012 (20643)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-7">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201808.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">274,122 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">274,122 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5b6779012f384302541d6813 (1)<br>5b6779012f384302541d6814 (1)<br>5b6779012f384302541d6819 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">144,954 <span class="dim">(52.9%)</span></td>
+      <td class="dim small">1d35c50df35f15c0f11398a3b5ac6166325489e7a9a010db522319b3762feb40 (170)<br>431393d4ed6a0f790c3a8d692a54d1ab3d73d408a4cc6b31bd558f358069ef71 (160)<br>4295d51f64c0eacbb0fc4b8fd58daaba5c152ec7c2568d0e37e0fa32dd0d429b (157)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17652)<br>2 (15901)<br>3 (15356)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.9431</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">18.1% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (224536)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">18.1% nulos</span></td>
+      <td class="">224,536 <span class="dim">(81.9%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.7078158, 40.4127144997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE SAN BRUNO 1,Madrid", "speed": 6.19, "secondsfromstart": 190}}, {"geometry": {"type": "Point", "coordinates": [-3.7071841, 40.4156114997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,PLAZA MAYOR 27,Madrid", "speed": 3.47, "secondsfromstart": 130}}, {"geometry": {"type": "Point", "coordinates": [-3.7048058, 40.4167895]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE ARENAL 1,Madrid", "speed": 3.61, "secondsfromstart": 71}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6935655, 40.4265797997222]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE GENOVA 17,Madrid", "speed": 6.8, "secondsfromstart": 330}}, {"geometry": {"type": "Point", "coordinates": [-3.69603379972222, 40.4286360997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE SANTA ENGRACIA 6,Madrid", "speed": 6.13, "secondsfromstart": 270}}, {"geometry": {"type": "Point", "coordinates": [-3.6971535, 40.4312810997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE SANTA ENGRACIA 29,Madrid", "speed": 7.52, "secondsfromstart": 210}}, {"geometry": {"type": "Point", "coordinates": [-3.6980911, 40.433362]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE SANTA ENGRACIA 51,Madrid", "speed": 4.66, "secondsfromstart": 150}}, {"geometry": {"type": "Point", "coordinates": [-3.7001821, 40.4345968]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE SANTISIMA TRINIDAD 2,Madrid", "speed": 3.33, "secondsfromstart": 90}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6753, 40.407341]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,CALLE JUAN DE URBIETA 43,Madrid", "speed": 0, "secondsfromstart": 373}}, {"geometry": {"type": "Point", "coordinates": [-3.68044649972222, 40.4072719997222]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,PASEO REINA CRISTINA,Madrid", "speed": 6.11, "secondsfromstart": 313}}, {"geometry": {"type": "Point", "coordinates": [-3.68492709972222, 40.4064632997222]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,PASEO REINA CRISTINA 1,Madrid", "speed": 6.94, "secondsfromstart": 252}}, {"geometry": {"type": "Point", "coordinates": [-3.68972509972222, 40.4072760997222]}, "type": "Feature", "properties": {"var": "28007,ES,Madrid,Madrid,AVDA CIUDAD DE BARCELONA,Madrid", "speed": 6.77, "secondsfromstart": 192}}, {"geometry": {"type": "Point", "coordinates": [-3.69236299972222, 40.4091973]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE ATOCHA 122,Madrid", "speed": 0, "secondsfromstart": 132}}, {"geometry": {"type": "Point", "coordinates": [-3.69611759972222, 40.4105247997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE SAN ILDEFONSO 18,Madrid", "speed": 9.75, "secondsfromstart": 71}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (244090)<br>3 (22977)<br>2 (7055)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1934</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17602)<br>2 (15821)<br>3 (15297)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.9345</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,412 <span class="dim">(3.4%)</span></td>
+      <td class="dim small">8 (400)<br>7 (391)<br>455 (353)</td>
+      <td class="dim small">min 0.0 · max 780734.0 · media 1172.1974</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">170 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">135 (4144)<br>175 (4124)<br>149 (3729)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 88.8421</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (117311)<br>4 (85418)<br>5 (49859)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.3755</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">170 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">135 (4252)<br>175 (4134)<br>149 (3733)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 88.7298</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">672 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-08-28T08:00:00.000+0200 (1033)<br>2018-08-28T19:00:00.000+0200 (1011)<br>2018-08-01T19:00:00.000+0200 (1003)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">423 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (133676)<br>28005 (13809)<br>28012 (13679)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-8">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201809.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">436,681 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">436,681 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5b9058462f38434ab0d85cd3 (1)<br>5b9058462f38434ab0d85ce9 (1)<br>5b9058462f38434ab0d85ced (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">241,040 <span class="dim">(55.2%)</span></td>
+      <td class="dim small">382d2afcfe63f230f3bc94ad69975c0ce38c544128b59bfa19858c111155baa5 (136)<br>27f35449dbace6c98c572729b554b5b387dbc7e0f1e83a7001c12facd516f1aa (113)<br>26393715d3f982537345456b0beae6f6be294d8d36169fefad8b0c7654d74c29 (110)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (28854)<br>2 (26311)<br>3 (24418)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0184</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">27.1% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (318131)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#ef4444">27.1% nulos</span></td>
+      <td class="">318,131 <span class="dim">(72.9%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.7073786, 40.4237274997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE SAN BERNARDO 38,Madrid", "speed": 1.75, "secondsfromstart": 205}}, {"geometry": {"type": "Point", "coordinates": [-3.709896, 40.4191897997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CUSTA SANTO DOMINGO 6,Madrid", "speed": 4.63, "secondsfromstart": 85}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7022001, 40.4052982997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,GTA EMBAJADORES,Madrid", "speed": 0.33, "secondsfromstart": 351}}, {"geometry": {"type": "Point", "coordinates": [-3.698618, 40.4061700997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,RONDA ATOCHA 30,Madrid", "speed": 6.36, "secondsfromstart": 291}}, {"geometry": {"type": "Point", "coordinates": [-3.6949231, 40.4072785997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,RONDA ATOCHA,Madrid", "speed": 4.77, "secondsfromstart": 231}}, {"geometry": {"type": "Point", "coordinates": [-3.6920543, 40.4081501]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,PLAZA EMPERADOR CARLOS V 1,Madrid", "speed": 4.38, "secondsfromstart": 170}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.69610249972222, 40.427829]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,PLAZA ALONSO MARTINEZ,Madrid", "speed": 6.22, "secondsfromstart": 200}}, {"geometry": {"type": "Point", "coordinates": [-3.69482799972222, 40.4282634997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE FERNANDO EL SANTO 4,Madrid", "speed": 0, "secondsfromstart": 140}}, {"geometry": {"type": "Point", "coordinates": [-3.69164359972222, 40.4280088]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE FERNANDO EL SANTO 20,Madrid", "speed": 5.05, "secondsfromstart": 80}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (402908)<br>3 (25370)<br>2 (6628)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.1273</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (28857)<br>2 (26212)<br>3 (24364)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0031</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,591 <span class="dim">(2.2%)</span></td>
+      <td class="dim small">511 (522)<br>481 (517)<br>560 (516)</td>
+      <td class="dim small">min 1.0 · max 1346583.0 · media 1074.4029</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">169 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">135 (7038)<br>175 (6420)<br>163 (5883)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 91.06</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (180901)<br>4 (130688)<br>5 (87801)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.4412</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">169 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">135 (7324)<br>175 (6416)<br>163 (5896)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.9577</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">720 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-09-19T19:00:00.000+0200 (1519)<br>2018-09-20T19:00:00.000+0200 (1498)<br>2018-09-20T18:00:00.000+0200 (1470)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">511 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (203543)<br>28005 (23195)<br>28012 (21441)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-9">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201810.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">385,450 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">385,450 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5bb83a812f3843232804c20e (1)<br>5bb83a812f3843232804c20f (1)<br>5bb83a812f3843232804c211 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">215,391 <span class="dim">(55.9%)</span></td>
+      <td class="dim small">66333f42457da28526ade65df26978fded4e2494468498bd8913433a55155f0f (183)<br>8c8081055f1d08cdc5b424026971308d0b2085c69cb68f78baa794c4afd69045 (153)<br>daf576c22a7374935401471d250a97b8c0b75a244bc9837fbfbb3ddaef660a32 (127)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (26173)<br>2 (22889)<br>3 (21190)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0795</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">22.1% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (300121)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">22.1% nulos</span></td>
+      <td class="">300,121 <span class="dim">(77.9%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.7085731, 40.4037263]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE SAN ISIDORO DE SEVILLA,Madrid", "speed": 4.47, "secondsfromstart": 257}}, {"geometry": {"type": "Point", "coordinates": [-3.703695, 40.4047386]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,PASEO ACACIAS 2,Madrid", "speed": 7.47, "secondsfromstart": 197}}, {"geometry": {"type": "Point", "coordinates": [-3.69915029972222, 40.4060072997222]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,RONDA ATOCHA 34,Madrid", "speed": 4.41, "secondsfromstart": 137}}, {"geometry": {"type": "Point", "coordinates": [-3.6970396, 40.4065561]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,RONDA ATOCHA 16,Madrid", "speed": 8.08, "secondsfromstart": 77}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.70208899972222, 40.4241232997222]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,PLAZA SAN ILDEFONSO,Madrid", "speed": 0.33, "secondsfromstart": 279}}, {"geometry": {"type": "Point", "coordinates": [-3.70386699972222, 40.4234896]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,CALLE MOLINO DE VIENTO 1,Madrid", "speed": 4.3, "secondsfromstart": 220}}, {"geometry": {"type": "Point", "coordinates": [-3.70525279972222, 40.4213333]}, "type": "Feature", "properties": {"var": "28004,ES,Madrid,Madrid,PLAZA SANTA MARIA SOLEDAD TORRES ACOSTA 2,Madrid", "speed": 3.5, "secondsfromstart": 160}}, {"geometry": {"type": "Point", "coordinates": [-3.7052146, 40.4199448]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE ABADA 37,Madrid", "speed": 4.72, "secondsfromstart": 100}}, {"geometry": {"type": "Point", "coordinates": [-3.70322409972222, 40.4171547997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,PLAZA PUERTA DEL SOL 12,Madrid", "speed": 4.27, "secondsfromstart": 40}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6861708, 40.3992920997222]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,CALLE RAMIREZ DE PRADO 9,Madrid", "speed": 4.97, "secondsfromstart": 312}}, {"geometry": {"type": "Point", "coordinates": [-3.69100509972222, 40.3997066]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,CALLE RAMIREZ DE PRADO,Madrid", "speed": 8.22, "secondsfromstart": 252}}, {"geometry": {"type": "Point", "coordinates": [-3.69507509972222, 40.4008585997222]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,CALLE FERROCARRIL 10,Madrid", "speed": 6.33, "secondsfromstart": 192}}, {"geometry": {"type": "Point", "coordinates": [-3.6994036, 40.4007416]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,GTA SANTA MARIA DE LA CABEZA,Madrid", "speed": 1.38, "secondsfromstart": 132}}, {"geometry": {"type": "Point", "coordinates": [-3.70260409972222, 40.4011341]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,PLAZA PEÑUELAS,Madrid", "speed": 7.38, "secondsfromstart": 72}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">4 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (348839)<br>3 (31943)<br>2 (4346)</td>
+      <td class="dim small">min 0.0 · max 3.0 · media 1.1762</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (26193)<br>2 (22834)<br>3 (21092)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0652</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,582 <span class="dim">(2.5%)</span></td>
+      <td class="dim small">8 (625)<br>7 (541)<br>9 (515)</td>
+      <td class="dim small">min 1.0 · max 5730890.0 · media 1175.2188</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">169 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">163 (5521)<br>135 (5484)<br>175 (5483)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 91.0436</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (160281)<br>4 (112747)<br>5 (80268)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.4456</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">169 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">135 (5650)<br>163 (5605)<br>175 (5523)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.8823</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">744 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-10-03T18:00:00.000+0200 (1443)<br>2018-10-03T19:00:00.000+0200 (1422)<br>2018-10-02T18:00:00.000+0200 (1421)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">497 <span class="dim">(0.1%)</span></td>
+      <td class="dim small"> (182850)<br>28005 (20288)<br>28012 (18385)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-10">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201811.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">300,131 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">300,131 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5be0cb822f384349d0384d17 (1)<br>5be0cb822f384349d0384d1f (1)<br>5be0cb822f384349d0384d22 (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">171,963 <span class="dim">(57.3%)</span></td>
+      <td class="dim small">fcd068353d8670342b886f38730a8d13339f729bb6581939d9068bce7644103a (235)<br>e6a268e62cb968f662ef595b91edec41c445110460d5ae2ce1a6ec22bcdfff4e (181)<br>0b9ce800e64cb72de03f210542722b0790d16069e932a6ddcaf731c0b8d732f8 (118)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (19946)<br>2 (17614)<br>3 (16526)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0447</td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">23.2% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (230542)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">23.2% nulos</span></td>
+      <td class="">230,542 <span class="dim">(76.8%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.70814609972222, 40.4203480997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE JACOMETREZO 8,Madrid", "speed": 0, "secondsfromstart": 234}}, {"geometry": {"type": "Point", "coordinates": [-3.70814609972222, 40.4203480997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE JACOMETREZO 8,Madrid", "speed": 0, "secondsfromstart": 234}}, {"geometry": {"type": "Point", "coordinates": [-3.7078771, 40.4214725]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE GRAN VIA 51,Madrid", "speed": 3.19, "secondsfromstart": 174}}, {"geometry": {"type": "Point", "coordinates": [-3.7078771, 40.4214725]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE GRAN VIA 51,Madrid", "speed": 3.19, "secondsfromstart": 174}}, {"geometry": {"type": "Point", "coordinates": [-3.7075486, 40.4224815997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE SAN BERNARDO 18,Madrid", "speed": 5.41, "secondsfromstart": 114}}, {"geometry": {"type": "Point", "coordinates": [-3.7075486, 40.4224815997222]}, "type": "Feature", "properties": {"var": "28015,ES,Madrid,Madrid,CALLE SAN BERNARDO 18,Madrid", "speed": 5.41, "secondsfromstart": 114}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6868725, 40.4313424997222]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE SERRANO 55,Madrid", "speed": 8.3, "secondsfromstart": 254}}, {"geometry": {"type": "Point", "coordinates": [-3.6868725, 40.4313424997222]}, "type": "Feature", "properties": {"var": "28006,ES,Madrid,Madrid,CALLE SERRANO 55,Madrid", "speed": 8.3, "secondsfromstart": 254}}, {"geometry": {"type": "Point", "coordinates": [-3.69180349972222, 40.4351000997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,PASEO GENERAL MARTINEZ CAMPOS 44,Madrid", "speed": 7.13, "secondsfromstart": 134}}, {"geometry": {"type": "Point", "coordinates": [-3.69180349972222, 40.4351000997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,PASEO GENERAL MARTINEZ CAMPOS 44,Madrid", "speed": 7.13, "secondsfromstart": 134}}, {"geometry": {"type": "Point", "coordinates": [-3.6964996, 40.4355542997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE MODESTO LAFUENTE,Madrid", "speed": 8.11, "secondsfromstart": 74}}, {"geometry": {"type": "Point", "coordinates": [-3.6964996, 40.4355542997222]}, "type": "Feature", "properties": {"var": "28010,ES,Madrid,Madrid,CALLE MODESTO LAFUENTE,Madrid", "speed": 8.11, "secondsfromstart": 74}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.69184979972222, 40.4092125]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,PASEO INFANTA ISABEL,Madrid", "speed": 7.91, "secondsfromstart": 215}}, {"geometry": {"type": "Point", "coordinates": [-3.69184979972222, 40.4092125]}, "type": "Feature", "properties": {"var": "28014,ES,Madrid,Madrid,PASEO INFANTA ISABEL,Madrid", "speed": 7.91, "secondsfromstart": 215}}] (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (273298)<br>3 (23918)<br>2 (2915)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.1691</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (19924)<br>2 (17496)<br>3 (16575)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0308</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,132 <span class="dim">(3.0%)</span></td>
+      <td class="dim small">8 (662)<br>7 (570)<br>9 (518)</td>
+      <td class="dim small">min 1.0 · max 767146.0 · media 1096.1534</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">168 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (4437)<br>163 (4307)<br>129 (4189)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 90.7708</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (122205)<br>4 (87805)<br>5 (63913)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.4735</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">168 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">175 (4472)<br>163 (4293)<br>129 (4221)</td>
+      <td class="dim small">min 1.0 · max 175.0 · media 90.5927</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">720 <span class="dim">(0.2%)</span></td>
+      <td class="dim small">2018-11-13T08:00:00.000+0100 (1132)<br>2018-11-13T18:00:00.000+0100 (1125)<br>2018-11-14T08:00:00.000+0100 (1107)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">477 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (140918)<br>28005 (16610)<br>28012 (14207)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+    <section class="file-section" id="file-11">
+      <div class="file-header">
+        <span class="file-icon">📦</span>
+        <div>
+          <h2 class="file-title">201812.json</h2>
+          <div class="file-meta">
+            <span class="meta-pill">273,272 filas analizadas</span>
+            <span class="meta-pill">13 columnas</span>
+            <span class="meta-pill">.json</span>
+            
+          </div>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Campo</th><th>Tipo</th><th>Nulos</th>
+              <th>Cardinalidad</th><th>Top valores</th><th>Stats</th>
+            </tr>
+          </thead>
+          <tbody>
+    <tr>
+      <td class="col-name">_id__$oid</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="high-card">273,272 <span class="dim">(100.0%)</span></td>
+      <td class="dim small">5c085aae2f384324b8a10925 (1)<br>5c085aae2f384324b8a10928 (1)<br>5c085aae2f384324b8a1092c (1)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">user_day_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="">156,724 <span class="dim">(57.4%)</span></td>
+      <td class="dim small">5282b32853090701901334120172c07907c2959eae9205b4df4a975969a50d93 (119)<br>0166623464982c34fb17929201e6070a0e6edbe62987c9821bbbaa1133a6de74 (118)<br>d25d6f5d7692ea9f055d9e25fde7572acc5013323215213ad71c205539d43227 (117)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17247)<br>2 (16452)<br>3 (15393)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 12.0036</td>
+    </tr>
+    <tr>
+      <td class="col-name">user_type</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">3 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (248035)<br>3 (21487)<br>2 (3750)</td>
+      <td class="dim small">min 1.0 · max 3.0 · media 1.171</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_base</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">30 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">1 (17173)<br>2 (16335)<br>3 (15313)</td>
+      <td class="dim small">min 1.0 · max 30.0 · media 11.9833</td>
+    </tr>
+    <tr>
+      <td class="col-name">travel_time</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">9,121 <span class="dim">(3.3%)</span></td>
+      <td class="dim small">8 (702)<br>7 (562)<br>9 (556)</td>
+      <td class="dim small">min 1.0 · max 1603461.0 · media 1203.2033</td>
+    </tr>
+    <tr>
+      <td class="col-name">idunplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">169 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">129 (3914)<br>43 (3799)<br>57 (3747)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.397</td>
+    </tr>
+    <tr>
+      <td class="col-name">ageRange</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">7 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">0 (112221)<br>4 (79652)<br>5 (58468)</td>
+      <td class="dim small">min 0.0 · max 6.0 · media 2.4687</td>
+    </tr>
+    <tr>
+      <td class="col-name">idplug_station</td>
+      <td><span class="badge" style="background:#3b82f6">entero</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">169 <span class="dim">(0.1%)</span></td>
+      <td class="dim small">129 (3960)<br>43 (3829)<br>57 (3732)</td>
+      <td class="dim small">min 1.0 · max 2008.0 · media 90.3471</td>
+    </tr>
+    <tr>
+      <td class="col-name">unplug_hourTime__$date</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">745 <span class="dim">(0.3%)</span></td>
+      <td class="dim small">2018-12-04T18:00:00.000+0100 (1048)<br>2018-12-11T18:00:00.000+0100 (1042)<br>2018-12-17T18:00:00.000+0100 (1026)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">zip_code</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#22c55e">0.0% nulos</span></td>
+      <td class="low-card">455 <span class="dim">(0.2%)</span></td>
+      <td class="dim small"> (128512)<br>28005 (15091)<br>28007 (12732)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__type</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">23.0% nulos</span></td>
+      <td class="low-card">1 <span class="dim">(0.0%)</span></td>
+      <td class="dim small">FeatureCollection (210375)</td>
+      <td class="dim small"></td>
+    </tr>
+    <tr>
+      <td class="col-name">track__features</td>
+      <td><span class="badge" style="background:#64748b">str</span></td>
+      <td><span class="badge" style="background:#f59e0b">23.0% nulos</span></td>
+      <td class="">210,375 <span class="dim">(77.0%)</span></td>
+      <td class="dim small">[{"geometry": {"type": "Point", "coordinates": [-3.6949683, 40.4031057997222]}, "type": "Feature", "properties": {"var": "28045,ES,Madrid,Madrid,CALLE PALOS DE LA FRONTERA 25,Madrid", "speed": 1.94, "secondsfromstart": 246}}, {"geometry": {"type": "Point", "coordinates": [-3.6972233, 40.4053758]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE JOSE ANTONIO DE ARMONA 12,Madrid", "speed": 8, "secondsfromstart": 186}}, {"geometry": {"type": "Point", "coordinates": [-3.69792949972222, 40.406854]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE MALLORCA 7,Madrid", "speed": 0.66, "secondsfromstart": 126}}, {"geometry": {"type": "Point", "coordinates": [-3.69815579972222, 40.4078321]}, "type": "Feature", "properties": {"var": "28012,ES,Madrid,Madrid,CALLE SOMBRERERIA 24,Madrid", "speed": 6.36, "secondsfromstart": 66}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.7176263, 40.4137704997222]}, "type": "Feature", "properties": {"var": "28005,ES,Madrid,Madrid,CALLE SEGOVIA 45,Madrid", "speed": 0, "secondsfromstart": 386}}, {"geometry": {"type": "Point", "coordinates": [-3.7159688, 40.4150107997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CUSTA VEGA,Madrid", "speed": 4.38, "secondsfromstart": 326}}, {"geometry": {"type": "Point", "coordinates": [-3.71325899972222, 40.4149572997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE MAYOR 88,Madrid", "speed": 0, "secondsfromstart": 266}}, {"geometry": {"type": "Point", "coordinates": [-3.7115135, 40.4152680997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE MAYOR 71,Madrid", "speed": 7.77, "secondsfromstart": 206}}, {"geometry": {"type": "Point", "coordinates": [-3.70714349972222, 40.4163578]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE COLOREROS 1,Madrid", "speed": 2.91, "secondsfromstart": 146}}, {"geometry": {"type": "Point", "coordinates": [-3.70405499972222, 40.4173084997222]}, "type": "Feature", "properties": {"var": "28013,ES,Madrid,Madrid,CALLE PRECIADOS,Madrid", "speed": 0.86, "secondsfromstart": 86}}] (1)<br>[{"geometry": {"type": "Point", "coordinates": [-3.6710348, 40.42327]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,CALLE FUENTE DEL BERRO 41,Madrid", "speed": 1.94, "secondsfromstart": 366}}, {"geometry": {"type": "Point", "coordinates": [-3.6729828, 40.4246028]}, "type": "Feature", "properties": {"var": "28009,ES,Madrid,Madrid,CALLE GOYA 107,Madrid", "speed": 4.75, "secondsfromstart": 306}}, {"geometry": {"type": "Point", "coordinates": [-3.67736859972222, 40.4247895997222]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,CALLE GOYA 62,Madrid", "speed": 5.72, "secondsfromstart": 246}}, {"geometry": {"type": "Point", "coordinates": [-3.68146659972222, 40.424906]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,CALLE CASTELLO 25,Madrid", "speed": 6.27, "secondsfromstart": 187}}, {"geometry": {"type": "Point", "coordinates": [-3.6854053, 40.4253005997222]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,CALLE LAGASCA 35D,Madrid", "speed": 1.41, "secondsfromstart": 127}}, {"geometry": {"type": "Point", "coordinates": [-3.68543859972222, 40.4262656]}, "type": "Feature", "properties": {"var": "28001,ES,Madrid,Madrid,CALLE HERMOSILLA 22,Madrid", "speed": 3.27, "secondsfromstart": 67}}] (1)</td>
+      <td class="dim small"></td>
+    </tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <span>analizar_datos.py · pandas 3.0.2</span>
+  <span>muestra máx: 10,000,000 filas por archivo</span>
+</footer>
+
+</body>
+</html>

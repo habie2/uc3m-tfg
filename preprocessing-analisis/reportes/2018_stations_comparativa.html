@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Comparativa mensual</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:#f8fafc;color:#1e293b}
+    header{background:#fff;border-bottom:1px solid #e2e8f0;padding:0 2rem;height:56px;display:flex;align-items:center;gap:1rem;position:sticky;top:0;z-index:10}
+    .logo{font-weight:600;font-size:15px}.logo span{color:#3b82f6}
+    .chip{font-size:11px;background:#f1f5f9;color:#475569;padding:3px 10px;border-radius:99px;font-weight:500}
+    .container{max-width:1200px;margin:0 auto;padding:2rem}
+    .grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:2rem}
+    .stat-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:1rem 1.25rem}
+    .stat-label{font-size:11px;color:#94a3b8;font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .stat-value{font-size:26px;font-weight:600;color:#0f172a;line-height:1}
+    .stat-sub{font-size:12px;color:#64748b;margin-top:4px}
+    .section{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:1.5rem;margin-bottom:1.5rem}
+    .section-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:4px}
+    .section-sub{font-size:12px;color:#94a3b8;margin-bottom:1.25rem}
+    .table-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px}
+    table{width:100%;border-collapse:collapse}
+    th{font-size:11px;font-weight:600;color:#475569;padding:8px 10px;background:#f8fafc;text-align:left;border-bottom:1px solid #e2e8f0}
+    td{border-bottom:1px solid #f1f5f9;vertical-align:middle}
+    tr:last-child td{border-bottom:none}
+    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+    .legend{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+    .leg-item{display:flex;align-items:center;gap:5px;font-size:11px;color:#64748b}
+    .leg-dot{width:10px;height:10px;border-radius:2px}
+    .tabs{display:flex;gap:2px;margin-bottom:1rem;background:#f1f5f9;border-radius:8px;padding:3px;width:fit-content}
+    .tab{padding:5px 14px;font-size:12px;font-weight:500;border-radius:6px;cursor:pointer;color:#64748b;border:none;background:none}
+    .tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+    .tab-content{display:none}.tab-content.active{display:block}
+    footer{text-align:center;color:#94a3b8;font-size:11px;padding:2rem}
+    @media(max-width:700px){.two-col{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="logo">data<span>/</span>comparativa</div>
+  <div style="margin-left:auto;display:flex;gap:8px">
+    <span class="chip">5 archivos</span>
+    <span class="chip">2 cols comunes</span>
+    <span class="chip">26/04/2026 17:48</span>
+  </div>
+</header>
+<div class="container">
+  <div class="grid-4">
+    <div class="stat-card"><div class="stat-label">Archivos</div><div class="stat-value">5</div><div class="stat-sub">analizados</div></div>
+    <div class="stat-card"><div class="stat-label">Total filas</div><div class="stat-value">3,681</div><div class="stat-sub">suma de todos los meses</div></div>
+    <div class="stat-card"><div class="stat-label">Cols comunes</div><div class="stat-value">2</div><div class="stat-sub">de 2 columnas</div></div>
+    <div class="stat-card"><div class="stat-label">Cols irregulares</div><div class="stat-value" style="color:#16a34a">0</div><div class="stat-sub">no en todos los meses</div></div>
+  </div>
+  <div class="two-col">
+    <div class="section"><div class="section-title">Filas por archivo</div><div class="section-sub">Volumen mensual</div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;color:#475569;width:80px;text-align:right;flex-shrink:0">201808</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden">
+            <div style="width:100%;background:#3b82f6;height:100%;border-radius:4px"></div></div>
+          <span style="font-size:12px;color:#64748b;width:70px">755 filas</span></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;color:#475569;width:80px;text-align:right;flex-shrink:0">201809</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden">
+            <div style="width:95%;background:#3b82f6;height:100%;border-radius:4px"></div></div>
+          <span style="font-size:12px;color:#64748b;width:70px">719 filas</span></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;color:#475569;width:80px;text-align:right;flex-shrink:0">201810</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden">
+            <div style="width:99%;background:#3b82f6;height:100%;border-radius:4px"></div></div>
+          <span style="font-size:12px;color:#64748b;width:70px">745 filas</span></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;color:#475569;width:80px;text-align:right;flex-shrink:0">201811</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden">
+            <div style="width:96%;background:#3b82f6;height:100%;border-radius:4px"></div></div>
+          <span style="font-size:12px;color:#64748b;width:70px">726 filas</span></div><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;color:#475569;width:80px;text-align:right;flex-shrink:0">201812</span>
+          <div style="flex:1;background:#f1f5f9;border-radius:4px;height:18px;overflow:hidden">
+            <div style="width:97%;background:#3b82f6;height:100%;border-radius:4px"></div></div>
+          <span style="font-size:12px;color:#64748b;width:70px">736 filas</span></div></div>
+    <div class="section"><div class="section-title">Filas duplicadas</div><div class="section-sub">Registros idénticos</div><div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9"><span style="font-size:12px;color:#475569">201808</span><span style="font-size:12px;font-weight:600;color:#16a34a">0</span></div><div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9"><span style="font-size:12px;color:#475569">201809</span><span style="font-size:12px;font-weight:600;color:#16a34a">0</span></div><div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9"><span style="font-size:12px;color:#475569">201810</span><span style="font-size:12px;font-weight:600;color:#16a34a">0</span></div><div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9"><span style="font-size:12px;color:#475569">201811</span><span style="font-size:12px;font-weight:600;color:#16a34a">0</span></div><div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9"><span style="font-size:12px;color:#475569">201812</span><span style="font-size:12px;font-weight:600;color:#16a34a">0</span></div></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Comparativa por columna</div>
+    <div class="section-sub">Todos los campos (2 columnas · 2 comunes · 0 parciales) — <span style="color:#94a3b8">— = campo ausente en ese mes</span></div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('nulos',this)">% Nulos</button>
+      <button class="tab" onclick="switchTab('cardinalidad',this)">Cardinalidad</button>
+    </div>
+    <div id="tab-nulos" class="tab-content active">
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#dcfce7"></div>0%</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#fef9c3"></div>&lt;10%</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#fee2e2"></div>&lt;50%</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#7f1d1d"></div>≥50%</div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th style="width:180px">Campo</th><th style="width:90px;color:#94a3b8">Tipo</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201808</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201809</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201810</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201811</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201812</th></tr></thead>
+        <tbody><tr style="">
+          <td style="font-size:12px;padding:6px 10px;white-space:nowrap;font-weight:500;color:#1e293b;border-right:1px solid #e2e8f0">_id</td>
+          <td style="font-size:11px;padding:6px 8px;color:#94a3b8;border-right:1px solid #e2e8f0">str</td>
+          <td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td></tr><tr style="">
+          <td style="font-size:12px;padding:6px 10px;white-space:nowrap;font-weight:500;color:#1e293b;border-right:1px solid #e2e8f0">stations</td>
+          <td style="font-size:11px;padding:6px 8px;color:#94a3b8;border-right:1px solid #e2e8f0">str</td>
+          <td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td><td style="background:#dcfce7;color:#166534;text-align:center;font-size:12px;padding:6px 4px">0.0%</td></tr></tbody></table></div></div>
+    <div id="tab-cardinalidad" class="tab-content">
+      <div class="legend">
+        <div class="leg-item"><div class="leg-dot" style="background:#f5f3ff"></div>&lt;5% enum/FK</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#f8fafc"></div>normal</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#fff7ed"></div>&gt;90% ID/hash</div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th style="width:180px">Campo</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201808</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201809</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201810</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201811</th><th style="font-size:11px;font-weight:600;padding:6px 8px;text-align:center;white-space:nowrap;color:#475569;border-bottom:1px solid #e2e8f0">201812</th></tr></thead>
+        <tbody><tr style="">
+          <td style="font-size:12px;padding:6px 10px;white-space:nowrap;font-weight:500;color:#1e293b;border-right:1px solid #e2e8f0">_id</td>
+          <td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">100.0%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">100.0%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">100.0%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">100.0%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">100.0%</td></tr><tr style="">
+          <td style="font-size:12px;padding:6px 10px;white-space:nowrap;font-weight:500;color:#1e293b;border-right:1px solid #e2e8f0">stations</td>
+          <td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">99.3%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">99.7%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">99.9%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">99.4%</td><td style="background:#fff7ed;color:#9a3412;text-align:center;font-size:12px;padding:6px 4px">100.0%</td></tr></tbody></table></div></div>
+  </div>
+  
+</div>
+<footer>Generado el 26/04/2026 17:48 · analizar_datos.py</footer>
+<script>
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body></html>
