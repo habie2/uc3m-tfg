@@ -1,108 +1,65 @@
 #!/usr/bin/env python3
 """
 BiciMAD - Script de importación
-Convierte el JSONL de mayo 2019 a una base de datos PostgreSQL (o SQLite).
+Convierte el JSONL de mayo 2019 a una base de datos PostgreSQL.
 
 Uso:
-    # PostgreSQL (por defecto)
-    python 02_import.py --input 201905.json --db-url postgresql://user:pass@localhost/bicimad
-
-    # SQLite (para pruebas rápidas sin servidor)
-    python 02_import.py --input 201905.json --sqlite bicimad.db
+    python 02_import.py --input 201905.json --db-url "postgresql://user:pass@host/bicimad"
 """
 import json
 import argparse
 import sys
+import warnings
 from datetime import datetime
 
-ENCODING = 'latin-1'
-BATCH_SIZE = 500  # Inserciones por lote
+import psycopg2
+import psycopg2.extras
+
+ENCODING   = 'latin-1'
+BATCH_SIZE = 500
 
 
-def parse_args():
-    p = argparse.ArgumentParser(description='Importar BiciMAD JSON a BD relacional')
-    p.add_argument('--input', required=True, help='Ruta al fichero 201905.json')
-    p.add_argument('--db-url', default=None, help='PostgreSQL DSN (postgresql://...)')
-    p.add_argument('--sqlite', default=None, help='Ruta fichero SQLite (alternativa a Postgres)')
-    return p.parse_args()
+# ── Warnings personalizados ────────────────────────────────────────────────────
+
+class MissingFieldWarning(UserWarning):
+    """Se lanza cuando un campo esperado no existe en el JSON y se usa un valor por defecto."""
+    pass
 
 
-# ── Adaptadores de BD ──────────────────────────────────────────────────────────
+def warn_default(field, default, context):
+    warnings.warn(
+        f"Campo '{field}' ausente en {context} → se usa valor por defecto: {repr(default)}",
+        MissingFieldWarning,
+        stacklevel=2
+    )
+
+
+def get_with_warning(obj, field, default, context):
+    """Como dict.get() pero levanta un warning si el campo no está presente."""
+    if field not in obj:
+        warn_default(field, default, context)
+        return default
+    return obj[field]
+
+
+# ── Conexión PostgreSQL ────────────────────────────────────────────────────────
 
 class PostgresConn:
     def __init__(self, url):
-        import psycopg2
         self.conn = psycopg2.connect(url)
         self.cur  = self.conn.cursor()
-        self.placeholder = '%s'
 
     def execute(self, sql, params=None):
         self.cur.execute(sql, params)
 
     def executemany(self, sql, rows):
-        import psycopg2.extras
         psycopg2.extras.execute_values(self.cur, sql, rows)
 
-    def commit(self):
-        self.conn.commit()
-
     def fetchone(self):
         return self.cur.fetchone()
 
-    def close(self):
-        self.cur.close()
-        self.conn.close()
-
-
-class SQLiteConn:
-    def __init__(self, path):
-        import sqlite3
-        self.conn = sqlite3.connect(path)
-        self.cur  = self.conn.cursor()
-        self.placeholder = '?'
-        # Crear tablas SQLite (sin SERIAL ni DECIMAL avanzado)
-        self.cur.executescript("""
-        CREATE TABLE IF NOT EXISTS station (
-            id          INTEGER PRIMARY KEY,
-            number      TEXT NOT NULL,
-            name        TEXT NOT NULL,
-            address     TEXT,
-            latitude    REAL,
-            longitude   REAL,
-            total_bases INTEGER NOT NULL
-        );
-        CREATE TABLE IF NOT EXISTS snapshot (
-            id          INTEGER PRIMARY KEY AUTOINCREMENT,
-            captured_at TEXT NOT NULL UNIQUE
-        );
-        CREATE INDEX IF NOT EXISTS idx_snap_ts ON snapshot(captured_at);
-        CREATE TABLE IF NOT EXISTS station_status (
-            id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-            snapshot_id        INTEGER NOT NULL REFERENCES snapshot(id),
-            station_id         INTEGER NOT NULL REFERENCES station(id),
-            activate           INTEGER NOT NULL DEFAULT 1,
-            light              INTEGER NOT NULL DEFAULT 0,
-            dock_bikes         INTEGER NOT NULL DEFAULT 0,
-            free_bases         INTEGER NOT NULL DEFAULT 0,
-            reservations_count INTEGER NOT NULL DEFAULT 0,
-            no_available       INTEGER NOT NULL DEFAULT 0,
-            UNIQUE (snapshot_id, station_id)
-        );
-        CREATE INDEX IF NOT EXISTS idx_ss_snap    ON station_status(snapshot_id);
-        CREATE INDEX IF NOT EXISTS idx_ss_station ON station_status(station_id);
-        """)
-
-    def execute(self, sql, params=None):
-        self.cur.execute(sql, params or ())
-
-    def executemany(self, sql, rows):
-        self.cur.executemany(sql, rows)
-
     def commit(self):
         self.conn.commit()
-
-    def fetchone(self):
-        return self.cur.fetchone()
 
     def close(self):
         self.cur.close()
@@ -111,142 +68,154 @@ class SQLiteConn:
 
 # ── Lógica de importación ──────────────────────────────────────────────────────
 
-def upsert_station(db, s):
+def upsert_station(db, s, context):
     """Inserta o actualiza la estación maestra."""
-    sql = """
-    INSERT INTO station (id, number, name, address, latitude, longitude, total_bases)
-    VALUES ({p},{p},{p},{p},{p},{p},{p})
-    ON CONFLICT (id) DO UPDATE SET
-        name        = EXCLUDED.name,
-        address     = EXCLUDED.address,
-        latitude    = EXCLUDED.latitude,
-        longitude   = EXCLUDED.longitude,
-        total_bases = EXCLUDED.total_bases
-    """.replace('{p}', db.placeholder)
 
-    db.execute(sql, (
-        s['id'],
-        str(s.get('number', '')),
-        s.get('name', ''),
-        s.get('address', ''),
-        float(s['latitude'])  if s.get('latitude')  else None,
-        float(s['longitude']) if s.get('longitude') else None,
-        int(s.get('total_bases', 0)),
+    number      = get_with_warning(s, 'number',      '',   context)
+    name        = get_with_warning(s, 'name',        '',   context)
+    address     = get_with_warning(s, 'address',     None, context)
+    total_bases = get_with_warning(s, 'total_bases', 0,    context)
+
+    lat = s.get('latitude')
+    lon = s.get('longitude')
+    if lat is None:
+        warn_default('latitude', None, context)
+    if lon is None:
+        warn_default('longitude', None, context)
+
+    db.execute("""
+        INSERT INTO station (id, number, name, address, latitude, longitude, total_bases)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT (id) DO UPDATE SET
+            name        = EXCLUDED.name,
+            address     = EXCLUDED.address,
+            latitude    = EXCLUDED.latitude,
+            longitude   = EXCLUDED.longitude,
+            total_bases = EXCLUDED.total_bases
+    """, (
+        int(s['id']),
+        str(number),
+        str(name),
+        address,
+        float(lat) if lat is not None else None,
+        float(lon) if lon is not None else None,
+        int(total_bases),
     ))
 
 
-def insert_snapshot(db, ts_str):
-    """Inserta el snapshot y devuelve su id."""
-    try:
-        dt = datetime.fromisoformat(ts_str)
-    except ValueError:
-        dt = ts_str  # lo pasamos tal cual si ya es cadena ISO
+def build_status_row(captured_at, s, context):
+    """Construye la tupla de station_status para una estación, con warnings si faltan campos."""
 
-    if isinstance(db, SQLiteConn):
-        sql = "INSERT OR IGNORE INTO snapshot (captured_at) VALUES (?)"
-        db.execute(sql, (str(dt),))
-        db.execute("SELECT id FROM snapshot WHERE captured_at = ?", (str(dt),))
-    else:
-        sql = ("INSERT INTO snapshot (captured_at) VALUES (%s) "
-               "ON CONFLICT (captured_at) DO UPDATE SET captured_at=EXCLUDED.captured_at "
-               "RETURNING id")
-        db.execute(sql, (dt,))
-    row = db.fetchone()
-    return row[0]
+    activate           = get_with_warning(s, 'activate',           1, context)
+    light              = get_with_warning(s, 'light',              0, context)
+    dock_bikes         = get_with_warning(s, 'dock_bikes',         0, context)
+    free_bases         = get_with_warning(s, 'free_bases',         0, context)
+    reservations_count = get_with_warning(s, 'reservations_count', 0, context)
+    no_available       = get_with_warning(s, 'no_available',       0, context)
+
+    return (
+        captured_at,
+        int(s['id']),
+        int(activate),
+        int(light),
+        int(dock_bikes),
+        int(free_bases),
+        int(reservations_count),
+        int(no_available),
+    )
 
 
-def build_status_rows(snapshot_id, stations):
-    rows = []
-    for s in stations:
-        rows.append((
-            snapshot_id,
-            int(s['id']),
-            int(s.get('activate', 1)),
-            int(s.get('light', 0)),
-            int(s.get('dock_bikes', 0)),
-            int(s.get('free_bases', 0)),
-            int(s.get('reservations_count', 0)),
-            int(s.get('no_available', 0)),
-        ))
-    return rows
+def flush(db, buf):
+    if not buf:
+        return
+    db.executemany("""
+        INSERT INTO station_status
+            (captured_at, station_id, activate, light,
+             dock_bikes, free_bases, reservations_count, no_available)
+        VALUES %s
+        ON CONFLICT (captured_at, station_id) DO NOTHING
+    """, buf)
+    db.commit()
 
 
 def import_file(db, path):
-    known_stations = set()
-    status_buffer = []
-    total_snaps = 0
-    total_rows  = 0
+    # Activar warnings para que salgan por consola
+    warnings.simplefilter('always', MissingFieldWarning)
 
-    def flush(buf):
-        if not buf:
-            return
-        if isinstance(db, SQLiteConn):
-            sql = """INSERT OR IGNORE INTO station_status
-                     (snapshot_id, station_id, activate, light, dock_bikes,
-                      free_bases, reservations_count, no_available)
-                     VALUES (?,?,?,?,?,?,?,?)"""
-        else:
-            sql = """INSERT INTO station_status
-                     (snapshot_id, station_id, activate, light, dock_bikes,
-                      free_bases, reservations_count, no_available)
-                     VALUES %s
-                     ON CONFLICT (snapshot_id, station_id) DO NOTHING"""
-        db.executemany(sql, buf)
-        db.commit()
+    known_stations = set()
+    status_buffer  = []
+    total_snaps    = 0
+    total_rows     = 0
 
     print(f"Leyendo {path} ...")
+
     with open(path, 'rb') as f:
         for lineno, line in enumerate(f, 1):
             line = line.strip()
             if not line:
                 continue
+
             try:
                 obj = json.loads(line.decode(ENCODING))
             except json.JSONDecodeError as e:
-                print(f"  [WARN] línea {lineno}: {e}", file=sys.stderr)
+                print(f"  [ERROR] línea {lineno}: {e}", file=sys.stderr)
                 continue
 
-            ts_str   = obj.get('_id', '')
-            stations = obj.get('stations', [])
+            # Extraer timestamp
+            ts_str = obj.get('_id', '')
+            if not ts_str:
+                print(f"  [ERROR] línea {lineno}: falta campo '_id', se omite el snapshot", file=sys.stderr)
+                continue
 
-            # Upsert estaciones nuevas o actualizadas
+            try:
+                captured_at = datetime.fromisoformat(ts_str)
+            except ValueError as e:
+                print(f"  [ERROR] línea {lineno}: timestamp inválido '{ts_str}': {e}", file=sys.stderr)
+                continue
+
+            stations = obj.get('stations', [])
+            if not stations:
+                print(f"  [WARN] línea {lineno}: snapshot {ts_str} sin estaciones", file=sys.stderr)
+
             for s in stations:
-                sid = int(s['id'])
+                sid     = int(s['id'])
+                context = f"snapshot={ts_str}, station_id={sid}"
+
                 if sid not in known_stations:
-                    upsert_station(db, s)
+                    upsert_station(db, s, context)
                     known_stations.add(sid)
 
-            snap_id = insert_snapshot(db, ts_str)
+                status_buffer.append(build_status_row(captured_at, s, context))
+                total_rows += 1
+
             total_snaps += 1
 
-            status_buffer.extend(build_status_rows(snap_id, stations))
-            total_rows += len(stations)
-
             if len(status_buffer) >= BATCH_SIZE:
-                flush(status_buffer)
+                flush(db, status_buffer)
                 status_buffer.clear()
-                print(f"  {total_snaps} snapshots / {total_rows} filas de estado...", end='\r')
+                print(f"  {total_snaps} snapshots / {total_rows} filas procesadas...", end='\r')
 
-    flush(status_buffer)
+    flush(db, status_buffer)
+
     print(f"\nImportación completada.")
-    print(f"  Estaciones únicas : {len(known_stations)}")
-    print(f"  Snapshots         : {total_snaps}")
-    print(f"  Filas station_status: {total_rows}")
+    print(f"  Estaciones únicas    : {len(known_stations)}")
+    print(f"  Snapshots            : {total_snaps}")
+    print(f"  Filas station_status : {total_rows}")
+
+
+# ── Entrada ────────────────────────────────────────────────────────────────────
+
+def parse_args():
+    p = argparse.ArgumentParser(description='Importar BiciMAD JSON a PostgreSQL')
+    p.add_argument('--input',  required=True, help='Ruta al fichero 201905.json')
+    p.add_argument('--db-url', required=True, help='DSN PostgreSQL (postgresql://user:pass@host/db)')
+    return p.parse_args()
 
 
 def main():
     args = parse_args()
-
-    if args.sqlite:
-        print(f"Conectando a SQLite: {args.sqlite}")
-        db = SQLiteConn(args.sqlite)
-    elif args.db_url:
-        print(f"Conectando a PostgreSQL: {args.db_url}")
-        db = PostgresConn(args.db_url)
-    else:
-        print("ERROR: especifica --db-url o --sqlite", file=sys.stderr)
-        sys.exit(1)
-
+    print(f"Conectando a PostgreSQL: {args.db_url}")
+    db = PostgresConn(args.db_url)
     try:
         import_file(db, args.input)
     finally:
