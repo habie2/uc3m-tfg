@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BiciMAD · Saturación de Estaciones</title>
+
+  <!-- Leaflet (mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Tipografía -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- React + Babel (en desarrollo, sin build paso) -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #EDEAE4;
+      --bg-sb:   #F2EFE9;
+      --blue:    #2B5CF6;
+      --blue-dk: #1A40D4;
+      --red:     #E8421A;
+      --black:   #0E0E0E;
+      --muted:   #7A7268;
+      --border:  #D8D4CD;
+      --card:    #FAFAF7;
+    }
+
+    html, body, #root { height: 100%; overflow: hidden; }
+    body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--black); }
+    .app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Header ── */
+    .header {
+      height: 52px; flex-shrink: 0;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center;
+      padding: 0 22px; gap: 14px;
+    }
+    .logo { display: flex; align-items: baseline; gap: 1px; }
+    .logo-bici { font-size: 20px; font-weight: 800; letter-spacing: -1px; }
+    .logo-dot  { width: 5px; height: 5px; border-radius: 50%; background: var(--blue); margin: 0 1px 3px; }
+    .logo-mad  { font-size: 20px; font-weight: 300; letter-spacing: -1px; }
+    .hd-sep  { width: 1px; height: 22px; background: var(--border); }
+    .hd-cat  { font-size: 11px; font-weight: 500; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+    .hd-chip {
+      margin-left: auto;
+      background: var(--blue); color: #fff;
+      font-size: 11px; font-weight: 600;
+      padding: 3px 12px; border-radius: 20px;
+      text-transform: uppercase; letter-spacing: .07em;
+    }
+
+    /* ── Body ── */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 268px; flex-shrink: 0;
+      background: var(--bg-sb);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .sb-sec { padding: 16px 18px; border-bottom: 1px solid var(--border); }
+    .sb-lbl {
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted); margin-bottom: 12px;
+    }
+
+    /* mode toggle */
+    .mode-row { display: flex; background: var(--border); border-radius: 9px; padding: 2px; gap: 2px; }
+    .mode-btn {
+      flex: 1; padding: 6px 4px;
+      border: none; background: transparent; border-radius: 7px;
+      font-size: 12px; font-weight: 600;
+      color: var(--muted); cursor: pointer; transition: all .15s;
+    }
+    .mode-btn.on { background: #fff; color: var(--black); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+
+    /* day chips */
+    .day-row { display: flex; gap: 4px; margin-top: 11px; }
+    .day-btn {
+      flex: 1; padding: 8px 0;
+      border: 1.5px solid var(--border); border-radius: 8px; background: #fff;
+      font-size: 12px; font-weight: 600;
+      color: var(--muted); cursor: pointer; transition: all .15s;
+    }
+    .day-btn.on  { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .day-btn:hover:not(.on) { border-color: var(--blue); color: var(--blue); }
+
+    /* toggle switch (festivo) */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-top: 13px; }
+    .toggle-lbl { font-size: 13px; font-weight: 500; }
+    .tgl {
+      width: 36px; height: 20px;
+      background: var(--border); border-radius: 10px;
+      position: relative; cursor: pointer; border: none; transition: background .2s;
+    }
+    .tgl.on { background: var(--blue); }
+    .tgl::after {
+      content: ''; position: absolute;
+      width: 14px; height: 14px; background: #fff;
+      border-radius: 50%; top: 3px; left: 3px;
+      transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .tgl.on::after { transform: translateX(16px); }
+
+    .mode-caption { margin-top: 10px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .mode-caption strong { color: var(--black); font-weight: 600; }
+
+    /* date input */
+    .date-inp {
+      width: 100%; padding: 8px 12px; margin-top: 10px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 13px; font-weight: 600;
+      background: #fff; color: var(--black); outline: none;
+    }
+    .date-inp:focus { border-color: var(--blue); }
+
+    /* badge laborable / festivo */
+    .day-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px; border-radius: 20px;
+      margin-top: 10px;
+    }
+    .day-badge .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .day-badge .lbl {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: .04em; text-transform: uppercase;
+    }
+    .day-badge.workday  { background: #F2EFE9; border: 1.5px solid var(--border); }
+    .day-badge.workday .dot { background: #B0A99E; }
+    .day-badge.workday .lbl { color: var(--muted); }
+    .day-badge.holiday  { background: #FFF0ED; border: 1.5px solid var(--red); }
+    .day-badge.holiday .dot { background: var(--red); }
+    .day-badge.holiday .lbl { color: var(--red); }
+
+    /* stats */
+    .stat-list { display: flex; flex-direction: column; gap: 12px; }
+    .stat-row2 { display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+    .stat-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .stat-lbl  { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .stat-sub  { font-size: 11px; color: var(--muted); opacity: .7;
+                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .stat-val  { font-size: 19px; font-weight: 700; line-height: 1;
+                 flex-shrink: 0; letter-spacing: -.5px; }
+
+    /* legend */
+    .leg-swatches { display: flex; gap: 10px; margin-bottom: 6px; }
+    .leg-sw { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 500; }
+    .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .leg-neutral { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+    .leg-mini { width: 6px; height: 6px; border-radius: 50%; background: #B0A99E; border: 1.5px solid #fff; flex-shrink: 0; }
+    .leg-note { margin-top: 10px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+    /* ── Map area ── */
+    .map-area { flex: 1; position: relative; overflow: hidden; }
+    #map-mount { width: 100%; height: 100%; }
+
+    /* Station card */
+    .station-card {
+      position: absolute; top: 14px; right: 14px; z-index: 900;
+      background: #fff; border-radius: 18px;
+      box-shadow: 0 6px 32px rgba(0,0,0,.13);
+      padding: 18px; width: 252px;
+      animation: slideIn .18s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .sc-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+    .sc-name { font-size: 15px; font-weight: 700; line-height: 1.2; letter-spacing: -.3px; }
+    .sc-cap  { font-size: 11px; color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; margin-top: 3px; }
+    .sc-close { background: none; border: none; cursor: pointer; font-size: 20px; color: var(--muted); line-height: 1; padding: 0 0 0 10px; }
+    .sc-sat-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; }
+    .sc-sat-key { font-size: 12px; font-weight: 500; color: var(--muted); }
+    .sc-sat-pct { font-size: 18px; font-weight: 700; letter-spacing: -.5px; }
+    .sc-bar { height: 7px; border-radius: 4px; background: var(--border); overflow: hidden; margin-bottom: 14px; }
+    .sc-fill { height: 100%; border-radius: 4px; transition: width .3s; }
+    .sc-tiles { display: flex; gap: 8px; margin-bottom: 14px; }
+    .sc-tile { flex: 1; background: var(--bg-sb); border-radius: 11px; padding: 10px; text-align: center; }
+    .sc-tile-val { font-size: 22px; font-weight: 700; line-height: 1; letter-spacing: -.5px; }
+    .sc-tile-lbl { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 3px; }
+    .sc-spark-lbl { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: 7px; }
+    .sc-spark-ticks { display: flex; justify-content: space-between; margin-top: 4px; font-size: 10px; color: var(--muted); }
+
+    /* ── Time slider ── */
+    .time-bar {
+      position: absolute; bottom: 18px;
+      left: 50%; transform: translateX(-50%);
+      width: min(580px, calc(100% - 32px));
+      background: #fff; border-radius: 20px;
+      box-shadow: 0 4px 32px rgba(0,0,0,.13);
+      padding: 14px 20px; z-index: 800;
+    }
+    .tb-top  { display: flex; align-items: center; gap: 14px; margin-bottom: 11px; }
+    .tb-play {
+      width: 40px; height: 40px; flex-shrink: 0;
+      border-radius: 50%; background: var(--blue);
+      border: none; color: #fff; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s; font-size: 15px;
+    }
+    .tb-play:hover { background: var(--blue-dk); }
+    .tb-hour { font-size: 26px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; }
+    .tb-ctx  { font-size: 12px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+    .tb-day  { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--muted); text-align: right; line-height: 1.4; }
+
+    input[type=range] {
+      -webkit-appearance: none; appearance: none;
+      width: 100%; height: 4px; border-radius: 2px;
+      background: var(--border); outline: none; cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--blue); border: 3px solid #fff;
+      box-shadow: 0 1px 6px rgba(0,0,0,.25); margin-top: -8px;
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--blue); border: none;
+      box-shadow: 0 1px 6px rgba(0,0,0,.25);
+    }
+    input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--border); }
+
+    .tb-ticks { display: flex; justify-content: space-between; margin-top: 5px; }
+    .tb-tick  { font-size: 10px; font-weight: 600; color: var(--muted); }
+
+    /* Leaflet overrides */
+    .leaflet-popup-content-wrapper { border-radius: 12px; }
+    .leaflet-tooltip {
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 700;
+      border-radius: 8px; border: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    /* ─────────────────────── CONFIGURACIÓN ─────────────────────── */
+
+    // Tamaño de los puntos pequeños sobre cada estación
+    const DOT_SIZE = 4;
+
+    // Umbrales de color
+    const T_FULL  = 0.65; // por encima → azul (llena)
+    const T_EMPTY = 0.35; // por debajo → rojo (vacía)
+    // Entre los dos → gris (equilibrada)
+
+
+    /* ─────────────────────── DATOS ─────────────────────── */
+
+    // Estaciones simuladas (id, nombre, coordenadas, capacidad y zona)
+    const STATIONS = [
+      { id:  1, name: "Puerta del Sol",       lat: 40.4168, lng: -3.7038, cap: 24, zone: 'central'     },
+      { id:  2, name: "Plaza Mayor",          lat: 40.4153, lng: -3.7074, cap: 18, zone: 'central'     },
+      { id:  3, name: "Gran Vía",             lat: 40.4200, lng: -3.7025, cap: 24, zone: 'central'     },
+      { id:  4, name: "Atocha",               lat: 40.4069, lng: -3.6907, cap: 30, zone: 'transport'   },
+      { id:  5, name: "Retiro – P. Alcalá",   lat: 40.4193, lng: -3.6877, cap: 24, zone: 'park'        },
+      { id:  6, name: "Retiro – Estanque",    lat: 40.4144, lng: -3.6848, cap: 18, zone: 'park'        },
+      { id:  7, name: "Chueca",               lat: 40.4240, lng: -3.6985, cap: 24, zone: 'residential' },
+      { id:  8, name: "Malasaña",             lat: 40.4267, lng: -3.7063, cap: 18, zone: 'residential' },
+      { id:  9, name: "Lavapiés",             lat: 40.4096, lng: -3.7030, cap: 18, zone: 'residential' },
+      { id: 10, name: "La Latina",            lat: 40.4125, lng: -3.7108, cap: 18, zone: 'residential' },
+      { id: 11, name: "Argüelles",            lat: 40.4280, lng: -3.7169, cap: 24, zone: 'residential' },
+      { id: 12, name: "Moncloa",              lat: 40.4357, lng: -3.7188, cap: 24, zone: 'transport'   },
+      { id: 13, name: "Nuevos Ministerios",   lat: 40.4458, lng: -3.6930, cap: 30, zone: 'business'    },
+      { id: 14, name: "Alonso Martínez",      lat: 40.4303, lng: -3.6935, cap: 24, zone: 'residential' },
+      { id: 15, name: "Colón",                lat: 40.4236, lng: -3.6886, cap: 24, zone: 'business'    },
+      { id: 16, name: "Serrano",              lat: 40.4250, lng: -3.6830, cap: 24, zone: 'business'    },
+      { id: 17, name: "Goya",                 lat: 40.4233, lng: -3.6785, cap: 18, zone: 'residential' },
+      { id: 18, name: "Castellana",           lat: 40.4285, lng: -3.6810, cap: 24, zone: 'business'    },
+      { id: 19, name: "Embajadores",          lat: 40.4055, lng: -3.7045, cap: 18, zone: 'residential' },
+      { id: 20, name: "Ópera",                lat: 40.4179, lng: -3.7117, cap: 24, zone: 'central'     },
+      { id: 21, name: "Tribunal",             lat: 40.4256, lng: -3.7024, cap: 18, zone: 'residential' },
+      { id: 22, name: "Antón Martín",         lat: 40.4127, lng: -3.6971, cap: 18, zone: 'central'     },
+      { id: 23, name: "Justicia",             lat: 40.4227, lng: -3.6982, cap: 18, zone: 'business'    },
+      { id: 24, name: "Bernabéu",             lat: 40.4531, lng: -3.6884, cap: 30, zone: 'sport'       },
+      { id: 25, name: "Legazpi",              lat: 40.3943, lng: -3.7017, cap: 24, zone: 'residential' },
+      { id: 26, name: "Pirámides",            lat: 40.4052, lng: -3.7149, cap: 18, zone: 'residential' },
+      { id: 27, name: "Delicias",             lat: 40.3998, lng: -3.6942, cap: 18, zone: 'residential' },
+      { id: 28, name: "Pacífico",             lat: 40.4026, lng: -3.6832, cap: 18, zone: 'residential' },
+      { id: 29, name: "Ventas",               lat: 40.4315, lng: -3.6618, cap: 18, zone: 'residential' },
+      { id: 30, name: "Cdad. Universitaria",  lat: 40.4456, lng: -3.7253, cap: 24, zone: 'education'   },
+      { id: 31, name: "Arganzuela",           lat: 40.3976, lng: -3.7070, cap: 18, zone: 'residential' },
+      { id: 32, name: "Huertas",              lat: 40.4142, lng: -3.6980, cap: 18, zone: 'central'     },
+      { id: 33, name: "Chamberí",             lat: 40.4348, lng: -3.7025, cap: 24, zone: 'residential' },
+      { id: 34, name: "Ibiza",                lat: 40.4174, lng: -3.6753, cap: 18, zone: 'residential' },
+      { id: 35, name: "Méndez Álvaro",        lat: 40.3922, lng: -3.6880, cap: 18, zone: 'transport'   },
+    ];
+
+    // Festivos de Madrid: o bien MM-DD (los fijos cada año), o YYYY-MM-DD (movibles)
+    const HOLIDAYS = new Set([
+      // Nacionales fijos
+      '01-01','01-06','05-01','08-15','10-12','11-01','12-06','12-08','12-25',
+      // Madrid fijos
+      '05-02','05-15','11-09',
+      // 2023 movibles
+      '2023-04-06','2023-04-07','2023-04-10',
+      // 2024 movibles
+      '2024-03-28','2024-03-29','2024-04-01',
+      // 2025 movibles
+      '2025-04-17','2025-04-18','2025-04-21',
+    ]);
+
+    function isHolidayDate(dateStr) {
+      if (!dateStr) return false;
+      const mmdd = dateStr.slice(5); // "YYYY-MM-DD" → "MM-DD"
+      return HOLIDAYS.has(dateStr) || HOLIDAYS.has(mmdd);
+    }
+
+    // Días: L(unes) M(artes) X(miércoles) J(ueves) V(iernes) S(ábado) D(omingo)
+    const DAY_KEYS  = ['L','M','X','J','V','S','D'];
+    const DAY_NAMES = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+
+
+    /* ─────────────────────── CÁLCULO DE SATURACIÓN ─────────────────────── */
+    // Devuelve un número entre 0 y 1 para una estación, hora, tipo de día y festivo.
+    // Es 100% determinista (mismas entradas → mismo resultado).
+
+    // Pseudoaleatorio determinista (semilla → [0,1))
+    function srand(seed) {
+      const x = Math.sin(seed + 1.7) * 10000;
+      return x - Math.floor(x);
+    }
+
+    function getSat(station, hour, dayType, holiday) {
+      const leisure = holiday || dayType === 'S' || dayType === 'D';
+      const z = station.zone;
+      let base;
+
+      if (leisure) {
+        // Patrón de fin de semana / festivo
+        if      (hour < 7)  base = 0.74;
+        else if (hour < 10) base = 0.60;
+        else if (hour < 14) base = 0.44;
+        else if (hour < 20) base = 0.46;
+        else if (hour < 23) base = 0.58;
+        else                base = 0.70;
+        if (z === 'park' || z === 'central') base -= 0.10;
+        if (z === 'business')                base += 0.08;
+      } else {
+        // Patrón laborable
+        if      (hour < 6)   base = 0.76;
+        else if (hour === 7) base = (z === 'residential' || z === 'education') ? 0.55 : 0.60;
+        else if (hour === 8) {
+          if      (z === 'residential' || z === 'education') base = 0.27;
+          else if (z === 'business' || z === 'transport')    base = 0.76;
+          else                                                base = 0.52;
+        }
+        else if (hour === 9) {
+          if      (z === 'residential') base = 0.38;
+          else if (z === 'business')    base = 0.72;
+          else                          base = 0.56;
+        }
+        else if (hour >= 10 && hour < 14) base = (z === 'business' || z === 'central') ? 0.62 : 0.47;
+        else if (hour >= 14 && hour < 16) base = 0.54;
+        else if (hour >= 16 && hour < 18) base = (z === 'business') ? 0.44 : 0.52;
+        else if (hour === 18 || hour === 19) {
+          if      (z === 'residential')                   base = 0.76;
+          else if (z === 'business' || z === 'transport') base = 0.27;
+          else                                             base = 0.50;
+        }
+        else if (hour >= 20 && hour < 22) base = 0.64;
+        else                              base = 0.74;
+      }
+
+      // Pequeñas variaciones por estación, día y hora para que no parezca todo igual
+      const dayIdx = DAY_KEYS.indexOf(dayType);
+      const stChar = srand(station.id * 53) * 0.12 - 0.06;
+      const dayVar = srand(station.id * 7 + dayIdx * 31) * 0.07 - 0.035;
+      const noise  = (srand(station.id * 137 + hour * 41 + (holiday ? 500 : 0)) - 0.5) * 0.09;
+
+      return Math.max(0.02, Math.min(0.98, base + stChar + dayVar + noise));
+    }
+
+
+    /* ─────────────────────── HELPERS DE DISPLAY ─────────────────────── */
+
+    function dotColor(sat) {
+      if (sat > T_FULL)  return '#2B5CF6'; // azul
+      if (sat < T_EMPTY) return '#E8421A'; // rojo
+      return '#B0A99E';                    // gris
+    }
+
+    function hLabel(h) {
+      return `${String(h).padStart(2,'0')}:00`;
+    }
+
+    function hCtx(h) {
+      if (h < 6)  return 'Madrugada';
+      if (h < 9)  return 'Primera mañana';
+      if (h < 12) return 'Mañana';
+      if (h < 14) return 'Mediodía';
+      if (h < 17) return 'Tarde temprana';
+      if (h < 21) return 'Tarde';
+      if (h < 23) return 'Noche temprana';
+      return 'Noche';
+    }
+
+
+    /* ─────────────────────── COMPONENTE: MAPA ─────────────────────── */
+    function MapView({ hour, dayType, holiday, onStationClick }) {
+      const mountRef  = useRef(null);   // div donde Leaflet monta el mapa
+      const mapRef    = useRef(null);   // instancia de Leaflet
+      const canvasRef = useRef(null);   // canvas con los blobs
+      const mrkRef    = useRef({});     // diccionario id → circleMarker
+      const propsRef  = useRef({ hour, dayType, holiday });
+
+      // Mantener una referencia "viva" a las props (para usarlas dentro de listeners)
+      useEffect(() => {
+        propsRef.current = { hour, dayType, holiday };
+      }, [hour, dayType, holiday]);
+
+      // Dibuja los gradientes radiales (blobs) detrás de los puntos
+      const drawBlobs = useCallback(() => {
+        const map    = mapRef.current;
+        const canvas = canvasRef.current;
+        if (!map || !canvas) return;
+
+        const { hour: h, dayType: d, holiday: hol } = propsRef.current;
+        const size = map.getSize();
+        canvas.width  = size.x;
+        canvas.height = size.y;
+
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, size.x, size.y);
+
+        STATIONS.forEach(st => {
+          const sat = getSat(st, h, d, hol);
+          let rgb = null, intensity = 0;
+
+          if (sat > T_FULL) {
+            rgb = [43, 92, 246]; // azul
+            intensity = Math.pow((sat - T_FULL) / (1 - T_FULL), 0.65);
+          } else if (sat < T_EMPTY) {
+            rgb = [232, 66, 26]; // rojo
+            intensity = Math.pow((T_EMPTY - sat) / T_EMPTY, 0.65);
+          }
+          if (!rgb) return; // estaciones equilibradas: no se dibuja blob
+
+          const pt = map.latLngToContainerPoint([st.lat, st.lng]);
+          const radius = (52 + (st.cap / 30) * 28) * (0.5 + 0.5 * intensity);
+          const [R, G, B] = rgb;
+
+          const grad = ctx.createRadialGradient(pt.x, pt.y, 0, pt.x, pt.y, radius);
+          grad.addColorStop(0,    `rgba(${R},${G},${B},${0.50 * intensity})`);
+          grad.addColorStop(0.35, `rgba(${R},${G},${B},${0.28 * intensity})`);
+          grad.addColorStop(0.7,  `rgba(${R},${G},${B},${0.10 * intensity})`);
+          grad.addColorStop(1,    `rgba(${R},${G},${B},0)`);
+
+          ctx.beginPath();
+          ctx.fillStyle = grad;
+          ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }, []);
+
+      // Inicialización del mapa (una sola vez)
+      useEffect(() => {
+        const map = L.map(mountRef.current, {
+          center: [40.418, -3.700],
+          zoom: 14,
+          zoomControl: true,
+        });
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19,
+        }).addTo(map);
+
+        // Canvas superpuesto al mapa (entre tiles y markers)
+        const canvas = document.createElement('canvas');
+        canvas.style.cssText = 'position:absolute;top:0;left:0;pointer-events:none;z-index:450;';
+        map.getContainer().appendChild(canvas);
+        canvasRef.current = canvas;
+
+        map.on('moveend zoomend resize', drawBlobs);
+
+        // Un círculo pequeño por cada estación, encima del canvas
+        STATIONS.forEach(st => {
+          const sat = getSat(st, propsRef.current.hour, propsRef.current.dayType, propsRef.current.holiday);
+          const m = L.circleMarker([st.lat, st.lng], {
+            radius: DOT_SIZE,
+            fillColor: dotColor(sat),
+            color: '#fff',
+            fillOpacity: 1,
+            weight: 1.5,
+            pane: 'markerPane',
+          });
+          m.bindTooltip(st.name, { direction: 'top', offset: [0, -6] });
+          m.on('click', () => {
+            const { hour: hh, dayType: dd, holiday: hh2 } = propsRef.current;
+            onStationClick(st, getSat(st, hh, dd, hh2));
+          });
+          m.addTo(map);
+          mrkRef.current[st.id] = m;
+        });
+
+        mapRef.current = map;
+        drawBlobs();
+
+        return () => { map.remove(); };
+      }, [drawBlobs, onStationClick]);
+
+      // Cuando cambian hora / tipo de día / festivo: actualizar colores y blobs
+      useEffect(() => {
+        STATIONS.forEach(st => {
+          const m = mrkRef.current[st.id];
+          if (!m) return;
+          const sat = getSat(st, hour, dayType, holiday);
+          m.setStyle({ fillColor: dotColor(sat), radius: DOT_SIZE });
+        });
+        drawBlobs();
+      }, [hour, dayType, holiday, drawBlobs]);
+
+      return <div ref={mountRef} id="map-mount" />;
+    }
+
+
+    /* ─────────────────────── COMPONENTE: TARJETA DE ESTACIÓN ─────────────────────── */
+    function StationCard({ station, hour, dayType, holiday, onClose }) {
+      const sat   = getSat(station, hour, dayType, holiday);
+      const bikes = Math.round(sat * station.cap);
+      const docks = station.cap - bikes;
+      const colorRgb = dotColor(sat);
+
+      // Sparkline: saturación en cada hora del día
+      const W = 210, H = 44;
+      const sparkData = Array.from({ length: 24 }, (_, h) => getSat(station, h, dayType, holiday));
+      const pts = sparkData
+        .map((v, i) => `${(i / 23 * W).toFixed(1)},${(H - v * H).toFixed(1)}`)
+        .join(' ');
+      const cx = (hour / 23 * W).toFixed(1);
+      const cy = (H - sat * H).toFixed(1);
+
+      return (
+        <div className="station-card">
+          <div className="sc-head">
+            <div>
+              <div className="sc-name">{station.name}</div>
+              <div className="sc-cap">{station.cap} anclajes totales</div>
+            </div>
+            <button className="sc-close" onClick={onClose}>×</button>
+          </div>
+
+          <div className="sc-sat-row">
+            <span className="sc-sat-key">Saturación</span>
+            <span className="sc-sat-pct" style={{ color: colorRgb }}>
+              {Math.round(sat * 100)}%
+            </span>
+          </div>
+          <div className="sc-bar">
+            <div className="sc-fill" style={{ width: `${sat * 100}%`, background: colorRgb }} />
+          </div>
+
+          <div className="sc-tiles">
+            <div className="sc-tile">
+              <div className="sc-tile-val" style={{ color: colorRgb }}>{bikes}</div>
+              <div className="sc-tile-lbl">Bicis</div>
+            </div>
+            <div className="sc-tile">
+              <div className="sc-tile-val">{docks}</div>
+              <div className="sc-tile-lbl">Libres</div>
+            </div>
+          </div>
+
+          <div className="sc-spark-lbl">Saturación del día</div>
+          <svg width={W} height={H + 2} style={{ display: 'block', overflow: 'visible' }}>
+            <defs>
+              <linearGradient id={`sg${station.id}`} x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%"   stopColor="#E8421A" />
+                <stop offset="40%"  stopColor="#B0A99E" />
+                <stop offset="60%"  stopColor="#B0A99E" />
+                <stop offset="100%" stopColor="#2B5CF6" />
+              </linearGradient>
+            </defs>
+            {/* Líneas guía de los umbrales */}
+            <line x1="0" y1={H - T_FULL  * H} x2={W} y2={H - T_FULL  * H}
+                  stroke="#2B5CF6" strokeWidth="1" strokeDasharray="3,3" opacity=".35" />
+            <line x1="0" y1={H - T_EMPTY * H} x2={W} y2={H - T_EMPTY * H}
+                  stroke="#E8421A" strokeWidth="1" strokeDasharray="3,3" opacity=".35" />
+            {/* Curva del día */}
+            <polyline points={pts} fill="none"
+                      stroke={`url(#sg${station.id})`}
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round" />
+            {/* Punto de la hora actual */}
+            <circle cx={cx} cy={cy} r="4.5" fill={colorRgb} stroke="#fff" strokeWidth="2" />
+          </svg>
+          <div className="sc-spark-ticks">
+            {['00h','06h','12h','18h','23h'].map(t => <span key={t}>{t}</span>)}
+          </div>
+        </div>
+      );
+    }
+
+
+    /* ─────────────────────── COMPONENTE: ESTADÍSTICAS ─────────────────────── */
+    function Stats({ hour, dayType, holiday }) {
+      const sats   = STATIONS.map(s => getSat(s, hour, dayType, holiday));
+      const avg    = sats.reduce((a, b) => a + b, 0) / sats.length;
+      const maxIdx = sats.indexOf(Math.max(...sats));
+      const minIdx = sats.indexOf(Math.min(...sats));
+
+      // Hora "más activa" = aquella en la que la saturación media está más cerca de 0.5
+      // (es decir, donde el sistema está más mezclado: muchos préstamos y devoluciones).
+      let peakH = 0, bestDist = 99;
+      for (let h = 0; h < 24; h++) {
+        const hAvg = STATIONS.reduce((s, st) => s + getSat(st, h, dayType, holiday), 0) / STATIONS.length;
+        const d = Math.abs(hAvg - 0.5);
+        if (d < bestDist) { bestDist = d; peakH = h; }
+      }
+
+      const rows = [
+        { lbl: 'Saturación media', sub: 'todas las estaciones', val: `${Math.round(avg * 100)}%`,             color: dotColor(avg) },
+        { lbl: 'Más llena',        sub: STATIONS[maxIdx].name,   val: `${Math.round(sats[maxIdx] * 100)}%`,    color: '#2B5CF6'      },
+        { lbl: 'Más vacía',        sub: STATIONS[minIdx].name,   val: `${Math.round(sats[minIdx] * 100)}%`,    color: '#E8421A'      },
+        { lbl: 'Hora más activa',  sub: 'mayor movimiento',      val: hLabel(peakH),                           color: 'var(--black)' },
+      ];
+
+      return (
+        <div className="sb-sec">
+          <div className="sb-lbl">Estadísticas — {hLabel(hour)}</div>
+          <div className="stat-list">
+            {rows.map(({ lbl, sub, val, color }) => (
+              <div key={lbl} className="stat-row2">
+                <div className="stat-info">
+                  <span className="stat-lbl">{lbl}</span>
+                  <span className="stat-sub">{sub}</span>
+                </div>
+                <span className="stat-val" style={{ color }}>{val}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+
+    /* ─────────────────────── COMPONENTE: APP (raíz) ─────────────────────── */
+    function App() {
+      // Modo: 'daytype' (elegir L/M/X/...) o 'date' (elegir una fecha concreta)
+      const [mode,    setMode]    = useState('daytype');
+      const [dayType, setDayType] = useState('L');
+      const [holiday, setHoliday] = useState(false);
+      const [date,    setDate]    = useState('2024-04-15');
+      const [hour,    setHour]    = useState(9);
+      const [playing, setPlaying] = useState(false);
+      const [selSt,   setSelSt]   = useState(null);
+      const sliderRef             = useRef(null);
+
+      // En modo 'date', deducir el día de la semana de la fecha
+      const dateDay = (() => {
+        try {
+          const d = new Date(date + 'T12:00:00');
+          const i = d.getDay(); // 0 = domingo
+          return DAY_KEYS[i === 0 ? 6 : i - 1];
+        } catch {
+          return 'L';
+        }
+      })();
+
+      // Valores efectivos que se usan para calcular saturación
+      const effDay        = mode === 'date' ? dateDay : dayType;
+      const dateIsHoliday = isHolidayDate(date);
+      const effHoliday    = mode === 'date' ? dateIsHoliday : holiday;
+      const dayLabel      = `${DAY_NAMES[DAY_KEYS.indexOf(effDay)]}${effHoliday ? ' · Festivo' : ''}`;
+
+      // Reproducción automática
+      useEffect(() => {
+        if (!playing) return;
+        const t = setInterval(() => setHour(h => (h + 1) % 24), 650);
+        return () => clearInterval(t);
+      }, [playing]);
+
+      // Pintar el "fill" del slider de horas
+      useEffect(() => {
+        if (!sliderRef.current) return;
+        const pct = (hour / 23) * 100;
+        sliderRef.current.style.background =
+          `linear-gradient(to right, var(--blue) 0%, var(--blue) ${pct}%, var(--border) ${pct}%, var(--border) 100%)`;
+      }, [hour]);
+
+      const handleStation = useCallback(st => setSelSt(st), []);
+
+      return (
+        <div className="app">
+          {/* Header */}
+          <header className="header">
+            <div className="logo">
+              <span className="logo-bici">bici</span>
+              <span className="logo-dot" />
+              <span className="logo-mad">mad</span>
+            </div>
+            <div className="hd-sep" />
+            <span className="hd-cat">Indicadores · TFG</span>
+            <div className="hd-chip">Saturación</div>
+          </header>
+
+          <div className="app-body">
+            {/* ── Sidebar ── */}
+            <aside className="sidebar">
+
+              {/* Periodo de análisis */}
+              <div className="sb-sec">
+                <div className="sb-lbl">Periodo de análisis</div>
+
+                <div className="mode-row">
+                  <button
+                    className={`mode-btn ${mode === 'daytype' ? 'on' : ''}`}
+                    onClick={() => setMode('daytype')}>
+                    Tipo de día
+                  </button>
+                  <button
+                    className={`mode-btn ${mode === 'date' ? 'on' : ''}`}
+                    onClick={() => setMode('date')}>
+                    Fecha concreta
+                  </button>
+                </div>
+
+                {mode === 'daytype' ? (
+                  <>
+                    <div className="day-row">
+                      {DAY_KEYS.map(d => (
+                        <button
+                          key={d}
+                          className={`day-btn ${dayType === d ? 'on' : ''}`}
+                          onClick={() => setDayType(d)}>
+                          {d}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="toggle-row">
+                      <span className="toggle-lbl">Festivo</span>
+                      <button
+                        className={`tgl ${holiday ? 'on' : ''}`}
+                        onClick={() => setHoliday(h => !h)} />
+                    </div>
+                    <div className="mode-caption">
+                      Promedio de <strong>{DAY_NAMES[DAY_KEYS.indexOf(dayType)].toLowerCase()}s</strong>
+                      {holiday ? ' festivos' : ''} del dataset.
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="date"
+                      className="date-inp"
+                      value={date}
+                      onChange={e => setDate(e.target.value)} />
+                    <div className={`day-badge ${dateIsHoliday ? 'holiday' : 'workday'}`}>
+                      <div className="dot" />
+                      <span className="lbl">
+                        {dateIsHoliday ? 'Festivo' : 'Día laborable'}
+                      </span>
+                    </div>
+                    <div className="mode-caption">
+                      Datos del <strong>{dayLabel}</strong>{date ? ` — ${date}` : ''}.
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Estadísticas */}
+              <Stats hour={hour} dayType={effDay} holiday={effHoliday} />
+
+              {/* Leyenda */}
+              <div className="sb-sec">
+                <div className="sb-lbl">Leyenda</div>
+                <div className="leg-swatches">
+                  <div className="leg-sw">
+                    <div className="leg-dot" style={{ background: '#2B5CF6' }} />
+                    <span>Llena (&gt;65%)</span>
+                  </div>
+                  <div className="leg-sw">
+                    <div className="leg-dot" style={{ background: '#E8421A' }} />
+                    <span>Vacía (&lt;35%)</span>
+                  </div>
+                </div>
+                <div className="leg-neutral">
+                  <div className="leg-mini" />
+                  <span>Equilibrada (35–65%) — sin blob</span>
+                </div>
+                <div className="leg-note">
+                  El área difuminada refleja la intensidad de la condición.
+                  Haz clic en cualquier estación para ver su detalle.
+                </div>
+              </div>
+            </aside>
+
+            {/* ── Mapa + tarjeta + barra de tiempo ── */}
+            <main className="map-area">
+              <MapView
+                hour={hour}
+                dayType={effDay}
+                holiday={effHoliday}
+                onStationClick={handleStation} />
+
+              {selSt && (
+                <StationCard
+                  station={selSt}
+                  hour={hour}
+                  dayType={effDay}
+                  holiday={effHoliday}
+                  onClose={() => setSelSt(null)} />
+              )}
+
+              {/* Barra de tiempo */}
+              <div className="time-bar">
+                <div className="tb-top">
+                  <button className="tb-play" onClick={() => setPlaying(p => !p)}>
+                    {playing ? '⏸' : '▶'}
+                  </button>
+                  <div>
+                    <div className="tb-hour">{hLabel(hour)}</div>
+                    <div className="tb-ctx">{hCtx(hour)}</div>
+                  </div>
+                  <div className="tb-day">{dayLabel}</div>
+                </div>
+
+                <input
+                  ref={sliderRef}
+                  type="range" min={0} max={23} value={hour}
+                  onChange={e => {
+                    setPlaying(false);
+                    setHour(Number(e.target.value));
+                  }} />
+
+                <div className="tb-ticks">
+                  {[0, 3, 6, 9, 12, 15, 18, 21, 23].map(h => (
+                    <span key={h} className="tb-tick">
+                      {String(h).padStart(2, '0')}h
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
