@@ -167,7 +167,7 @@ function App() {
                 ),
                 h('div', { className: 'mode-caption' },
                   'Promedio de ',
-                  h('strong', null, DAY_NAMES[DAY_KEYS.indexOf(dayType)].toLowerCase() + 's'),
+                  h('strong', null, DAY_NAMES[DAY_KEYS.indexOf(dayType)].toLowerCase()),
                   holiday ? ' festivos' : '',
                   ' del dataset.'
                 )
