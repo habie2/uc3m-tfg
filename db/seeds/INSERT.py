@@ -4,7 +4,7 @@ BiciMAD - Script de importación
 Convierte el JSONL de mayo 2019 a una base de datos PostgreSQL.
 
 Uso:
-    python 02_import.py --input 201905.json --db-url "postgresql://user:pass@host/bicimad"
+    python INSERT.py --input 201905.json --db-url "postgresql://user:pass@host/bicimad"
 """
 import json
 import argparse
