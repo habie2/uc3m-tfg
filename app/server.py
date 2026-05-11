@@ -1,17 +1,28 @@
 """
 BiciMAD · Saturación de Estaciones — Servidor Flask
 ====================================================
-Adaptado al esquema real:
-  - station(id, number, name, address, latitude, longitude, total_bases)
-  - station_status(captured_at, station_id, dock_bikes, free_bases, ...)
+Esquema:
+  - station(station_id SERIAL, source_id, number, name, address,
+            latitude, longitude, total_bases)
+    Una fila por versión de estación. Si cambian los metadatos →
+    nueva fila con nuevo station_id.
+
+  - station_snapshot(captured_at, station_id, activate, light,
+                     dock_bikes, free_bases, reservations_count,
+                     operative_bases)
+    Solo estado operativo. Sin filas no_available = 1.
+
   - holidays(holiday_date)
 
+Criterio de saturación:
+  dock_bikes / NULLIF(operative_bases, 0)
+  operative_bases = dock_bikes + free_bases (columna generada).
+
 Requisitos:
-    pip install flask psycopg2-binary
+    pip install flask psycopg2-binary python-dotenv
 
 Uso:
-    python server.py
-    → http://localhost:5000
+    python server.py  →  http://localhost:5000
 """
 
 from flask import Flask, jsonify, request, send_from_directory
@@ -48,27 +59,32 @@ def get_conn():
 # ─────────────────────────────────────────────────────────
 # ENDPOINT 1: Lista de estaciones
 # GET /api/stations
+#
+# SELECT * FROM station — lectura directa, sin agregados.
+# Devuelve todas las versiones; el frontend agrupa por source_id
+# si necesita mostrar una sola entrada por estación física,
+# pero normalmente basta con station_id como clave.
 # ─────────────────────────────────────────────────────────
 @app.route("/api/stations")
 def api_stations():
     sql = """
         SELECT
-            id,
+            station_id  AS id,
+            source_id,
             name,
-            latitude   AS lat,
-            longitude  AS lng,
+            latitude    AS lat,
+            longitude   AS lng,
             total_bases AS cap
         FROM station
-        WHERE latitude IS NOT NULL
+        WHERE latitude  IS NOT NULL
           AND longitude IS NOT NULL
-        ORDER BY id
+        ORDER BY source_id, station_id
     """
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
             cur.execute(sql)
             rows = cur.fetchall()
 
-    # Convertir Decimal a float para JSON
     for r in rows:
         r['lat'] = float(r['lat'])
         r['lng'] = float(r['lng'])
@@ -79,33 +95,49 @@ def api_stations():
 
 # ─────────────────────────────────────────────────────────
 # ENDPOINT 2: Saturación por tipo de día
-# GET /api/saturation?dayType=L&holiday=false
+# GET /api/saturation?dayType=L&holiday=false[&month=5]
 #
-# Calcula: AVG(dock_bikes / total_bases) agrupado por
-#          station_id y hora, filtrando por día de la semana.
+# Parámetros:
+#   dayType  : L M X J V S D  (ISO, requerido)
+#   holiday  : true | false
+#   month    : 1–12  (opcional; omitido = todos los meses)
+#
+# Agrupa por station_id (clave sintética de station).
+# Excluye snapshots con activate != 1 o operative_bases = 0.
 # ─────────────────────────────────────────────────────────
 @app.route("/api/saturation")
 def api_saturation():
-    day_type = request.args.get("dayType", "L")
+    day_type   = request.args.get("dayType", "L")
     is_holiday = request.args.get("holiday", "false").lower() == "true"
+    month_str  = request.args.get("month", "")
 
-    # L=1, M=2, X=3, J=4, V=5, S=6, D=7 (ISO)
+    month = None
+    if month_str:
+        try:
+            month = int(month_str)
+            if not (1 <= month <= 12):
+                return jsonify({"error": "month debe estar entre 1 y 12"}), 400
+        except ValueError:
+            return jsonify({"error": "month debe ser un entero"}), 400
+
     day_map = {"L": 1, "M": 2, "X": 3, "J": 4, "V": 5, "S": 6, "D": 7}
     iso_dow = day_map.get(day_type, 1)
 
-    sql = """
+    month_clause = "AND EXTRACT(MONTH FROM ss.captured_at) = %(month)s" if month else ""
+
+    sql = f"""
         SELECT
             ss.station_id,
             EXTRACT(HOUR FROM ss.captured_at)::int AS hora,
-            AVG(ss.dock_bikes::float / NULLIF(st.total_bases, 0)) AS sat
-        FROM station_status ss
-        JOIN station st ON st.id = ss.station_id
+            AVG(ss.dock_bikes::float / NULLIF(ss.operative_bases, 0)) AS sat
+        FROM station_snapshot ss
         LEFT JOIN holidays h
             ON h.holiday_date = ss.captured_at::date
         WHERE
             EXTRACT(ISODOW FROM ss.captured_at) = %(dow)s
             AND ss.activate = 1
-            AND st.total_bases > 0
+            AND ss.operative_bases > 0
+            {month_clause}
             AND (
                 CASE
                     WHEN %(holiday)s THEN h.holiday_date IS NOT NULL
@@ -115,15 +147,14 @@ def api_saturation():
         GROUP BY ss.station_id, hora
         ORDER BY ss.station_id, hora
     """
-    params = {"dow": iso_dow, "holiday": is_holiday}
+    params = {"dow": iso_dow, "holiday": is_holiday, "month": month}
 
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, params)
             rows = cur.fetchall()
 
-    result = _build_sat_dict(rows)
-    return jsonify(result)
+    return jsonify(_build_sat_dict(rows))
 
 
 # ─────────────────────────────────────────────────────────
@@ -140,24 +171,22 @@ def api_saturation_date():
 
     sql = """
         SELECT
-            ss.station_id,
-            EXTRACT(HOUR FROM ss.captured_at)::int AS hora,
-            AVG(ss.dock_bikes::float / NULLIF(st.total_bases, 0)) AS sat
-        FROM station_status ss
-        JOIN station st ON st.id = ss.station_id
-        WHERE ss.captured_at::date = %(target)s
-          AND ss.activate = 1
-          AND st.total_bases > 0
-        GROUP BY ss.station_id, hora
-        ORDER BY ss.station_id, hora
+            station_id,
+            EXTRACT(HOUR FROM captured_at)::int AS hora,
+            AVG(dock_bikes::float / NULLIF(operative_bases, 0)) AS sat
+        FROM station_snapshot
+        WHERE captured_at::date = %(target)s
+          AND activate = 1
+          AND operative_bases > 0
+        GROUP BY station_id, hora
+        ORDER BY station_id, hora
     """
     with get_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(sql, {"target": target})
             rows = cur.fetchall()
 
-    result = _build_sat_dict(rows)
-    return jsonify(result)
+    return jsonify(_build_sat_dict(rows))
 
 
 # ─────────────────────────────────────────────────────────
@@ -184,7 +213,6 @@ def api_is_holiday():
 # ─────────────────────────────────────────────────────────
 # ENDPOINT 5: Rango de fechas disponibles
 # GET /api/date-range
-# Para que el frontend sepa qué fechas puede seleccionar
 # ─────────────────────────────────────────────────────────
 @app.route("/api/date-range")
 def api_date_range():
@@ -192,7 +220,7 @@ def api_date_range():
         SELECT
             MIN(captured_at::date)::text AS min_date,
             MAX(captured_at::date)::text AS max_date
-        FROM station_status
+        FROM station_snapshot
     """
     with get_conn() as conn:
         with conn.cursor() as cur:
@@ -203,7 +231,84 @@ def api_date_range():
 
 
 # ─────────────────────────────────────────────────────────
-# Helper: montar diccionario { stationId: [s0..s23] }
+# ENDPOINT 6: Meses disponibles en el dataset
+# GET /api/available-months
+# ─────────────────────────────────────────────────────────
+MONTH_NAMES = {
+    1: 'Enero', 2: 'Febrero', 3: 'Marzo', 4: 'Abril',
+    5: 'Mayo', 6: 'Junio', 7: 'Julio', 8: 'Agosto',
+    9: 'Septiembre', 10: 'Octubre', 11: 'Noviembre', 12: 'Diciembre',
+}
+
+@app.route("/api/available-months")
+def api_available_months():
+    sql = """
+        SELECT DISTINCT EXTRACT(MONTH FROM captured_at)::int AS month
+        FROM station_snapshot
+        ORDER BY month
+    """
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+
+    months = [{"value": row[0], "label": MONTH_NAMES[row[0]]} for row in rows]
+    return jsonify(months)
+
+
+# ─────────────────────────────────────────────────────────
+# ENDPOINT 7: Versiones de una estación
+# GET /api/station-versions?source_id=1
+#
+# Devuelve todas las versiones de una estación física
+# (misma source_id, distintos metadatos).
+# ─────────────────────────────────────────────────────────
+@app.route("/api/station-versions")
+def api_station_versions():
+    try:
+        source_id = int(request.args.get("source_id", 0))
+    except ValueError:
+        return jsonify({"error": "source_id debe ser un entero"}), 400
+
+    if not source_id:
+        return jsonify({"error": "Parámetro 'source_id' requerido"}), 400
+
+    sql = """
+        SELECT
+            st.station_id,
+            st.number,
+            st.name,
+            st.address,
+            st.latitude,
+            st.longitude,
+            st.total_bases,
+            MIN(ss.captured_at) AS first_seen,
+            MAX(ss.captured_at) AS last_seen,
+            COUNT(ss.captured_at) AS snapshot_count
+        FROM station st
+        LEFT JOIN station_snapshot ss ON ss.station_id = st.station_id
+        WHERE st.source_id = %(sid)s
+        GROUP BY st.station_id
+        ORDER BY first_seen
+    """
+    with get_conn() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute(sql, {"sid": source_id})
+            rows = cur.fetchall()
+
+    for r in rows:
+        r['latitude']       = float(r['latitude'])  if r['latitude']  else None
+        r['longitude']      = float(r['longitude']) if r['longitude'] else None
+        r['total_bases']    = int(r['total_bases'])
+        r['snapshot_count'] = int(r['snapshot_count'])
+        r['first_seen']     = r['first_seen'].isoformat() if r['first_seen'] else None
+        r['last_seen']      = r['last_seen'].isoformat()  if r['last_seen']  else None
+
+    return jsonify(rows)
+
+
+# ─────────────────────────────────────────────────────────
+# Helper: montar { station_id: [sat_h0..sat_h23] }
 # ─────────────────────────────────────────────────────────
 def _build_sat_dict(rows):
     result = {}
@@ -213,14 +318,12 @@ def _build_sat_dict(rows):
             result[key] = [None] * 24
         result[key][int(hora)] = round(float(sat), 4) if sat else None
 
-    # Rellenar huecos con interpolación simple o 0.5
     for key in result:
         arr = result[key]
         for i in range(24):
             if arr[i] is None:
-                # Buscar vecinos
                 prev_val = next((arr[j] for j in range(i - 1, -1, -1) if arr[j] is not None), None)
-                next_val = next((arr[j] for j in range(i + 1, 24) if arr[j] is not None), None)
+                next_val = next((arr[j] for j in range(i + 1, 24)     if arr[j] is not None), None)
                 if prev_val is not None and next_val is not None:
                     arr[i] = round((prev_val + next_val) / 2, 4)
                 elif prev_val is not None:

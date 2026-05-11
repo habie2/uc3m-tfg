@@ -257,3 +257,41 @@ input[type=range]::-moz-range-track { height: 4px; border-radius: 2px; backgroun
   border-radius: 8px; border: none;
   box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
+
+.month-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.month-btn {
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+
+.month-btn:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+}
+
+.month-btn.on {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+/* Etiqueta de mes en la barra de tiempo */
+.tb-month-tag {
+  font-size: 11px;
+  opacity: 0.7;
+  font-weight: 400;
+}
