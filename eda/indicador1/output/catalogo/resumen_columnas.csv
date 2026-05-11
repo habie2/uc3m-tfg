@@ -1,0 +1,15 @@
+Columna,Tipo,No nulos,Nulos,% Nulos,Únicos,Ejemplo
+id,int64,266,0,0.0,266,1
+number,object,266,0,0.0,266,1a
+name,object,266,0,0.0,262,Puerta del Sol A
+address,object,266,0,0.0,259,Puerta del Sol nº 1
+latitude,float64,266,0,0.0,265,40.4172137
+longitude,float64,266,0,0.0,265,-3.7018341
+total_bases,int64,266,0,0.0,8,30
+primer_visto,object,266,0,0.0,13,2018-07-01T00:27:38.220760
+ultimo_visto,object,266,0,0.0,3,2022-12-01T00:38:00.036831
+veces_vista,int64,266,0,0.0,15,54
+nombres_distintos,int64,266,0,0.0,2,1
+direcciones_distintas,int64,266,0,0.0,3,1
+capacidades_distintas,int64,266,0,0.0,2,2
+coordenadas_distintas,int64,266,0,0.0,3,3

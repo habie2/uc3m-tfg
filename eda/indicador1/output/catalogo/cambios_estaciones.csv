@@ -1,0 +1,192 @@
+id_estacion,nombre_referencia,tipo_cambio,timestamp_cambio,valor_anterior,valor_nuevo,distancia_m
+1,Puerta del Sol A,capacidad,2020-01-01T00:27:28.332295,24,30,
+1,Puerta del Sol A,coordenadas,2020-01-01T00:27:28.332295,"('40.4168961', '-3.7024255')","('40.41715281', '-3.70178074')",61.6
+1,Puerta del Sol A,coordenadas,2020-07-01T00:27:28.514815,"('40.41715281', '-3.70178074')","('40.4172137', '-3.7018341')",8.14
+2,Puerta del Sol B,capacidad,2020-03-01T00:07:58.944437,24,30,
+2,Puerta del Sol B,coordenadas,2020-05-01T00:22:37.115298,"('40.4170009', '-3.7024207')","('40.417189', '-3.701642')",69.16
+2,Puerta del Sol B,coordenadas,2020-07-01T00:27:28.514815,"('40.417189', '-3.701642')","('40.41731271011562', '-3.701602938060457')",14.15
+4,Plaza Conde Suchil,direccion,2021-02-01T00:38:22.571579,Plaza del Conde Suchil nº 2-4,Plaza del Conde del Valle de Súchil nº 3,
+6,Fuencarral,coordenadas,2020-06-01T00:44:29.888088,"('40.4285280', '-3.7020599')","('40.42852', '-3.70205')",1.22
+11,Marqués de la Ensenada,coordenadas,2020-06-01T00:44:29.888088,"('40.4250863', '-3.6918807')","('40.42533', '-3.69214')",34.87
+15,Ventura Rodríguez,direccion,2021-02-01T00:38:22.571579,Calle Ventura Rodríguez nº 2,Calle Duque de Liria,
+16,San Vicente Ferrer,coordenadas,2020-03-01T00:07:58.944437,"('40.4261649', '-3.7073764')","('40.4262383', '-3.7074453')",10.03
+19,Plaza de Pedro Zerolo,direccion,2021-02-01T00:38:22.571579,Plaza de Pedro Zerolo,Plaza de Pedro Zerolo nº 1,
+21,Banco de España A,capacidad,2018-08-01T00:58:32.872907,24,30,
+23,Red de San Luis A,coordenadas,2019-08-01T00:50:32.351097,"('40.4197872', '-3.7014814')","('40.4197204', '-3.7015235')",8.24
+26,Santo Domingo,coordenadas,2020-07-01T00:27:28.514815,"('40.4197429', '-3.7080733')","('40.4202834', '-3.7081246')",60.26
+27,Palacio de Oriente,coordenadas,2019-06-01T00:27:15.455361,"('40.4182146', '-3.7103538')","('40.417908', '-3.710692')",44.52
+28,Plaza de Celenque A,coordenadas,2020-07-01T00:27:28.514815,"('40.4173114', '-3.7064809')","('40.4173703', '-3.7057791')",59.77
+32,Sevilla,coordenadas,2020-07-01T00:27:28.514815,"('40.4181663', '-3.6992600')","('40.4181518', '-3.6984368')",69.71
+37,Carretas,capacidad,2019-08-01T00:50:32.351097,24,21,
+37,Carretas,coordenadas,2020-07-01T00:27:28.514815,"('40.4157138', '-3.7031808')","('40.4165039', '-3.7030833')",88.24
+39,Plaza del Cordón,direccion,2021-02-01T00:38:22.571579,Plaza del Cordón nº 1,Plaza del Cordón,
+40,Plaza Ramales,nombre,2021-02-01T00:38:22.571579,Plaza de Ramales,Plaza Ramales,
+40,Plaza Ramales,direccion,2021-02-01T00:38:22.571579,Plaza de Ramales nº 1,Plaza de Ramales,
+40,Plaza Ramales,coordenadas,2020-06-01T00:44:29.888088,"('40.4167281', '-3.7124038')","('40.4168', '-3.71183')",49.23
+41,Plaza de San Francisco,nombre,2021-02-01T00:38:22.571579,Plaza San Francisco,Plaza de San Francisco,
+41,Plaza de San Francisco,coordenadas,2021-08-01T00:24:17.718979,"('40.4108442', '-3.7144964')","('40.4108', '-3.714113')",32.83
+42,Plaza de los Carros,coordenadas,2020-07-01T00:27:28.514815,"('40.4110406', '-3.7120734')","('40.4114041', '-3.7114762')",64.73
+45,Antón Martín,capacidad,2019-10-01T00:30:37.376135,21,18,
+46,Santa Isabel,direccion,2018-09-30T23:42:38.647290,Calle Atocha nº 32,Calle Santa Isabel nº 32,
+46,Santa Isabel,direccion,2021-02-01T00:38:22.571579,Calle Santa Isabel nº 32,Calle Atocha nº 95,
+47,Jesús y María,direccion,2021-02-01T00:38:22.571579,Calle Lavapiés nº 34-36,Calle Lavapiés nº 34,
+57,Plaza de Lavapiés,coordenadas,2020-07-01T00:27:28.514815,"('40.4089282', '-3.7008803')","('40.4083061', '-3.7007111')",70.64
+59,Plaza de San Ildefonso,direccion,2021-02-01T00:38:22.571579,Plaza de San Ildefonso nº 3,Plaza de San Ildefonso,
+69,Antonio Maura,coordenadas,2020-07-01T00:27:28.514815,"('40.4165605', '-3.6904525')","('40.4166834', '-3.6894193')",88.53
+79,Menéndez Pelayo,direccion,2021-02-01T00:38:22.571579,Avenida de Menéndez Pelayo nº 90,Avenida de Menéndez Pelayo con calle Poeta Esteban Villegas,
+80,Puerta de Mariano de Cavia,coordenadas,2020-07-01T00:27:28.514815,"('40.4076726', '-3.6750121')","('40.4071304', '-3.6751352')",61.18
+82,Pedro Bosch,coordenadas,2019-10-01T00:30:37.376135,"('40.4009101', '-3.6744804')","('40.400789', '-3.674400')",15.09
+86,Cuesta de Moyano,direccion,2021-02-01T00:38:22.571579,Plaza del Emperador Carlos V nº 11,Cuesta de Claudio Moyano,
+88,Pío Baroja,coordenadas,2020-07-01T00:27:28.514815,"('40.4130243', '-3.6751105')","('40.4132995', '-3.6745323')",57.73
+90,Puerta de Madrid,direccion,2021-02-01T00:38:22.571579,Avenida de Menéndez Pelayo nº 11,Avenida de Menéndez Pelayo esquina calle O'Donnell,
+91,Cibeles,direccion,2021-02-01T00:38:22.571579,Paseo del Prado nº 1,Plaza Cibeles,
+91,Cibeles,coordenadas,2020-07-01T00:27:28.514815,"('40.4186148', '-3.6926217')","('40.4186516', '-3.6933498')",61.77
+99,Biblioteca Nacional,direccion,2021-02-01T00:38:22.571579,Paseo de Recoletos nº 32-34,Paseo de Recoletos nº 20,
+99,Biblioteca Nacional,coordenadas,2020-07-01T00:27:28.514815,"('40.4226990', '-3.6909648')","('40.4232153', '-3.690756')",60.07
+100,Villanueva,direccion,2019-11-01T00:51:20.843377,Calle Claudio Coello nº 109,Calle Claudio Coello nº 19,
+100,Villanueva,direccion,2021-02-01T00:38:22.571579,Calle Claudio Coello nº 19,Calle Claudio Coello nº 109,
+102,Alcalá,coordenadas,2020-07-01T00:27:28.514815,"('40.4226906', '-3.6801307')","('40.4222969', '-3.6805189')",54.74
+103,Plaza de Felipe II,coordenadas,2020-07-01T00:27:28.514815,"('40.4242625', '-3.6753567')","('40.4239447', '-3.6758383')",53.95
+105,Palacio de Deportes,coordenadas,2020-06-01T00:44:29.888088,"('40.4248457', '-3.6738635')","('40.42478', '-3.67384')",7.57
+106,Jorge Juan,coordenadas,2020-07-01T00:27:28.514815,"('40.4231526', '-3.6691523')","('40.4231526', '-3.6691524')",0.01
+108,Ortega y Gasset,direccion,2021-02-01T00:38:22.571579,Calle Ortega y Gasset nº 6,Calle José Ortega y Gasset nº 4,
+108,Ortega y Gasset,coordenadas,2020-06-01T00:44:29.888088,"('40.4303057', '-3.6865654')","('40.43037', '-3.68653')",7.75
+109,Castellana,coordenadas,2020-06-01T00:44:29.888088,"('40.4268331', '-3.6895336')","('40.42677', '-3.68958')",8.04
+110,Serrano,coordenadas,2020-06-01T00:44:29.888088,"('40.4267905', '-3.6873922')","('40.42699', '-3.68745')",22.72
+113,Columela,direccion,2021-02-01T00:38:22.571579,Calle Serrano nº 6,Calle Serrano nº 8,
+116,Moncloa,coordenadas,2020-07-01T00:27:28.514815,"('40.4344969', '-3.7206893')","('40.4347895', '-3.7200845')",60.65
+118,Arcipreste de Hita B,coordenadas,2020-07-01T00:27:28.514815,"('40.4337036', '-3.7175115')","('40.4341006', '-3.7179687')",58.7
+120,Pintor Rosales,direccion,2021-02-01T00:38:22.571579,Paseo del Pintor Rosales nº 38,Paseo del Pintor Rosales frente al nº 38,
+121,Quintana,direccion,2021-02-01T00:38:22.571579,Calle Quintana nº 11-13,Calle Quintana nº 11,
+123,Plaza de España A,direccion,2021-02-01T00:38:22.571579,Plaza de España,Calle Princesa nº 5,
+123,Plaza de España A,coordenadas,2022-04-01T00:03:37.449167,"('40.4240200', '-3.7116030')","('40.423668', '-3.713053')",128.83
+124,Plaza de España B,direccion,2021-02-01T00:38:22.571579,Plaza de España,Calle Princesa nº 5,
+124,Plaza de España B,coordenadas,2022-04-01T00:03:37.449167,"('40.4241200', '-3.7117030')","('40.423681', '-3.710537')",110.11
+126,Juan Martín,direccion,2021-02-01T00:38:22.571579,Calle Juan Martín el Empecinado nº 14,Calle Juan Martín el Empecinado nº 16,
+128,Palos de la Frontera,direccion,2021-02-01T00:38:22.571579,Calle Palos de la Frontera nº 40,Calle Palos de la Frontera nº 27,
+130,Santa Engracia 14,coordenadas,2020-07-01T00:27:28.514815,"('40.4295863', '-3.6963983')","('40.4291992', '-3.6967169')",50.79
+131,Guzmán el Bueno,direccion,2021-02-01T00:38:22.571579,Calle Guzmán el Bueno nº 2,Calle Guzmán el Bueno nº 1,
+163,General Álvarez de Castro,direccion,2021-02-01T00:38:22.571579,Calle del General Álvarez de Castro nº 2,Calle del General Álvarez de Castro nº 1,
+160,Cea Bermúdez,capacidad,2018-09-30T23:42:38.647290,24,27,
+161,José Abascal,coordenadas,2020-07-01T00:27:28.514815,"('40.4385316', '-3.6982209')","('40.4383865', '-3.6982353')",16.18
+157,Santa Engracia 127,coordenadas,2020-06-01T00:44:29.888088,"('40.4413860', '-3.7016321')","('40.44156', '-3.70164')",19.36
+156,Bravo Murillo 44,coordenadas,2020-07-01T00:27:28.514815,"('40.4412115', '-3.7039582')","('40.4418402', '-3.7040344')",70.21
+150,Raimundo Fernández,direccion,2021-02-01T00:38:22.571579,Calle Raimundo Fernández Villaverde nº 33-35,Calle Raimundo Fernández Villaverde nº 33,
+152,Plaza de la República Argentina,direccion,2021-02-01T00:38:22.571579,Plaza de la República Argentina nº 6-7,Plaza de la República Argentina nº 6,
+154,Paseo de la Castellana con Raimundo Fernández,direccion,2021-02-01T00:38:22.571579,Paseo de la Castellana nº 67,Paseo de la Castellana esquina calle Raimundo Fernández Villaverde,
+162,Velázquez 130,capacidad,2020-07-01T00:27:28.514815,24,27,
+162,Velázquez 130,coordenadas,2020-07-01T00:27:28.514815,"('40.4379444', '-3.6828620')","('40.4385127', '-3.6831578')",67.97
+165,Paseo de la Castellana - Glorieta de Emilio Castelar,nombre,2021-02-01T00:38:22.571579,Pº Castellana - Glorieta de Emilio Castelar,Paseo de la Castellana - Glorieta de Emilio Castelar,
+147,Castellana frente a Hermanos Pinzón,direccion,2021-02-01T00:38:22.571579,Paseo de la Castellana nº 124,Paseo de la Castellana nº 122,
+145,Orense 12,coordenadas,2020-07-01T00:27:28.514815,"('40.4480662', '-3.6952860')","('40.4489101', '-3.6952943')",93.84
+142,General Perón 1,direccion,2021-02-01T00:38:22.571579,Avenida del General Perón nº 1-4,Avenida del General Perón frente al nº 4,
+143,General Perón con Poeta Joan Maragall,direccion,2021-02-01T00:38:22.571579,Avenida del General Perón nº 36,Avenida del General Perón frente al nº 36,
+143,General Perón con Poeta Joan Maragall,coordenadas,2020-07-01T00:27:28.514815,"('40.4522938', '-3.6926510')","('40.4522454', '-3.693085')",37.11
+139,San Germán 57,nombre,2021-02-01T00:38:22.571579,San Germán,San Germán 57,
+139,San Germán 57,direccion,2021-02-01T00:38:22.571579,Calle del General Yagüe nº 57,Calle San Germán nº 57,
+132,Paseo de la Florida,capacidad,2018-09-30T23:42:38.647290,24,27,
+132,Paseo de la Florida,coordenadas,2020-07-01T00:27:28.514815,"('40.4220812', '-3.7218482')","('40.4219665', '-3.7224983')",56.49
+136,Paseo de las Delicias,direccion,2021-02-01T00:38:22.571579,Paseo de las Delicias nº 92-94,Paseo de las Delicias nº 92,
+135,Entrada Matadero,capacidad,2018-09-30T23:42:38.647290,24,27,
+135,Entrada Matadero,coordenadas,2020-07-01T00:27:28.514815,"('40.3919385', '-3.6971829')","('40.3928821', '-3.6975708')",109.95
+174,Segovia 26,direccion,2021-02-01T00:38:22.571579,"Calle Segovia, 26",Calle Segovia nº 26,
+175,Segovia 45,direccion,2021-02-01T00:38:22.571579,"Calle Segovia, 45",Calle Segovia nº 45,
+190,Parque Roma,direccion,2021-02-01T00:38:22.571579,"Sainz de Baranda, frente al nº 107",Calle Alcalde Sáinz de Baranda frente al nº 107,
+211,San Francisco de Sales,direccion,2021-02-01T00:38:22.571579,"General Ampudia, 2",Calle General Ampudia nº 2,
+179,Embajadores-Cáceres,direccion,2021-02-01T00:38:22.571579,"Embajadores, 101",Calle Embajadores nº 101,
+183,Jaime el Conquistador,direccion,2021-02-01T00:38:22.571579,"Jaime I el Conquistador, 30",Calle Jaime el Conquistador nº 30,
+184,Beata,direccion,2021-02-01T00:38:22.571579,"Alicante, 3",Calle Alicante nº 3,
+184,Beata,capacidad,2019-08-01T00:50:32.351097,27,24,
+185,Legazpi,direccion,2021-02-01T00:38:22.571579,"Bolivar, 3",Calle Bolívar nº 3,
+189,Retiro-Ibiza,direccion,2021-02-01T00:38:22.571579,"Ibiza, 18",Calle Ibiza nº 18,
+191,Doctor Esquerdo-Hermosilla,direccion,2021-02-01T00:38:22.571579,"Hermosilla, 135",Calle Hermosilla nº 135,
+200,Avenida de los Toreros,direccion,2021-02-01T00:38:22.571579,"Avda. Toreros,3",Avenida de los Toreros nº 3,
+201,Ventas,direccion,2021-02-01T00:38:22.571579,"Avda. Toreros, 49",Avenida de los Toreros nº 49,
+207,Fernando el Católico,direccion,2021-02-01T00:38:22.571579,"Fernando el Católico, 61",Calle Fernando el Católico nº 61,
+213,Estrecho,direccion,2021-02-01T00:38:22.571579,"Navarra, 1",Calle Navarra nº 1,
+213,Estrecho,capacidad,2019-08-01T00:50:32.351097,27,24,
+178,Paseo de la Esperanza,direccion,2021-02-01T00:38:22.571579,"Pº Esperanza, 21",Paseo de la Esperanza nº 21,
+192,Marqués de Zafra,direccion,2021-02-01T00:38:22.571579,"Pº Marqués de Zafra, 24",Paseo Marqués de Zafra nº 24,
+193,Quinta Fuente del Berro,direccion,2021-02-01T00:38:22.571579,Sancho Dávila esq. Pº Marqués de Zafra,Calle Sancho Dávila esquina Paseo Marqués de Zafra,
+195,Alcalá-Ventas,direccion,2021-02-01T00:38:22.571579,"Alejandro González, 1",Calle Alejandro González nº 1,
+198,Velázquez-Diego de León,direccion,2021-02-01T00:38:22.571579,"Velázquez, 91",Calle Velázquez nº 91,
+199,Diego de león,direccion,2021-02-01T00:38:22.571579,"Alonso Heredia, 1",Calle Alonso Heredia nº 1,
+205,Parque Berlín,direccion,2021-02-01T00:38:22.571579,"Avenida Concha Espina, 34 ",Avenida de Concha Espina nº 34,
+212,Cuatro Caminos 2,direccion,2021-02-01T00:38:22.571579,Doctor Santero 1,Calle Doctor Santero nº 1,
+215,Remonta,direccion,2021-02-01T00:38:22.571579,"Azucenas, 1",Calle Azucenas nº 1,
+218,Tres Cruces,direccion,2021-02-01T00:38:22.571579,Tres Cruces 7,Calle Tres Cruces nº 7,
+177,Pirámides,direccion,2021-02-01T00:38:22.571579,"Toledo, 181",Calle Toledo nº 181,
+181,Puente Praga,direccion,2021-02-01T00:38:22.571579,"Pº Esperanza, 59",Paseo de la Esperanza nº 59,
+182,Madrid Río-Yeserías,direccion,2021-02-01T00:38:22.571579,Pº Yeserías 45,Paseo de Yeserías nº 45,
+219,Desengaño,direccion,2021-02-01T00:38:22.571579,Desengaño 1,Calle Desengaño nº 1,
+176,Batalla del Salado,direccion,2021-02-01T00:38:22.571579,"Pº Sta. Mª Cabeza, 29-31",Paseo Santa María de la Cabeza nº 29,
+180,Delicias,direccion,2021-02-01T00:38:22.571579,"Bustamante, 1",Calle Bustamante nº 1,
+187,Puente de Vallecas,direccion,2021-02-01T00:38:22.571579,Avda. Albufera 6 con Antonia Calas ,Avenida de la Albufera nº 6,
+188,Méndez Álvaro,direccion,2021-02-01T00:38:22.571579,"Retama, 5",Calle Retama nº 5,
+194,General Pardiñas,direccion,2021-02-01T00:38:22.571579,"General Pardiñas, 56",Calle General Pardiñas nº 56,
+196,Puente de Ventas,direccion,2021-02-01T00:38:22.571579,"Avda. Daroca, 2",Avenida de Daroca nº 2,
+202,Avenida de América 2,direccion,2021-02-01T00:38:22.571579,Francisco Silvela 86,Calle Francisco Silvela nº 86,
+203,Avenida de América 1,direccion,2021-02-01T00:38:22.571579,"Padre Indalecio Hernandez, 1",Calle Padre Indalecio Hernández nº 1,
+208,Quevedo,direccion,2021-02-01T00:38:22.571579,"Gta. Quevedo, 5",Glorieta de Quevedo nº 5,
+214,Metro Tetuán,direccion,2021-02-01T00:38:22.571579,"Marqués de Viana, 3",Calle Marqués de Viana nº 3,
+216,Plaza de Castilla,direccion,2021-02-01T00:38:22.571579,"Paseo Castellana, 216",Paseo de la Castellana nº 216,
+217,Plaza de Castilla 2,coordenadas,2020-06-01T00:44:29.888088,"('40.4659166', '-3.6884722')","('40.4656779', '-3.6887722')",36.72
+197,Avenida Donostiarra,direccion,2021-02-01T00:38:22.571579,Virgen de la Alegria 18,Calle Virgen de la Alegría nº 18,
+197,Avenida Donostiarra,coordenadas,2020-07-01T00:27:28.514815,"('40.4350277', '-3.6555277')","('40.4351256', '-3.6554918')",11.3
+204,Prosperidad,direccion,2021-02-01T00:38:22.571579,"Suero de Quiñones, 2",Calle Suero de Quiñones nº 2,
+206,Rubén Darío,direccion,2021-02-01T00:38:22.571579,Gta. Rubén Darío 2,Glorieta Rubén Darío 2,
+209,Canal,direccion,2021-02-01T00:38:22.571579,"José Abascal, frene al nº 2",Calle José Abascal frente al nº 2,
+210,Parque Santander,direccion,2021-02-01T00:38:22.571579,Calle Santander esq. Avda. Filipinas,Calle Santander esquina con Avenida de Filipinas,
+186,Junta Municipal Retiro,direccion,2020-12-01T00:56:04.683755,Plaza de Daoíz y Velarde,"León Gil de Palacios, 5",
+186,Junta Municipal Retiro,direccion,2021-02-01T00:38:22.571579,"León Gil de Palacios, 5",Calle León Gil de Palacio nº 3,
+220,Marqués de Vadillo,direccion,2021-02-01T00:38:22.571579,"Marqués de Vadillo, 9",Glorieta Marqués de Vadillo nº 9,
+221,Glorieta de Cádiz,direccion,2021-02-01T00:38:22.571579,"Antonio López, 129",Calle Antonio López nº 129,
+222,Condesa de Venadito,direccion,2021-02-01T00:38:22.571579,"Condesa de Venadito, 2 / Calle Albacete",Calle Condesa de Venadito nº 2,
+223,Gutierre de Cetina,direccion,2021-02-01T00:38:22.571579,"Gutierre de Cetina, 77",Calle Gutierre de Cetina nº 77,
+224,Puerta del Ángel,direccion,2021-02-01T00:38:22.571579,"Plaza Puerta del Ángel, 4",Plaza Puerta del Ángel nº 4,
+225,Pedro Rico,direccion,2021-02-01T00:38:22.571579,"Pedro Rico, 4",Calle Pedro Rico nº 4,
+226,Camino Vinateros,direccion,2021-02-01T00:38:22.571579,"Camino Vinateros, 28",Calle Camino de los Vinateros nº 28,
+227,Marroquina,direccion,2021-02-01T00:38:22.571579,"Camino Vinateros, 108",Calle Camino de los Vinateros nº 108,
+228,Plaza del Encuentro,direccion,2021-02-01T00:38:22.571579,"Calle Arroyo de las Pilillas, 6",Calle Arroyo de las Pilillas nº 6,
+229,Pavones,direccion,2021-02-01T00:38:22.571579,"Hacienda de Pavones, 342",Calle Hacienda de Pavones nº 342,
+230,Antonio López,direccion,2021-02-01T00:38:22.571579,"Eugenio Caxes, frente al 12",Calle Eugenio Caxes frente al nº 12,
+231,Ermita Santo,direccion,2021-02-01T00:38:22.571579,"Paseo de la Ermita del Santo, 48",Paseo de la Ermita del Santo nº 48,
+232,Caramuel,direccion,2021-02-01T00:38:22.571579,"Caramuel, 51",Calle Caramuel nº 51,
+232,Caramuel,capacidad,2021-02-01T00:38:22.571579,27,24,
+233,Doctor Lozano,direccion,2021-02-01T00:38:22.571579,"Sierra Toledana , 33",Calle Sierra Toledana nº 33,
+234,Sierra Toledana,direccion,2021-02-01T00:38:22.571579,"Camino de Valderribas, 94",Camino de Valderribas nº 94,
+236,Concordia,direccion,2021-02-01T00:38:22.571579,"Arroyo Olivar, 6",Calle Arroyo del Olivar nº 6,
+235,San Delfín,direccion,2021-02-01T00:38:22.571579,"San Delfin , 9",Calle San Delfín nº 9,
+237,C.D. Concepción,direccion,2021-02-01T00:38:22.571579,"Jose del Hierro, 5",Calle Jose del Hierro nº 5,
+238,Carlota O’Neill,direccion,2021-02-01T00:38:22.571579,"Carlota O'Neill, 32",Calle Carlota O'Neill nº 32,
+239,Derechos Humanos,direccion,2021-02-01T00:38:22.571579,"Derechos Humanos, 12",Calle Derechos Humanos nº 12,
+240,José María Pereda,direccion,2021-02-01T00:38:22.571579,"Jose Maria del Pereda, 1",Calle José María de Pereda nº 1,
+241,Marqués de Corbera 12,direccion,2021-02-01T00:38:22.571579,"Av. Marques de Corbera, 12",Avenida Marqués de Corbera nº 12,
+242,Marqués de Corbera 52,direccion,2021-02-01T00:38:22.571579,"Av. Marques de Corbera, 52",Avenida Marqués de Corbera nº 52,
+243,Embajadores 191,direccion,2021-02-01T00:38:22.571579,"Sodio, 1 B",Calle Sodio nº 1B,
+244,Paseo Imperial,direccion,2021-02-01T00:38:22.571579,"Paseo Imperial, 20",Paseo Imperial nº 20,
+245,Pablo Iglesias,direccion,2021-02-01T00:38:22.571579,"Francisco Balseiro, 1",Calle Francisco Balseiro nº 1,
+246,San Germán 5,nombre,2021-02-01T00:38:22.571579,San Germán,San Germán 5,
+246,San Germán 5,direccion,2021-02-01T00:38:22.571579,"San German, 5",Calle San Germán nº 5,
+247,Francos Rodríguez,direccion,2021-02-01T00:38:22.571579,"Francos Rodriguez, 62",Calle Francos Rodríguez nº 62,
+248,Avenida Brasilia,direccion,2021-02-01T00:38:22.571579,Avenida Brasilia frente al 9,Avenida de Brasilia frente al nº 9,
+249,Camilo José Cela,direccion,2021-02-01T00:38:22.571579,"Av. Camilo Jose Cela, 23",Avenida de Camilo José Cela nº 23,
+250,Avenida Bruselas,direccion,2021-02-01T00:38:22.571579,"Av. Bruselas, 56",Avenida Bruselas nº 56,
+251,Cartagena,direccion,2021-02-01T00:38:22.571579,"Cartagena, 34",Calle Cartagena nº 34,
+252,Hospital Clínico,direccion,2021-02-01T00:38:22.571579,"Isac Peral, 44",Calle Isaac Peral nº 44,
+253,Galileo,direccion,2021-02-01T00:38:22.571579,"Galileo, 63",Calle Galileo nº 63,
+254,Santa Engracia 87,direccion,2021-02-01T00:38:22.571579,"Santa Engracia, 87",Calle Santa Engracia nº 87,
+270,Zurbano,direccion,2021-02-01T00:38:22.571579,"Zurbano, 90",Calle Zurbano nº 90,
+256,Torre Cepsa,direccion,2021-02-01T00:38:22.571579,Sinesio Delgado,Calle Sinesio Delgado nº 2,
+257,Manuel Caldeiro,direccion,2021-02-01T00:38:22.571579,"Paseo Castellana, 298",Paseo de la Castellana nº 298,
+258,Serrano 113,direccion,2021-02-01T00:38:22.571579,"Serrano, 113 B",Calle Serrano nº 113B,
+259,Corazón de María,direccion,2021-02-01T00:38:22.571579,"Santa Hortensia, 31",Calle Santa Hortensia nº 31,
+260,Chamartín,direccion,2021-02-01T00:38:22.571579,Rodriguez Jaen,Calle Rodríguez Jaén nº 40,
+261,Doctor Fleming,direccion,2021-02-01T00:38:22.571579,"Dr. Fleming, 7",Calle Doctor Fleming nº 7,
+262,Pío XII,direccion,2021-02-01T00:38:22.571579,"Av. Pio XII, 3",Avenida Pío XII nº 3,
+263,López Pozas,direccion,2021-02-01T00:38:22.571579,"General Lopez Pozas, 2",Calle General López Pozas nº 2,
+264,Reina Victoria,direccion,2021-02-01T00:38:22.571579,Beatriz de Bobadilla frente al 2,Calle Beatriz de Bobadilla frente al nº 2,
+265,INEF,direccion,2021-02-01T00:38:22.571579,Avenida Juan de Herrera frente a Paul Guinard,Avenida Juan de Herrera frente a la calle Paul Guinard,
+268,Facultad Biología,direccion,2021-02-01T00:38:22.571579,"Jose Antonio Novais, frente al 12",Calle José Antonio Novais frente al nº 12,
+268,Facultad Biología,coordenadas,2021-07-01T00:03:34.143329,"('40.44912', '-3.72731')","('40.4483322', '-3.7272945')",87.61
+269,Facultad Derecho,direccion,2021-02-01T00:38:22.571579,"Avenida Complutense, 23",Avenida Complutense nº 23,

@@ -1,0 +1,14 @@
+Campo,Tipo en JSON,Ejemplo
+activate,entero,1
+name,string,Puerta del Sol A
+reservations_count,entero,0
+light,entero,2
+total_bases,entero,24
+free_bases,entero,10
+number,string,1a
+longitude,string (numérico),-3.7024255
+no_available,entero,0
+address,string,Puerta del Sol nº 1
+latitude,string (numérico),40.4168961
+dock_bikes,entero,14
+id,entero,1
