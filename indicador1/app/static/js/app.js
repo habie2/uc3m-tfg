@@ -208,13 +208,13 @@ function App() {
       h(
         "div",
         { className: "logo" },
-        h("span", { className: "logo-bici" }, "bici"),
+        h("span", { className: "logo-bici" }, "Indicador saturación"),
         h("span", { className: "logo-dot" }),
         h("span", { className: "logo-mad" }, "mad"),
       ),
-      h("div", { className: "hd-sep" }),
-      h("span", { className: "hd-cat" }, "Indicadores · TFG"),
-      h("div", { className: "hd-chip" }, "Saturación"),
+      // h("div", { className: "hd-sep" }),
+      // h("span", { className: "hd-cat" }, "Indicadores · TFG"),
+      // h("div", { className: "hd-chip" }, "Saturación"),
     ),
 
     h(

@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>bici.mad — Indicador 2 · Tránsito por tipo de vía</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+/* ============================================================
+   PALETA Y TIPOGRAFÍA — coherente con el indicador 1
+   ============================================================ */
+:root {
+    /* base */
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --ink-soft: #555;
+    --ink-mute: #999;
+    --border: #e8e8e8;
+    --shadow: 0 8px 32px rgba(0,0,0,0.08);
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.04);
+
+    /* acento — replicado del indicador 1 */
+    --accent: #4f5ce8;
+    --accent-soft: rgba(79,92,232,0.12);
+
+    /* paleta de tipos de vía — alineada con el seed SQL */
+    --c-cycleway:  #2E8B57;
+    --c-quiet:     #7FB069;
+    --c-tertiary:  #E1B16A;
+    --c-secondary: #D98E48;
+    --c-primary:   #C25A3C;
+    --c-trunk:     #8C3A2D;
+    --c-service:   #9C9387;
+}
+
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* ============================================================
+   HEADER — idéntico al indicador 1
+   ============================================================ */
+.header {
+    height: 60px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 32px;
+    background: var(--panel);
+    position: relative;
+    z-index: 1000;
+}
+.logo {
+    font-weight: 700;
+    font-size: 18px;
+    letter-spacing: -0.02em;
+}
+.logo .dot { color: var(--accent); }
+.breadcrumb {
+    color: var(--ink-mute);
+    font-size: 13px;
+    letter-spacing: 0.05em;
+}
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+.layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    height: calc(100vh - 60px);
+}
+
+.sidebar {
+    border-right: 1px solid var(--border);
+    background: var(--panel);
+    padding: 24px;
+    overflow-y: auto;
+}
+.map-area { position: relative; }
+#map { width: 100%; height: 100%; }
+
+/* ============================================================
+   SECCIONES DEL SIDEBAR
+   ============================================================ */
+.section { margin-bottom: 28px; }
+.section-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+
+/* tabs (Tipo de día / Fecha concreta) — placeholder visual coherente */
+.tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #f4f4f6;
+    border-radius: 8px;
+    padding: 3px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+.tabs button {
+    border: none;
+    background: transparent;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--ink-soft);
+    font: inherit;
+}
+.tabs button.active {
+    background: white;
+    color: var(--ink);
+    box-shadow: var(--shadow-card);
+}
+
+/* ============================================================
+   LISTA DE TIPOS DE VÍA (modo intensidad global)
+   ============================================================ */
+.via-list { display: flex; flex-direction: column; gap: 10px; }
+.via-row {
+    display: grid;
+    grid-template-columns: 14px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px 10px;
+    margin: -8px -10px;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+.via-row:hover { background: #fafafa; }
+.via-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+}
+.via-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+}
+.via-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+}
+.via-bar {
+    height: 4px;
+    background: #f0f0f0;
+    border-radius: 2px;
+    overflow: hidden;
+}
+.via-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+}
+.via-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+.via-value .pct {
+    font-size: 10px;
+    color: var(--ink-mute);
+    display: block;
+    font-weight: 500;
+}
+
+/* ============================================================
+   ESTADÍSTICAS GLOBALES (réplica del indicador 1)
+   ============================================================ */
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 10px 0;
+    border-bottom: 1px solid #f3f3f3;
+}
+.stat-row:last-child { border-bottom: none; }
+.stat-label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.stat-label .main { font-size: 13px; color: var(--ink); }
+.stat-label .sub { font-size: 11px; color: var(--ink-mute); }
+.stat-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================
+   LEYENDA
+   ============================================================ */
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+}
+.legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+.legend-note {
+    font-size: 11px;
+    color: var(--ink-mute);
+    line-height: 1.5;
+    margin-top: 12px;
+}
+
+/* ============================================================
+   POPUP FLOTANTE DE CELDA (idéntico estilo al indicador 1)
+   ============================================================ */
+.cell-card {
+    position: absolute;
+    top: 80px;
+    right: 24px;
+    width: 320px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    z-index: 500;
+    display: none;
+}
+.cell-card.visible { display: block; }
+.cell-card-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink-mute);
+    font-size: 18px;
+    padding: 4px;
+}
+.cell-card h3 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    font-weight: 600;
+    padding-right: 24px;
+}
+.cell-card .cell-sub {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+}
+
+.cell-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.cell-metric {
+    background: #fafafa;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+}
+.cell-metric .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+}
+.cell-metric .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-mute);
+    margin-top: 2px;
+}
+
+.cell-distribution {
+    margin-top: 4px;
+}
+.cell-distribution h4 {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-mute);
+    margin: 0 0 10px 0;
+    font-weight: 700;
+}
+.dist-row {
+    display: grid;
+    grid-template-columns: 10px 1fr auto;
+    gap: 8px;
+    align-items: center;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+.dist-row .swatch {
+    width: 10px; height: 10px; border-radius: 3px;
+}
+.dist-row .name { color: var(--ink); }
+.dist-row .vals {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink-soft);
+}
+.dist-row .vals .pct {
+    color: var(--ink-mute);
+    margin-left: 6px;
+    font-size: 11px;
+}
+
+/* ============================================================
+   LEAFLET — estilizado de las capas
+   ============================================================ */
+.leaflet-container { background: #fafafa; }
+.cell-label {
+    background: rgba(255,255,255,0.92);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+     ============================================================ -->
+<header class="header">
+    <div class="logo">bici<span class="dot">.</span>mad</div>
+    <div class="breadcrumb">INDICADORES · TFG</div>
+</header>
+
+<!-- ============================================================
+     LAYOUT
+     ============================================================ -->
+<div class="layout">
+    <!-- ===========================================================
+         SIDEBAR
+         =========================================================== -->
+    <aside class="sidebar">
+        <!-- Selector de modo de visualización.
+             Ocupa el lugar que en el indicador 1 tenía "Tipo de día / Fecha
+             concreta", manteniendo el mismo lenguaje visual. -->
+        <div class="section">
+            <div class="section-title">Modo de visualización</div>
+            <div class="tabs">
+                <button id="btn-global" class="active">Intensidad global</button>
+                <button id="btn-cell">Análisis de celda</button>
+            </div>
+            <div style="font-size:12px;color:var(--ink-mute);line-height:1.5">
+                Agregado sobre <strong style="color:var(--ink)">todos los viajes</strong>
+                del histórico BiciMAD.
+            </div>
+        </div>
+
+        <!-- Bloque que cambia según modo -->
+        <div id="panel-global">
+            <div class="section">
+                <div class="section-title">Intensidad por tipo de vía</div>
+                <div class="via-list" id="via-list"></div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Estadísticas globales</div>
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="main">Tránsito total</span>
+                        <span class="sub">todas las celdas</span>
+                    </div>
+                    <div class="stat-value" id="stat-total">—</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="main">Celda más intensa</span>
+                        <span class="sub" id="stat-top-name">—</span>
+                    </div>
+                    <div class="stat-value" id="stat-top-value">—</div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span class="main">Tipo dominante</span>
+                        <span class="sub" id="stat-dom-pct">—</span>
+                    </div>
+                    <div class="stat-value" id="stat-dom-name">—</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Leyenda</div>
+                <div class="legend-item">
+                    <div class="legend-swatch" style="background:linear-gradient(90deg,#fff5ee,#8C3A2D)"></div>
+                    <span>Intensidad: claro → oscuro</span>
+                </div>
+                <div class="legend-note">
+                    Cada celda muestra los metros totales transitados (en km).
+                    Haz clic en cualquier celda para ver su detalle.
+                </div>
+            </div>
+        </div>
+
+        <div id="panel-cell" style="display:none">
+            <div class="section">
+                <div class="section-title">Modo análisis de celda</div>
+                <div style="font-size:13px;color:var(--ink-soft);line-height:1.6">
+                    Haz clic sobre cualquier celda del mapa para ver:
+                    <ul style="padding-left:18px;margin:10px 0">
+                        <li>Metros por tipo de vía</li>
+                        <li>Distribución porcentual</li>
+                        <li>Vías OSM diferenciadas por color</li>
+                        <li>Mapa de calor de viajes que la cruzan</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-title">Leyenda de tipos</div>
+                <div id="legend-cell"></div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ===========================================================
+         MAPA
+         =========================================================== -->
+    <div class="map-area">
+        <div id="map"></div>
+
+        <!-- Popup flotante: aparece al seleccionar una celda en modo análisis -->
+        <div class="cell-card" id="cell-card">
+            <button class="cell-card-close" onclick="closeCellCard()">✕</button>
+            <h3 id="cc-name">—</h3>
+            <div class="cell-sub" id="cc-id">—</div>
+
+            <div class="cell-metrics">
+                <div class="cell-metric">
+                    <div class="value" id="cc-total">—</div>
+                    <div class="label">km transitados</div>
+                </div>
+                <div class="cell-metric">
+                    <div class="value" id="cc-trips">—</div>
+                    <div class="label">viajes</div>
+                </div>
+            </div>
+
+            <div class="cell-distribution">
+                <h4>Distribución por tipo</h4>
+                <div id="cc-distribution"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     SCRIPTS
+     ============================================================ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* =================================================================
+   DATOS MOCK (en producción vendrán del backend)
+   ================================================================= */
+
+const CATEGORIES = [
+    { code: 'cycleway',  name: 'Vía ciclista',    color: '#2E8B57' },
+    { code: 'quiet',     name: 'Calle tranquila', color: '#7FB069' },
+    { code: 'tertiary',  name: 'Vía terciaria',   color: '#E1B16A' },
+    { code: 'secondary', name: 'Vía secundaria',  color: '#D98E48' },
+    { code: 'primary',   name: 'Vía primaria',    color: '#C25A3C' },
+    { code: 'trunk',     name: 'Vía rápida',      color: '#8C3A2D' },
+    { code: 'service',   name: 'Servicio/Otros',  color: '#9C9387' },
+];
+
+// Intensidad por tipo (m), agregado total — mock realista para Madrid
+const CATEGORY_INTENSITY = {
+    cycleway:  4_820_000,
+    quiet:     8_240_000,
+    tertiary:  3_115_000,
+    secondary: 6_790_000,
+    primary:   5_120_000,
+    trunk:       980_000,
+    service:   1_245_000,
+};
+
+// Genera un grid sintético sobre el centro de Madrid (15x12 celdas)
+const CENTER = [40.4168, -3.7038];
+const STEP = 0.0045; // ~500m en latitud
+const STEP_LON = 0.006;
+
+function makeCells() {
+    const cells = [];
+    let id = 1;
+    for (let dy = -5; dy <= 5; dy++) {
+        for (let dx = -7; dx <= 7; dx++) {
+            const lat = CENTER[0] + dy * STEP;
+            const lon = CENTER[1] + dx * STEP_LON;
+            // Distancia al centro determina intensidad (más al centro = más tránsito)
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            const baseIntensity = Math.max(50, 2500 * Math.exp(-dist * 0.35)
+                                  + Math.random() * 400);
+
+            // Distribución por tipo: zonas centrales más residencial/secundaria,
+            // periferia más primaria/trunk
+            const weights = {
+                cycleway:  0.05 + Math.random() * 0.10,
+                quiet:     0.25 + (1 - dist/8) * 0.20 + Math.random() * 0.05,
+                tertiary:  0.10 + Math.random() * 0.08,
+                secondary: 0.20 + Math.random() * 0.08,
+                primary:   0.10 + (dist/8) * 0.15 + Math.random() * 0.05,
+                trunk:     0.02 + (dist/8) * 0.08 * Math.random(),
+                service:   0.05 + Math.random() * 0.05,
+            };
+            const sum = Object.values(weights).reduce((a,b) => a+b, 0);
+            const meters = {};
+            for (const [k,v] of Object.entries(weights)) {
+                meters[k] = Math.round(baseIntensity * v / sum * 1000);
+            }
+            const total = Object.values(meters).reduce((a,b) => a+b, 0);
+
+            cells.push({
+                id: id++,
+                lat, lon,
+                bounds: [
+                    [lat - STEP/2, lon - STEP_LON/2],
+                    [lat + STEP/2, lon + STEP_LON/2],
+                ],
+                total_meters: total,
+                meters,
+                num_trips: Math.round(total / 1500 + Math.random() * 30),
+                label: pickLabel(dx, dy),
+            });
+        }
+    }
+    return cells;
+}
+
+function pickLabel(dx, dy) {
+    const names = ['Sol','Lavapiés','Malasaña','Chueca','La Latina','Embajadores',
+        'Atocha','Retiro','Salamanca','Chamberí','Argüelles','Moncloa',
+        'Tetuán','Cuatro Caminos','Pacífico','Delicias'];
+    return names[Math.abs((dx*7 + dy*3)) % names.length];
+}
+
+const CELLS = makeCells();
+
+/* =================================================================
+   ESTADO Y RENDERIZADO
+   ================================================================= */
+
+let currentMode = 'global'; // 'global' | 'cell'
+let selectedCell = null;
+let map, cellLayer, labelLayer, waysLayer, heatLayer;
+
+function fmtKm(meters) {
+    if (meters >= 1_000_000) return (meters/1_000_000).toFixed(2) + ' Mkm';
+    if (meters >= 1_000) return (meters/1_000).toFixed(1) + ' km';
+    return meters + ' m';
+}
+
+function fmtPct(x) { return x.toFixed(1) + '%'; }
+
+/* =================================================================
+   SIDEBAR — Panel global
+   ================================================================= */
+function renderGlobalPanel() {
+    const total = Object.values(CATEGORY_INTENSITY).reduce((a,b)=>a+b, 0);
+
+    // Lista de tipos de vía con barras
+    const list = document.getElementById('via-list');
+    list.innerHTML = '';
+
+    const ordered = CATEGORIES.map(c => ({
+        ...c,
+        meters: CATEGORY_INTENSITY[c.code],
+        pct: CATEGORY_INTENSITY[c.code] / total * 100,
+    })).sort((a,b) => b.meters - a.meters);
+
+    const max = ordered[0].meters;
+
+    for (const cat of ordered) {
+        const row = document.createElement('div');
+        row.className = 'via-row';
+        row.innerHTML = `
+            <div class="via-swatch" style="background:${cat.color}"></div>
+            <div class="via-info">
+                <div class="via-name">${cat.name}</div>
+                <div class="via-bar">
+                    <div class="via-bar-fill"
+                         style="width:${(cat.meters/max*100).toFixed(1)}%;
+                                background:${cat.color}"></div>
+                </div>
+            </div>
+            <div class="via-value">
+                ${fmtKm(cat.meters)}
+                <span class="pct">${fmtPct(cat.pct)}</span>
+            </div>
+        `;
+        list.appendChild(row);
+    }
+
+    // Estadísticas
+    document.getElementById('stat-total').textContent = fmtKm(total);
+
+    const topCell = CELLS.reduce((a,b) => a.total_meters > b.total_meters ? a : b);
+    document.getElementById('stat-top-name').textContent = topCell.label;
+    document.getElementById('stat-top-value').textContent = fmtKm(topCell.total_meters);
+
+    const dom = ordered[0];
+    document.getElementById('stat-dom-name').textContent = dom.name.split(' ')[0];
+    document.getElementById('stat-dom-pct').textContent = fmtPct(dom.pct) + ' del total';
+}
+
+/* =================================================================
+   SIDEBAR — Panel de celda (leyenda)
+   ================================================================= */
+function renderCellPanelLegend() {
+    const container = document.getElementById('legend-cell');
+    container.innerHTML = '';
+    for (const cat of CATEGORIES) {
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `
+            <div class="legend-swatch" style="background:${cat.color}"></div>
+            <span>${cat.name}</span>
+        `;
+        container.appendChild(item);
+    }
+}
+
+/* =================================================================
+   MAPA — Capas
+   ================================================================= */
+function intensityColor(value, max) {
+    // Escala secuencial cálida (claro -> oscuro)
+    const t = Math.min(1, value / max);
+    // interpola entre #FFF5EE y #8C3A2D
+    const start = [255, 245, 238];
+    const end   = [140, 58, 45];
+    const rgb = start.map((s,i) => Math.round(s + (end[i]-s) * t));
+    return `rgb(${rgb.join(',')})`;
+}
+
+function clearLayers() {
+    if (cellLayer)  { cellLayer.remove();  cellLayer  = null; }
+    if (labelLayer) { labelLayer.remove(); labelLayer = null; }
+    if (waysLayer)  { waysLayer.remove();  waysLayer  = null; }
+    if (heatLayer)  { heatLayer.remove();  heatLayer  = null; }
+}
+
+function renderGlobalMap() {
+    clearLayers();
+    const max = Math.max(...CELLS.map(c => c.total_meters));
+
+    cellLayer  = L.layerGroup().addTo(map);
+    labelLayer = L.layerGroup().addTo(map);
+
+    for (const cell of CELLS) {
+        const rect = L.rectangle(cell.bounds, {
+            color: '#fff',
+            weight: 1,
+            fillColor: intensityColor(cell.total_meters, max),
+            fillOpacity: 0.72,
+        }).addTo(cellLayer);
+
+        rect.on('click', () => onCellClick(cell));
+        rect.on('mouseover', function() { this.setStyle({ weight: 2.5, color: '#333' }); });
+        rect.on('mouseout',  function() { this.setStyle({ weight: 1, color: '#fff' }); });
+
+        // Etiqueta de intensidad encima de cada celda
+        const lbl = L.marker([cell.lat, cell.lon], {
+            icon: L.divIcon({
+                className: 'cell-label',
+                html: fmtKm(cell.total_meters),
+                iconSize: [60, 18],
+                iconAnchor: [30, 9],
+            }),
+            interactive: false,
+        }).addTo(labelLayer);
+    }
+}
+
+function renderCellMap() {
+    clearLayers();
+    // Mismo grid pero más transparente, sin etiquetas
+    cellLayer = L.layerGroup().addTo(map);
+    for (const cell of CELLS) {
+        const rect = L.rectangle(cell.bounds, {
+            color: '#ddd',
+            weight: 0.5,
+            fillColor: '#fafafa',
+            fillOpacity: 0.3,
+        }).addTo(cellLayer);
+        rect.on('click', () => onCellClick(cell));
+    }
+}
+
+/* =================================================================
+   POPUP DE CELDA
+   ================================================================= */
+function onCellClick(cell) {
+    selectedCell = cell;
+    setMode('cell');                  // entrar en modo celda al hacer click
+    showCellCard(cell);
+    drawCellDetail(cell);
+}
+
+function showCellCard(cell) {
+    document.getElementById('cc-name').textContent = cell.label;
+    document.getElementById('cc-id').textContent =
+        `Celda C-${String(cell.id).padStart(3,'0')}`;
+    document.getElementById('cc-total').textContent = fmtKm(cell.total_meters);
+    document.getElementById('cc-trips').textContent = cell.num_trips;
+
+    const dist = document.getElementById('cc-distribution');
+    dist.innerHTML = '';
+    const total = cell.total_meters;
+
+    const items = CATEGORIES
+        .map(c => ({ ...c, m: cell.meters[c.code] }))
+        .filter(x => x.m > 0)
+        .sort((a,b) => b.m - a.m);
+
+    for (const it of items) {
+        const pct = it.m / total * 100;
+        const row = document.createElement('div');
+        row.className = 'dist-row';
+        row.innerHTML = `
+            <div class="swatch" style="background:${it.color}"></div>
+            <div class="name">${it.name}</div>
+            <div class="vals">${fmtKm(it.m)}<span class="pct">${pct.toFixed(1)}%</span></div>
+        `;
+        dist.appendChild(row);
+    }
+    document.getElementById('cell-card').classList.add('visible');
+}
+
+function closeCellCard() {
+    document.getElementById('cell-card').classList.remove('visible');
+    selectedCell = null;
+    if (waysLayer) { waysLayer.remove(); waysLayer = null; }
+    if (heatLayer) { heatLayer.remove(); heatLayer = null; }
+}
+
+/* =================================================================
+   DETALLE DE CELDA — dibujar vías OSM y heat de viajes
+   ================================================================= */
+function drawCellDetail(cell) {
+    if (waysLayer) waysLayer.remove();
+    waysLayer = L.layerGroup().addTo(map);
+
+    // MOCK: en producción → fetch a GET /api/cells/:id/ways
+    // Aquí generamos vías sintéticas dentro de la celda, coloreadas por tipo
+    const [sw, ne] = cell.bounds;
+    const types = Object.keys(cell.meters).filter(k => cell.meters[k] > 0);
+
+    for (let i = 0; i < 8; i++) {
+        const type = types[i % types.length];
+        const cat = CATEGORIES.find(c => c.code === type);
+        const y1 = sw[0] + Math.random() * (ne[0] - sw[0]);
+        const x1 = sw[1] + Math.random() * (ne[1] - sw[1]);
+        const y2 = sw[0] + Math.random() * (ne[0] - sw[0]);
+        const x2 = sw[1] + Math.random() * (ne[1] - sw[1]);
+
+        L.polyline([[y1,x1],[y2,x2]], {
+            color: cat.color,
+            weight: 3.5 + Math.log(cell.meters[type] + 1) * 0.3,
+            opacity: 0.85,
+        }).addTo(waysLayer);
+    }
+
+    // Centrar el mapa sobre la celda
+    map.flyToBounds(cell.bounds, { padding: [80, 80], duration: 0.6 });
+}
+
+/* =================================================================
+   TOGGLE DE MODO
+   ================================================================= */
+function setMode(mode) {
+    currentMode = mode;
+    document.getElementById('btn-global').classList.toggle('active', mode==='global');
+    document.getElementById('btn-cell').classList.toggle('active', mode==='cell');
+    document.getElementById('panel-global').style.display = mode==='global' ? 'block' : 'none';
+    document.getElementById('panel-cell').style.display  = mode==='cell'   ? 'block' : 'none';
+
+    if (mode === 'global') {
+        closeCellCard();
+        renderGlobalMap();
+    } else {
+        renderCellMap();
+    }
+}
+
+document.getElementById('btn-global').addEventListener('click', () => setMode('global'));
+document.getElementById('btn-cell').addEventListener('click',   () => setMode('cell'));
+
+/* =================================================================
+   INIT
+   ================================================================= */
+map = L.map('map', {
+    center: CENTER,
+    zoom: 13,
+    zoomControl: true,
+    preferCanvas: true,
+});
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap · CARTO',
+    maxZoom: 19,
+}).addTo(map);
+
+renderGlobalPanel();
+renderCellPanelLegend();
+renderGlobalMap();
+</script>
+</body>
+</html>
