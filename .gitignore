@@ -2,3 +2,37 @@
 /data
 .env
 comandos-utiles
+# ==========================================
+# OpenRouteService (ORS) - Archivos ignorados
+# ==========================================
+
+# 1. Mapas base y datos en bruto (Suelen pesar gigabytes)
+*.pbf
+*.osm
+*.osm.pbf
+*.osm.gz
+data/osm_file.pbf
+
+# 2. Grafos y cachés generados por GraphHopper
+# (Esto es lo que el servidor ha tardado en calcular, ¡no lo subas a Git!)
+graphs/
+elevation_cache/
+**/ors-core/data/graphs/
+**/ors-core/data/elevation_cache/
+
+# 3. Logs del servidor y Tomcat
+logs/
+*.log
+**/ors-core/logs/
+**/tomcat/logs/
+
+# 4. Archivos temporales de Tomcat (si tienes la carpeta mapeada)
+**/tomcat/webapps/ors/
+**/tomcat/work/
+**/tomcat/temp/
+
+# 5. Variables de entorno (¡Seguridad primero!)
+.env
+
+# 6. (Opcional) Configuración si contiene contraseñas o rutas muy específicas
+# ors-config.json

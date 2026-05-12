@@ -1,0 +1,16 @@
+services:
+  ors-app:
+    container_name: ors-app
+    ports:
+      - "8080:8080"
+    image: openrouteservice/openrouteservice:v7.1.0
+    user: "1000:1000"
+    volumes:
+      - ./ors-docker/graphs:/home/ors/ors-core/data/graphs
+      - ./ors-docker/elevation_cache:/home/ors/ors-core/data/elevation_cache
+      - ./ors-docker/logs:/home/ors/ors-core/logs/ors
+      - ./ors-docker/files/madrid-latest.osm.pbf:/home/ors/ors-core/data/osm_file.pbf
+    environment:
+      - BUILD_GRAPHS=True
+      - "JAVA_OPTS=-Djava.awt.headless=true -server -XX:TargetSurvivorRatio=75 -XX:SurvivorRatio=64 -XX:MaxTenuringThreshold=3 -XX:+UseG1GC -XX:+ScavengeBeforeFullGC -XX:ParallelGCThreads=4 -Xms2g -Xmx4g"
+      - "CATALINA_OPTS=-Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9001 -Dcom.sun.management.jmxremote.rmi.port=9001 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=localhost"
