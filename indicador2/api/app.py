@@ -24,13 +24,14 @@ Ejecutar:
 """
 from __future__ import annotations
 
+import logging
 import os
 from pathlib import Path
 
 import psycopg2
 import psycopg2.extras
 from dotenv import load_dotenv
-from flask import Flask, jsonify, abort
+from flask import Flask, jsonify, abort, send_file
 from flask_cors import CORS
 from psycopg2 import pool
 
@@ -82,6 +83,11 @@ def query(sql: str, params: tuple | dict = (),
 # --------------------------------------------------------------------------- #
 app = Flask(__name__)
 CORS(app)   # permitir llamadas desde el visualizador en cualquier origen
+
+
+@app.get("/")
+def index():
+    return send_file(Path(__file__).parent.parent / "visualizador_indicador2.html")
 
 
 @app.get("/api/health")
@@ -279,7 +285,41 @@ def cell_ways(cell_id: int):
 # --------------------------------------------------------------------------- #
 # Manejo de errores
 # --------------------------------------------------------------------------- #
-@app.errorhandler(404)
+@app.get("/api/cells/<int:cell_id>/routes")
+def cell_routes(cell_id: int):
+    """Rutas OD que cruzan la celda, con su geometría y número de viajes.
+
+    Devuelve un GeoJSON FeatureCollection donde cada feature es una ruta
+    y su peso (num_trips) se usa para escalar grosor y opacidad en Leaflet.
+    """
+    rows = query("""
+        SELECT
+            p.od_id,
+            p.num_trips,
+            ST_AsGeoJSON(p.geom_4326)::text AS geom_geojson
+        FROM od_pair_segments s
+        JOIN od_pairs p USING (od_id)
+        WHERE s.cell_id = %s
+          AND p.geom_4326 IS NOT NULL
+        GROUP BY p.od_id, p.num_trips, p.geom_4326
+        ORDER BY p.num_trips DESC
+        LIMIT 200
+    """, (cell_id,))
+
+    features = []
+    for r in rows:
+        if not r["geom_geojson"]:
+            continue
+        import json
+        features.append({
+            "type": "Feature",
+            "geometry": json.loads(r["geom_geojson"]),
+            "properties": {
+                "od_id":     r["od_id"],
+                "num_trips": r["num_trips"],
+            },
+        })
+    return jsonify({"type": "FeatureCollection", "features": features})
 def not_found(e):
     return jsonify(error="not_found", message=str(e.description)), 404
 

@@ -39,7 +39,7 @@ WITH bbox AS (
     FROM stations_dedup
 ),
 raw_grid AS (
-    SELECT (ST_SquareGrid(500, env)).geom AS geom
+    SELECT ST_SetSRID((ST_SquareGrid(500, env)).geom, 25830) AS geom
     FROM bbox
 ),
 -- Proxy de "celda relevante": contiene una estación o es atravesada por la
@@ -63,7 +63,8 @@ candidates AS (
 indexed AS (
     SELECT
         geom,
-        ROW_NUMBER() OVER (ORDER BY ST_YMin(geom), ST_XMin(geom)) AS rn,
+        DENSE_RANK() OVER (ORDER BY ST_XMin(geom)) - 1  AS grid_x,
+        DENSE_RANK() OVER (ORDER BY ST_YMin(geom)) - 1  AS grid_y,
         MIN(ST_XMin(geom)) OVER () AS x0,
         MIN(ST_YMin(geom)) OVER () AS y0
     FROM candidates
@@ -71,10 +72,10 @@ indexed AS (
 INSERT INTO grid_cells (grid_x, grid_y, centroid_lat, centroid_lon,
                         geom_4326, geom_25830)
 SELECT
-    ROUND((ST_X(ST_Centroid(geom)) - x0) / 500)::int   AS grid_x,
-    ROUND((ST_Y(ST_Centroid(geom)) - y0) / 500)::int   AS grid_y,
-    ST_Y(ST_Transform(ST_Centroid(geom), 4326))        AS centroid_lat,
-    ST_X(ST_Transform(ST_Centroid(geom), 4326))        AS centroid_lon,
+    grid_x,
+    grid_y,
+    ST_Y(ST_Transform(ST_Centroid(geom), 4326))  AS centroid_lat,
+    ST_X(ST_Transform(ST_Centroid(geom), 4326))  AS centroid_lon,
     ST_Transform(geom, 4326),
     geom
 FROM indexed;

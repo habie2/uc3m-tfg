@@ -9,6 +9,7 @@ services:
       - ./ors-docker/graphs:/home/ors/ors-core/data/graphs
       - ./ors-docker/elevation_cache:/home/ors/ors-core/data/elevation_cache
       - ./ors-docker/logs:/home/ors/ors-core/logs/ors
+      - ./ors-docker/conf:/home/ors/ors-conf
       - ./ors-docker/files/madrid-latest.osm.pbf:/home/ors/ors-core/data/osm_file.pbf
     environment:
       - BUILD_GRAPHS=True
