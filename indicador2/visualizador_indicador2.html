@@ -558,6 +558,7 @@
      SCRIPTS
      ============================================================ -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script>
         /* =================================================================
            DATOS MOCK (en producción vendrán del backend)
@@ -724,9 +725,22 @@
         /* =================================================================
            POPUP DE CELDA
            ================================================================= */
+        let selectedCellBorder = null;
+
         async function onCellClick(cell) {
             selectedCell = cell;
             setMode('cell');
+
+            // Dibujar/actualizar el borde de la celda seleccionada
+            if (selectedCellBorder) selectedCellBorder.remove();
+            const bounds = [[cell.south, cell.west], [cell.north, cell.east]];
+            selectedCellBorder = L.rectangle(bounds, {
+                color: '#4f5ce8',
+                weight: 2.5,
+                fill: false,
+                dashArray: '6 4',
+                interactive: false,
+            }).addTo(map);
 
             // Carga detalle desde la API
             const detail = await fetch(`${API}/cells/${cell.cell_id}`).then(r => r.json());
@@ -763,30 +777,42 @@
             document.getElementById('cell-card').classList.remove('visible');
             selectedCell = null;
             if (waysLayer) { waysLayer.remove(); waysLayer = null; }
+            if (selectedCellBorder) { selectedCellBorder.remove(); selectedCellBorder = null; }
         }
 
         async function drawCellWays(cell, detail) {
             if (waysLayer) waysLayer.remove();
             waysLayer = L.layerGroup().addTo(map);
 
-            // Capa 1: rutas OD que cruzan la celda (heatmap de líneas)
+            // Capa 1: rutas OD como líneas — grosor y opacidad proporcional a num_trips
             try {
                 const routes = await fetch(`${API}/cells/${cell.cell_id}/routes`)
                     .then(r => r.json());
 
                 if (routes.features.length) {
                     const maxTrips = Math.max(...routes.features.map(f => f.properties.num_trips));
+                    const minTrips = Math.min(...routes.features.map(f => f.properties.num_trips));
+                    const range = (maxTrips - minTrips) || 1;
 
-                    L.geoJSON(routes, {
-                        style: feature => {
-                            const t = feature.properties.num_trips / (maxTrips || 1);
-                            return {
-                                color: `rgba(79, 92, 232, ${0.08 + t * 0.55})`,
-                                weight: 1 + t * 5,
-                                opacity: 1,
-                            };
-                        }
-                    }).addTo(waysLayer);
+                    // Ordenar de menos a más viajes para que las más usadas queden encima
+                    const sorted = [...routes.features].sort((a, b) =>
+                        a.properties.num_trips - b.properties.num_trips);
+
+                    const routeLayer = L.layerGroup();
+                    for (const feat of sorted) {
+                        const t = (feat.properties.num_trips - minTrips) / range;
+                        const tLog = Math.log1p(t * 9) / Math.log1p(9);
+                        L.geoJSON(feat, {
+                            style: {
+                                color: '#a8c4f0',
+                                weight: 2 + tLog * 18,
+                                opacity: 0.5,
+                                lineCap: 'round',
+                                lineJoin: 'round',
+                            }
+                        }).addTo(routeLayer);
+                    }
+                    routeLayer.addTo(waysLayer);
                 }
             } catch (e) {
                 console.warn('No se pudieron cargar las rutas:', e);
