@@ -200,6 +200,7 @@ def cells():
             ST_XMax(g.geom_4326)::float AS east
         FROM grid_cells g
         LEFT JOIN cell_intensity ci USING (cell_id)
+        WHERE ci.total_meters > 0
         ORDER BY g.cell_id
     """)
     return jsonify(rows)

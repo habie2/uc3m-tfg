@@ -1,18 +1,21 @@
 -- =============================================================================
 -- SEED — 7 categorías de tipo de vía + mapeo desde tags OSM `highway`
 -- =============================================================================
+SET client_encoding = 'UTF8';
 
 INSERT INTO highway_categories
     (category_code, display_name, display_order, color_hex)
 VALUES
-    ('cycleway',  'Vía ciclista',    1, '#2E8B57'),
-    ('quiet',     'Calle tranquila', 2, '#7FB069'),
-    ('tertiary',  'Vía terciaria',   3, '#E1B16A'),
-    ('secondary', 'Vía secundaria',  4, '#D98E48'),
-    ('primary',   'Vía primaria',    5, '#C25A3C'),
-    ('trunk',     'Vía rápida',      6, '#8C3A2D'),
-    ('service',   'Servicio/Otros',  7, '#9C9387')
-ON CONFLICT (category_code) DO NOTHING;
+    ('cycleway',  'Vía ciclista',    1, '#9B59B6'),
+    ('quiet',     'Calle tranquila', 2, '#2ECC71'),
+    ('tertiary',  'Vía terciaria',   3, '#F1C40F'),
+    ('secondary', 'Vía secundaria',  4, '#E67E22'),
+    ('primary',   'Vía primaria',    5, '#E74C3C'),
+    ('trunk',     'Vía rápida',      6, '#3498DB'),
+    ('service',   'Servicio/Otros',  7, '#95A5A6')
+ON CONFLICT (category_code) DO UPDATE SET
+    color_hex    = EXCLUDED.color_hex,
+    display_name = EXCLUDED.display_name;
 
 
 INSERT INTO highway_mapping (osm_highway, category_code) VALUES

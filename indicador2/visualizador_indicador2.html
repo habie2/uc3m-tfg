@@ -266,13 +266,30 @@
             gap: 8px;
             font-size: 12px;
             color: var(--ink-soft);
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
-        .legend-swatch {
-            width: 12px;
-            height: 12px;
-            border-radius: 3px;
+        .legend-color-btn {
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            border: 2px solid rgba(0, 0, 0, 0.12);
+            cursor: pointer;
+            padding: 0;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .legend-color-btn input[type=color] {
+            position: absolute;
+            inset: -4px;
+            width: calc(100% + 8px);
+            height: calc(100% + 8px);
+            opacity: 0;
+            cursor: pointer;
+            border: none;
+            padding: 0;
         }
 
         .legend-note {
@@ -579,9 +596,14 @@
         }
         function fmtPct(x) { return Number(x).toFixed(1) + '%'; }
 
-        /* =================================================================
-           CARGA DE DATOS DESDE LA API
-           ================================================================= */
+        /* Colores personalizados por el usuario (category_code → hex).
+           Se inicializan con los valores de la API y se sobreescriben al cambiar. */
+        const USER_COLORS = {};
+
+        function getColor(category_code) {
+            return USER_COLORS[category_code] || '#999';
+        }
+
         async function loadAll() {
             const [cats, cells, stats] = await Promise.all([
                 fetch(`${API}/categories/intensity`).then(r => r.json()),
@@ -590,6 +612,8 @@
             ]);
 
             CATEGORIES = cats;
+            // Inicializar colores con los valores de la API
+            cats.forEach(c => { USER_COLORS[c.category_code] = c.color_hex; });
             CELLS = cells;
 
             renderGlobalPanel(cats, stats);
@@ -607,16 +631,17 @@
 
             const sorted = [...cats].sort((a, b) => b.meters - a.meters);
             for (const cat of sorted) {
+                const color = getColor(cat.category_code);
                 const row = document.createElement('div');
                 row.className = 'via-row';
                 row.innerHTML = `
-            <div class="via-swatch" style="background:${cat.color_hex}"></div>
+            <div class="via-swatch" style="background:${color}"></div>
             <div class="via-info">
                 <div class="via-name">${cat.display_name}</div>
                 <div class="via-bar">
                     <div class="via-bar-fill"
                          style="width:${max ? (cat.meters / max * 100).toFixed(1) : 0}%;
-                                background:${cat.color_hex}"></div>
+                                background:${color}"></div>
                 </div>
             </div>
             <div class="via-value">
@@ -651,14 +676,40 @@
             const container = document.getElementById('legend-cell');
             container.innerHTML = '';
             for (const cat of cats) {
+                const color = getColor(cat.category_code);
                 const item = document.createElement('div');
                 item.className = 'legend-item';
+                item.dataset.code = cat.category_code;
                 item.innerHTML = `
-            <div class="legend-swatch" style="background:${cat.color_hex}"></div>
+            <button class="legend-color-btn" style="background:${color}" title="Cambiar color">
+                <input type="color" value="${color}" data-code="${cat.category_code}">
+            </button>
             <span>${cat.display_name}</span>
         `;
+                // Listener en el input color
+                const input = item.querySelector('input[type=color]');
+                input.addEventListener('input', e => {
+                    const code = e.target.dataset.code;
+                    const color = e.target.value;
+                    USER_COLORS[code] = color;
+                    // Actualizar el botón
+                    e.target.closest('.legend-color-btn').style.background = color;
+                    // Redibujar las vías si hay celda seleccionada
+                    if (selectedCell && waysLayer) {
+                        waysLayer.eachLayer(layer => {
+                            if (layer.feature?.properties?.category_code === code) {
+                                layer.setStyle({ color });
+                            }
+                        });
+                    }
+                });
                 container.appendChild(item);
             }
+            // Nota al pie
+            const note = document.createElement('div');
+            note.className = 'legend-note';
+            note.textContent = 'Haz clic en el color para cambiarlo. Se aplica al instante.';
+            container.appendChild(note);
         }
 
         /* =================================================================
@@ -764,7 +815,7 @@
                 const row = document.createElement('div');
                 row.className = 'dist-row';
                 row.innerHTML = `
-            <div class="swatch" style="background:${it.color_hex}"></div>
+            <div class="swatch" style="background:${getColor(it.category_code)}"></div>
             <div class="name">${it.display_name}</div>
             <div class="vals">${fmtKm(it.meters)}<span class="pct">${fmtPct(it.pct)}%</span></div>
         `;
@@ -825,7 +876,7 @@
 
                 L.geoJSON(geojson, {
                     style: feature => ({
-                        color: feature.properties.color_hex,
+                        color: getColor(feature.properties.category_code),
                         weight: 3,
                         opacity: 0.9,
                     }),
