@@ -742,7 +742,7 @@
                 const rect = L.rectangle(bounds, {
                     color: '#fff', weight: 1,
                     fillColor: intensityColor(cell.total_meters, max),
-                    fillOpacity: 0.72,
+                    fillOpacity: 0.45,
                 }).addTo(cellLayer);
 
                 rect.on('click', () => onCellClick(cell));
@@ -924,9 +924,10 @@
             zoomControl: true,
             preferCanvas: true,
         });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap · CARTO',
             maxZoom: 19,
+            opacity: 1,
         }).addTo(map);
 
         loadAll();
