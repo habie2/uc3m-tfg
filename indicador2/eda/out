@@ -1,0 +1,101 @@
+Analizando estructura JSON: /home/ajolotef/Downloads/bicimad_data/bicimad_2017/trips/201704.json...
+
+==========================================================================================
+ESTRUCTURA DE UN REGISTRO JSON (sin campo track)
+==========================================================================================
+
+   Campo                           Tipo
+   ------------------------------------------------------------
+   ├─ _id                          string (ObjectId)
+   ├─ user_day_code                string
+   ├─ idplug_base                  entero
+   ├─ user_type                    entero
+   ├─ idunplug_base                entero
+   ├─ travel_time                  entero
+   ├─ idunplug_station             entero
+   ├─ ageRange                     entero
+   ├─ idplug_station               entero
+   ├─ unplug_hourTime              string (ISO 8601)
+   └─ zip_code                     string
+
+
+==========================================================================================
+ESTRUCTURA DE UN REGISTRO JSON (con campo track)
+==========================================================================================
+
+   Campo                                Tipo
+   -----------------------------------------------------------------
+   ├─ _id                               string (ObjectId)
+   ├─ user_day_code                     string
+   ├─ idplug_base                       entero
+   ├─ track                             GeoJSON FeatureCollection
+      ├─ type                           string
+      └─ features (array, 2 elementos)  
+         ├─ type                        string
+         ├─ geometry                    objeto
+            ├─ type                     string
+            └─ coordinates              array [lon, lat]
+         └─ properties                  objeto
+            ├─ var                      string
+            ├─ speed                    decimal
+            └─ secondsfromstart         entero
+   ├─ user_type                         entero
+   ├─ idunplug_base                     entero
+   ├─ travel_time                       entero
+   ├─ idunplug_station                  entero
+   ├─ ageRange                          entero
+   ├─ idplug_station                    entero
+   ├─ unplug_hourTime                   string (ISO 8601)
+   └─ zip_code                          string
+
+==========================================================================================
+COMPARACIÓN: campos en registros CON vs SIN track
+==========================================================================================
+   Campos comunes (11): _id, ageRange, idplug_base, idplug_station, idunplug_base, idunplug_station, travel_time, unplug_hourTime, user_day_code, user_type, zip_code
+   Solo CON track (1): track
+
+Analizando estructura CSV: /home/ajolotef/Downloads/bicimad_data/bicimad_2021/trips/202106.csv...
+
+==========================================================================================
+ESTRUCTURA DE UN REGISTRO CSV
+   Archivo: 202106.csv
+   Separador: punto y coma (;)
+==========================================================================================
+
+   Campo                           Tipo
+   ------------------------------------------------------------
+   ├─ fecha                        string
+   ├─ idBike                       entero (como string)
+   ├─ fleet                        entero (como string)
+   ├─ trip_minutes                 decimal (como string)
+   ├─ geolocation_unlock           string (GeoJSON Point)
+   ├─ address_unlock               string (vacío)
+   ├─ unlock_date                  string (ISO 8601)
+   ├─ locktype                     string
+   ├─ unlocktype                   string
+   ├─ geolocation_lock             string (GeoJSON Point)
+   ├─ address_lock                 string (vacío)
+   ├─ lock_date                    string (ISO 8601)
+   ├─ station_unlock               entero (como string)
+   ├─ dock_unlock                  entero (como string)
+   ├─ unlock_station_name          string
+   ├─ station_lock                 entero (como string)
+   ├─ dock_lock                    entero (como string)
+   └─ lock_station_name            string
+
+==========================================================================================
+DICCIONARIO DE CAMPOS (JSON)
+==========================================================================================
+   _id                    Identificador único del registro (MongoDB ObjectId)
+   user_day_code          Hash anonimizado del usuario + día (SHA-256)
+   idplug_base            Número del anclaje donde se devolvió la bici
+   idplug_station         ID de la estación donde se devolvió la bici
+   idunplug_base          Número del anclaje donde se cogió la bici
+   idunplug_station       ID de la estación donde se cogió la bici
+   unplug_hourTime        Fecha/hora de desanclaje (inicio del viaje)
+   travel_time            Duración del viaje en segundos
+   user_type              Tipo de usuario (1=anual, 2=ocasional, 3=empresa)
+   ageRange               Rango de edad (0=desconocido, 1=<25, 2=25-40, 3=40-55, 4=55-65, 5=>65)
+   zip_code               Código postal del usuario (puede estar vacío)
+   track                  Trayectoria GPS del viaje (GeoJSON FeatureCollection, NO siempre presente)
+
