@@ -36,3 +36,4 @@ logs/
 
 # 6. (Opcional) Configuración si contiene contraseñas o rutas muy específicas
 # ors-config.json
+__pycache__/
