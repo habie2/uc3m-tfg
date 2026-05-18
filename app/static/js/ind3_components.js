@@ -102,6 +102,12 @@ function Ind3View() {
         )
       ),
 
+      // Donut de la estación seleccionada (solo si hay selección)
+      selNode ? h(Ind3NodeDonut, { node: selNode, stats: stats, radius: radius }) : null,
+
+      // Barra compacta de cobertura global (siempre visible)
+      h(Ind3GlobalBar, { stats: stats, radius: radius }),
+
       // Ranking
       h(Ind3Ranking, {
         nodes: nodes, metric: metric, metricValue: metricValue,
@@ -352,6 +358,138 @@ function Ind3MapView(props) {
   return h('div', { ref: mountRef, id: 'map-mount' });
 }
 
+/* ─── Ind3NodeDonut: donut grande de la estación seleccionada ── */
+function Ind3NodeDonut(props) {
+  var node   = props.node;
+  var stats  = props.stats;
+  var radius = props.radius;
+  if (!node || !stats) return null;
+
+  var total = stats.total_intermodal || 1;
+  var pct   = +(node.captured / total * 100).toFixed(1);
+  var cap   = node.captured || 1;
+  var oPct  = (node.out / cap * 100).toFixed(1);
+  var iPct  = (node['in'] / cap * 100).toFixed(1);
+
+  // SVG donut
+  var size = 110, stroke = 11, r = (size - stroke) / 2;
+  var circ = 2 * Math.PI * r;
+  var offset = circ - (pct / 100) * circ;
+
+  return h('div', { className: 'sb-sec' },
+    h('div', { className: 'sb-lbl' }, 'Estaci\u00F3n seleccionada'),
+    h('div', { style: {
+      display: 'flex', alignItems: 'center', gap: 14, marginBottom: 10
+    }},
+      // Donut
+      h('div', { style: { position: 'relative', width: size, height: size, flexShrink: 0 } },
+        h('svg', { width: size, height: size, viewBox: '0 0 ' + size + ' ' + size },
+          h('circle', {
+            cx: size / 2, cy: size / 2, r: r,
+            fill: 'none', stroke: '#f0f0f3', strokeWidth: stroke
+          }),
+          h('circle', {
+            cx: size / 2, cy: size / 2, r: r,
+            fill: 'none', stroke: 'var(--blue)', strokeWidth: stroke,
+            strokeDasharray: circ, strokeDashoffset: offset,
+            strokeLinecap: 'round',
+            transform: 'rotate(-90 ' + size / 2 + ' ' + size / 2 + ')',
+            style: { transition: 'stroke-dashoffset 0.6s ease' }
+          })
+        ),
+        h('div', { style: {
+          position: 'absolute', inset: 0,
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center'
+        }},
+          h('span', { style: {
+            fontSize: 22, fontWeight: 700, color: 'var(--blue)',
+            fontVariantNumeric: 'tabular-nums', lineHeight: 1
+          }}, pct + '%'),
+          h('span', { style: {
+            fontSize: 8, color: 'var(--muted)',
+            textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: 2
+          }}, 'del total')
+        )
+      ),
+      // Info del nodo
+      h('div', { style: { minWidth: 0 } },
+        h('div', { style: { fontSize: 14, fontWeight: 600, color: 'var(--ink)', marginBottom: 2 } },
+          node.name),
+        h('div', { style: { fontSize: 11, color: 'var(--muted)', marginBottom: 8 } },
+          node.lines),
+        h('div', { style: { fontSize: 12, color: 'var(--ink)', fontWeight: 600, fontVariantNumeric: 'tabular-nums' } },
+          fmt(node.captured) + ' viajes'),
+        h('div', { style: { display: 'flex', gap: 10, marginTop: 4, fontSize: 11 } },
+          h('span', { style: { color: '#3b46c4' } }, '\u2191 ' + fmt(node.out) + ' (' + oPct + '%)'),
+          h('span', { style: { color: '#8f99ec' } }, '\u2193 ' + fmt(node['in']) + ' (' + iPct + '%)')
+        )
+      )
+    )
+  );
+}
+
+/* ─── Ind3GlobalBar: barra compacta de cobertura global ─── */
+function Ind3GlobalBar(props) {
+  var stats  = props.stats;
+  var radius = props.radius;
+  if (!stats) return null;
+
+  var pct      = stats.share_pct != null ? stats.share_pct : 0;
+  var metroWB  = stats.metro_with_bici || 0;
+  var metroTot = stats.metro_total || 1;
+  var metroPct = stats.metro_coverage_pct || 0;
+
+  return h('div', { className: 'sb-sec' },
+    h('div', { className: 'sb-lbl' }, 'Cobertura intermodal'),
+
+    // Viajes intermodales
+    h('div', { style: {
+      display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+      fontSize: 12, marginBottom: 4
+    }},
+      h('span', { style: { color: 'var(--muted)' } }, 'Viajes intermodales'),
+      h('span', { style: { fontWeight: 700, color: 'var(--blue)', fontVariantNumeric: 'tabular-nums' } },
+        pct + '%')
+    ),
+    h('div', { style: {
+      height: 5, background: '#f0f0f3', borderRadius: 3, overflow: 'hidden', marginBottom: 3
+    }},
+      h('div', { style: {
+        height: '100%', borderRadius: 3, background: 'var(--blue)',
+        width: Math.min(pct, 100) + '%',
+        transition: 'width 0.5s ease'
+      }})
+    ),
+    h('div', { style: { fontSize: 10, color: 'var(--muted)', marginBottom: 10 } },
+      fmt(stats.total_intermodal) + ' de ' + fmt(stats.historic_trips) +
+      ' viajes (radio ' + radius + ' m)'
+    ),
+
+    // Estaciones cubiertas
+    h('div', { style: {
+      display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
+      fontSize: 12, marginBottom: 4
+    }},
+      h('span', { style: { color: 'var(--muted)' } }, 'Estaciones metro con BiciMAD'),
+      h('span', { style: { fontWeight: 700, color: 'var(--c-bici)', fontVariantNumeric: 'tabular-nums' } },
+        metroWB + ' / ' + metroTot)
+    ),
+    h('div', { style: {
+      height: 5, background: '#f0f0f3', borderRadius: 3, overflow: 'hidden', marginBottom: 3
+    }},
+      h('div', { style: {
+        height: '100%', borderRadius: 3, background: 'var(--c-bici)',
+        width: metroPct + '%',
+        transition: 'width 0.5s ease'
+      }})
+    ),
+    h('div', { style: { fontSize: 10, color: 'var(--muted)' } },
+      metroPct + '% de cobertura espacial'
+    )
+  );
+}
+
 /* ─── NodeCard (ind3) — tarjeta flotante de detalle ──── */
 function Ind3NodeCard(props) {
   var node        = props.node;
@@ -371,13 +509,6 @@ function Ind3NodeCard(props) {
         h('div', { className: 'sc-cap' }, node.lines + ' \u00B7 c\u00F3d CTM ' + node.id)
       ),
       h('button', { className: 'sc-close', onClick: onClose }, '\u00D7')
-    ),
-
-    // Ratio tag
-    h('div', { className: 'ratio-tag' },
-      node.is_hub
-        ? 'Nodo intercambiador \u00B7 alta funci\u00F3n intermodal'
-        : 'Estaci\u00F3n urbana \u00B7 funci\u00F3n mixta'
     ),
 
     // Métricas principales

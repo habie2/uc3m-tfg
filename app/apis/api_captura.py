@@ -187,12 +187,18 @@ def api_stats():
                 cur.execute(f"SELECT COUNT(*) AS c FROM {DB_SCHEMA}.trips;")
                 historic = cur.fetchone()["c"] or 1
     top = max(nodes, key=lambda n: n["captured"]) if nodes else None
+    nodes_with_bici = sum(1 for n in nodes if n["captured"] > 0)
+    nodes_total = len(nodes)
     return jsonify({
         "radius": radius,
         "total_intermodal": total_intermodal,
         "historic_trips": historic,
         "share_pct": round(total_intermodal / historic * 100, 2),
         "top_node": {"name": top["name"], "captured": top["captured"]} if top else None,
+        "metro_with_bici": nodes_with_bici,
+        "metro_total": nodes_total,
+        "metro_coverage_pct": round(nodes_with_bici / nodes_total * 100, 1)
+        if nodes_total else 0,
     })
 
 
