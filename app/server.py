@@ -28,9 +28,9 @@ app = Flask(
 CORS(app)
 
 # ── Registrar blueprints ──────────────────────────────────
-from apis.api_saturacion import bp as bp_saturacion
-from apis.api_transito import bp as bp_transito
-from apis.api_captura import bp as bp_captura
+from apis.api_ind1 import bp as bp_saturacion
+from apis.api_ind2 import bp as bp_transito
+from apis.api_ind3 import bp as bp_captura
 
 app.register_blueprint(bp_saturacion, url_prefix="/api/ind1")
 app.register_blueprint(bp_transito,   url_prefix="/api/ind2")
