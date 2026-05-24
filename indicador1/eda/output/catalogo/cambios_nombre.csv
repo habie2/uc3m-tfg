@@ -1,6 +1,0 @@
-id_estacion,nombre_referencia,tipo_cambio,timestamp_cambio,valor_anterior,valor_nuevo,distancia_m,timestamp_cambio_dt
-40,Plaza Ramales,nombre,2021-02-01T00:38:22.571579,Plaza de Ramales,Plaza Ramales,,2021-02-01 00:38:22.571579
-41,Plaza de San Francisco,nombre,2021-02-01T00:38:22.571579,Plaza San Francisco,Plaza de San Francisco,,2021-02-01 00:38:22.571579
-165,Paseo de la Castellana - Glorieta de Emilio Castelar,nombre,2021-02-01T00:38:22.571579,Pº Castellana - Glorieta de Emilio Castelar,Paseo de la Castellana - Glorieta de Emilio Castelar,,2021-02-01 00:38:22.571579
-139,San Germán 57,nombre,2021-02-01T00:38:22.571579,San Germán,San Germán 57,,2021-02-01 00:38:22.571579
-246,San Germán 5,nombre,2021-02-01T00:38:22.571579,San Germán,San Germán 5,,2021-02-01 00:38:22.571579
