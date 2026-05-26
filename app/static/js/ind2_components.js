@@ -81,7 +81,7 @@ function Ind2View() {
               className: "mode-btn " + (mode === "global" ? "on" : ""),
               onClick: handleModeGlobal,
             },
-            "Intensidad global",
+            "Análisis global",
           ),
           h(
             "button",
@@ -148,47 +148,6 @@ function Ind2GlobalPanel() {
   return h(
     React.Fragment,
     null,
-    h(
-      "div",
-      { className: "sb-sec" },
-      h("div", { className: "sb-lbl" }, "Intensidad por tipo de vía"),
-      h(
-        "div",
-        { className: "via-list" },
-        cats.map(function (cat) {
-          var color = getInd2Color(cat.category_code);
-          return h(
-            "div",
-            { key: cat.category_code, className: "via-row" },
-            h("div", { className: "via-swatch", style: { background: color } }),
-            h(
-              "div",
-              { className: "via-info" },
-              h("div", { className: "via-name" }, cat.display_name),
-              h(
-                "div",
-                { className: "via-bar" },
-                h("div", {
-                  className: "via-bar-fill",
-                  style: {
-                    width: max
-                      ? ((cat.meters / max) * 100).toFixed(1) + "%"
-                      : "0%",
-                    background: color,
-                  },
-                }),
-              ),
-            ),
-            h(
-              "div",
-              { className: "via-value" },
-              fmtKm(cat.meters),
-              h("span", { className: "pct" }, fmtPct(cat.pct)),
-            ),
-          );
-        }),
-      ),
-    ),
     h(
       "div",
       { className: "sb-sec" },
@@ -261,27 +220,82 @@ function Ind2GlobalPanel() {
 /* ─── Panel celda (sidebar) ───────────────────────────── */
 function Ind2CellPanel(props) {
   var cell = props.cell;
+  var cats = _ind2Categories.slice().sort(function (a, b) {
+    return b.meters - a.meters;
+  });
+  var max = Math.max.apply(
+    null,
+    cats.map(function (c) {
+      return c.meters;
+    }),
+  );
+
   return h(
-    "div",
-    { className: "sb-sec" },
-    h("div", { className: "sb-lbl" }, "Modo análisis de celda"),
-    cell
-      ? h(
-          "div",
-          { className: "mode-caption" },
-          "Mostrando vías OSM y rutas OD de la celda ",
-          h(
-            "strong",
-            null,
-            cell.label || "C-" + String(cell.cell_id).padStart(3, "0"),
+    React.Fragment,
+    null,
+    h(
+      "div",
+      { className: "sb-sec" },
+      h("div", { className: "sb-lbl" }, "Modo análisis de celda"),
+      cell
+        ? h(
+            "div",
+            { className: "mode-caption" },
+            "Mostrando vías OSM y rutas OD de la celda ",
+            h(
+              "strong",
+              null,
+              cell.label || "C-" + String(cell.cell_id).padStart(3, "0"),
+            ),
+            ". Las líneas coloreadas representan tramos de calle, las bandas azules las rutas más frecuentes.",
+          )
+        : h(
+            "div",
+            { className: "mode-caption" },
+            "Haz clic sobre cualquier celda del mapa para ver metros por tipo de vía, distribución porcentual y vías OSM diferenciadas por color.",
           ),
-          ". Las líneas coloreadas representan tramos de calle, las bandas azules las rutas más frecuentes.",
-        )
-      : h(
-          "div",
-          { className: "mode-caption" },
-          "Haz clic sobre cualquier celda del mapa para ver metros por tipo de vía, distribución porcentual y vías OSM diferenciadas por color.",
-        ),
+    ),
+    h(
+      "div",
+      { className: "sb-sec" },
+      h("div", { className: "sb-lbl" }, "Intensidad global por tipo de vía"),
+      h(
+        "div",
+        { className: "via-list" },
+        cats.map(function (cat) {
+          var color = getInd2Color(cat.category_code);
+          return h(
+            "div",
+            { key: cat.category_code, className: "via-row" },
+            h("div", { className: "via-swatch", style: { background: color } }),
+            h(
+              "div",
+              { className: "via-info" },
+              h("div", { className: "via-name" }, cat.display_name),
+              h(
+                "div",
+                { className: "via-bar" },
+                h("div", {
+                  className: "via-bar-fill",
+                  style: {
+                    width: max
+                      ? ((cat.meters / max) * 100).toFixed(1) + "%"
+                      : "0%",
+                    background: color,
+                  },
+                }),
+              ),
+            ),
+            h(
+              "div",
+              { className: "via-value" },
+              fmtKm(cat.meters),
+              h("span", { className: "pct" }, fmtPct(cat.pct)),
+            ),
+          );
+        }),
+      ),
+    ),
   );
 }
 
