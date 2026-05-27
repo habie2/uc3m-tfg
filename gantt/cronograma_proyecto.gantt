@@ -1,0 +1,22 @@
+gantt
+    title Cronograma del proyecto
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b
+    excludes    weekends
+
+    section Gestión
+    Gestión de proyecto                  :gp,    2025-01-08, 2025-05-31
+
+    section Investigación
+    Investigación trabajos previos       :itp,   2025-01-22, 2025-03-07
+
+    section Desarrollo
+    Desarrollo                           :dev,   2025-03-08, 2025-05-15
+    Recopilar datos                      :rd,    2025-03-08, 2025-04-07
+    Limpieza datos                       :ld,    2025-04-01, 2025-04-15
+    Procesamiento de los datos           :pd,    2025-03-22, 2025-04-22
+    Análisis de los resultados           :ar,    2025-04-15, 2025-05-07
+    Desarrollo herramienta visualización :dhv,   2025-04-22, 2025-05-15
+
+    section Documentación
+    Documentación memoria                :dm,    2025-02-01, 2025-06-15
