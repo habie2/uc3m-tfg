@@ -3,7 +3,7 @@ Indicador 1 — Saturación de estaciones BiciMAD
 ================================================
 Blueprint: /api/ind1/…
 
-Fase 1: Agregado/Desagregado + filtros multi-select
+Fase 2: Agregado/Desagregado + filtros multi-select + años
 """
 
 from flask import Blueprint, jsonify, request
@@ -88,16 +88,19 @@ def api_saturation():
     Query params (todos opcionales):
       days     — comma-separated ISO days (1=Mon … 7=Sun).  Empty = all.
       months   — comma-separated months (1–12).             Empty = all.
+      years    — comma-separated years.                     Empty = all.
       holiday  — "only" | "exclude" | "all" (default "all").
       hour     — single int 0–23. If set, returns only that hour.
     """
     days_raw    = request.args.get("days", "")
     months_raw  = request.args.get("months", "")
+    years_raw   = request.args.get("years", "")
     holiday     = request.args.get("holiday", "all")
     hour_raw    = request.args.get("hour", "")
 
     days   = _parse_int_list(days_raw,   1, 7)
     months = _parse_int_list(months_raw, 1, 12)
+    years  = _parse_int_list(years_raw, 2000, 2099)
 
     hour = None
     if hour_raw:
@@ -121,6 +124,10 @@ def api_saturation():
     if months:
         clauses.append("EXTRACT(MONTH FROM ss.captured_at)::int = ANY(%(months)s)")
         params["months"] = months
+
+    if years:
+        clauses.append("EXTRACT(YEAR FROM ss.captured_at)::int = ANY(%(years)s)")
+        params["years"] = years
 
     if holiday == "only":
         clauses.append("h.holiday_date IS NOT NULL")
@@ -216,6 +223,20 @@ def api_available_months():
             rows = cur.fetchall()
     months = [{"value": r[0], "label": MONTH_NAMES[r[0]]} for r in rows]
     return jsonify(months)
+
+
+@bp.route("/available-years")
+def api_available_years():
+    sql = """
+        SELECT DISTINCT EXTRACT(YEAR FROM captured_at)::int AS year
+        FROM station_snapshot ORDER BY year
+    """
+    with get_conn() as conn:
+        with conn.cursor() as cur:
+            cur.execute(sql)
+            rows = cur.fetchall()
+    years = [{"value": r[0], "label": str(r[0])} for r in rows]
+    return jsonify(years)
 
 
 @bp.route("/station-versions")
