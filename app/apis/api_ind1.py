@@ -35,11 +35,11 @@ def _parse_int_list(raw, lo, hi):
 
 def _build_sat_dict(rows):
     result = {}
-    for station_id, hora, sat in rows:
-        key = str(station_id)
+    for source_id, hora, sat in rows:
+        key = str(source_id)
         if key not in result:
             result[key] = [None] * 24
-        result[key][int(hora)] = round(float(sat), 4) if sat else None
+        result[key][int(hora)] = round(float(sat), 4) if sat is not None else None
     for key in result:
         arr = result[key]
         for i in range(24):
@@ -62,12 +62,20 @@ def _build_sat_dict(rows):
 
 @bp.route("/stations")
 def api_stations():
+    # Una estación física (source_id) puede tener varias versiones en `station`,
+    # cada una con su propio station_id artificial. Los snapshots y la saturación
+    # se agregan por source_id, así que aquí devolvemos UN punto por source_id,
+    # usando los metadatos de la versión con el snapshot más reciente.
     sql = """
-        SELECT station_id AS id, source_id, name,
-               latitude AS lat, longitude AS lng, total_bases AS cap
-        FROM station
-        WHERE latitude IS NOT NULL AND longitude IS NOT NULL
-        ORDER BY source_id, station_id
+        SELECT DISTINCT ON (st.source_id)
+               st.source_id AS id, st.source_id, st.name,
+               st.latitude AS lat, st.longitude AS lng, st.total_bases AS cap
+        FROM station st
+        LEFT JOIN station_snapshot ss ON ss.station_id = st.station_id
+        WHERE st.latitude IS NOT NULL AND st.longitude IS NOT NULL
+        GROUP BY st.source_id, st.name,
+                 st.latitude, st.longitude, st.total_bases
+        ORDER BY st.source_id, MAX(ss.captured_at) DESC NULLS LAST
     """
     with get_conn() as conn:
         with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
@@ -111,44 +119,43 @@ def api_saturation():
         except ValueError:
             return jsonify({"error": "hour debe ser un entero"}), 400
 
-    clauses = [
-        "ss.activate = 1",
-        "ss.operative_bases > 0",
-    ]
+    clauses = []
     params = {}
 
     if days:
-        clauses.append("EXTRACT(ISODOW FROM ss.captured_at)::int = ANY(%(days)s)")
+        clauses.append("iso_dow = ANY(%(days)s)")
         params["days"] = days
 
     if months:
-        clauses.append("EXTRACT(MONTH FROM ss.captured_at)::int = ANY(%(months)s)")
+        clauses.append("month = ANY(%(months)s)")
         params["months"] = months
 
     if years:
-        clauses.append("EXTRACT(YEAR FROM ss.captured_at)::int = ANY(%(years)s)")
+        clauses.append("year = ANY(%(years)s)")
         params["years"] = years
 
     if holiday == "only":
-        clauses.append("h.holiday_date IS NOT NULL")
+        clauses.append("is_holiday = TRUE")
     elif holiday == "exclude":
-        clauses.append("h.holiday_date IS NULL")
+        clauses.append("is_holiday = FALSE")
 
     if hour is not None:
-        clauses.append("EXTRACT(HOUR FROM ss.captured_at)::int = %(hour)s")
+        clauses.append("hora = %(hour)s")
         params["hour"] = hour
 
-    where = " AND ".join(clauses)
+    where = (" WHERE " + " AND ".join(clauses)) if clauses else ""
 
+    # Leemos de la vista materializada pre-agregada (datos históricos fijos).
+    # La media se reconstruye como SUM(sat_sum)/SUM(sat_cnt) sobre los buckets
+    # que pasan el filtro — una media de medias sería incorrecta.
     sql = f"""
-        SELECT ss.station_id,
-               EXTRACT(HOUR FROM ss.captured_at)::int AS hora,
-               AVG(ss.dock_bikes::float / NULLIF(ss.operative_bases, 0)) AS sat
-        FROM station_snapshot ss
-        LEFT JOIN holidays h ON h.holiday_date = ss.captured_at::date
-        WHERE {where}
-        GROUP BY ss.station_id, hora
-        ORDER BY ss.station_id, hora
+        SELECT source_id,
+               hora,
+               SUM(sat_sum) / NULLIF(SUM(sat_cnt), 0) AS sat
+        FROM mv_ind1_sat_agg
+        {where}
+        GROUP BY source_id, hora
+        ORDER BY source_id, hora
     """
 
     with get_conn() as conn:
@@ -169,11 +176,12 @@ def api_saturation_date():
         return jsonify({"error": "Formato de fecha inválido. Usa YYYY-MM-DD"}), 400
 
     sql = """
-        SELECT station_id, EXTRACT(HOUR FROM captured_at)::int AS hora,
-               AVG(dock_bikes::float / NULLIF(operative_bases, 0)) AS sat
-        FROM station_snapshot
-        WHERE captured_at::date = %(target)s AND activate = 1 AND operative_bases > 0
-        GROUP BY station_id, hora ORDER BY station_id, hora
+        SELECT st.source_id, EXTRACT(HOUR FROM ss.captured_at)::int AS hora,
+               AVG(ss.dock_bikes::float / NULLIF(ss.operative_bases, 0)) AS sat
+        FROM station_snapshot ss
+        JOIN station st ON st.station_id = ss.station_id
+        WHERE ss.captured_at::date = %(target)s AND ss.activate = 1 AND ss.operative_bases > 0
+        GROUP BY st.source_id, hora ORDER BY st.source_id, hora
     """
     with get_conn() as conn:
         with conn.cursor() as cur:
@@ -213,9 +221,11 @@ def api_date_range():
 
 @bp.route("/available-months")
 def api_available_months():
+    # Lee de la vista pre-agregada (columna month ya extraída) en lugar de
+    # escanear station_snapshot entero.
     sql = """
-        SELECT DISTINCT EXTRACT(MONTH FROM captured_at)::int AS month
-        FROM station_snapshot ORDER BY month
+        SELECT DISTINCT month
+        FROM mv_ind1_sat_agg ORDER BY month
     """
     with get_conn() as conn:
         with conn.cursor() as cur:
@@ -227,9 +237,11 @@ def api_available_months():
 
 @bp.route("/available-years")
 def api_available_years():
+    # Lee de la vista pre-agregada (columna year ya extraída) en lugar de
+    # escanear station_snapshot entero.
     sql = """
-        SELECT DISTINCT EXTRACT(YEAR FROM captured_at)::int AS year
-        FROM station_snapshot ORDER BY year
+        SELECT DISTINCT year
+        FROM mv_ind1_sat_agg ORDER BY year
     """
     with get_conn() as conn:
         with conn.cursor() as cur:

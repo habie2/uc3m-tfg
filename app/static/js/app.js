@@ -83,7 +83,7 @@ function Ind1View() {
         setMonths(avMonths);
         setYears(avYears);
         setDateFrom(_dateRange.min || "2019-05-01");
-        setDateTo(_dateRange.max || "2019-05-31");
+        setDateTo(_dateRange.min || "2019-05-01");
         setCurDate(_dateRange.min || "2019-05-01");
         await loadSaturation({
           days: [],
@@ -587,8 +587,10 @@ function Ind1View() {
                     min: _dateRange.min,
                     max: _dateRange.max,
                     onChange: function (e) {
-                      setDateFrom(e.target.value);
-                      setCurDate(e.target.value);
+                      var v = e.target.value;
+                      setDateFrom(v);
+                      setCurDate(v);
+                      if (v > dateTo) setDateTo(v);
                     },
                   }),
                 ),
