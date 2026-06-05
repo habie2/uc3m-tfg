@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Heurísticas & Severidad — Guía de referencia</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg: #f6f1e6;
+  --surface: #ffffff;
+  --surface-warm: #fdfaf3;
+  --ink: #1a1a2e;
+  --ink-soft: #2d2d44;
+  --muted: #6b6b80;
+  --muted-soft: #a8a8b8;
+  --accent: #b8451a;
+  --accent-hover: #963a16;
+  --accent-soft: #f4e4d9;
+  --border: #e5dccc;
+  --border-strong: #c9bca7;
+  --success: #2d5e3f;
+  --error: #a83232;
+  --severity-0: #c9bca7;
+  --severity-1: #d4a574;
+  --severity-2: #c47d44;
+  --severity-3: #b8451a;
+  --severity-4: #7d1e1e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(184, 69, 26, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(26, 26, 46, 0.025) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 56px 32px 120px;
+}
+
+/* HEADER */
+.header {
+  margin-bottom: 56px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.header-text { flex: 1; }
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 500;
+  font-variation-settings: "SOFT" 30;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
+
+h1 em {
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: "SOFT" 100;
+  color: var(--accent);
+}
+
+.lead {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+.btn-print {
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.btn-print:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+  background: var(--surface);
+}
+
+.btn-print svg { width: 13px; height: 13px; }
+
+/* TOC NAV */
+.toc {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 48px;
+  padding: 18px 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.toc-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-soft);
+  align-self: center;
+}
+
+.toc a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+  transition: color 0.15s;
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+}
+
+.toc a:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* SECTION */
+.section {
+  margin-bottom: 72px;
+  scroll-margin-top: 24px;
+}
+
+.section-header {
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px dashed var(--border-strong);
+}
+
+.section-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variation-settings: "SOFT" 30;
+  margin-bottom: 8px;
+}
+
+.section h2 em {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 400;
+  font-variation-settings: "SOFT" 100;
+}
+
+.section-desc {
+  color: var(--muted);
+  font-size: 14px;
+  max-width: 580px;
+  line-height: 1.65;
+}
+
+/* SEVERITY SCALE */
+.severity-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.severity-row {
+  display: grid;
+  grid-template-columns: 56px 160px 1fr;
+  gap: 24px;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--sev-color);
+  padding: 22px 26px;
+  border-radius: 4px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.severity-row:hover {
+  transform: translateX(2px);
+  box-shadow: 0 4px 16px rgba(26, 26, 46, 0.04);
+}
+
+.severity-num {
+  font-family: 'Fraunces', serif;
+  font-size: 48px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--sev-color);
+  letter-spacing: -0.04em;
+}
+
+.severity-label-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.severity-label {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  font-style: italic;
+}
+
+.severity-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.severity-desc {
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+}
+
+.sev-bar {
+  display: flex;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.sev-bar-segment {
+  height: 4px;
+  flex: 1;
+  background: var(--border);
+  border-radius: 2px;
+}
+
+.sev-bar-segment.filled { background: var(--sev-color); }
+
+/* HEURISTIC CARDS */
+.heuristic-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.heuristic-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 26px 30px;
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 28px;
+  align-items: start;
+  transition: border-color 0.2s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+
+.heuristic-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.heuristic-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--accent);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.heuristic-card:hover::before { opacity: 1; }
+
+.heuristic-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+  padding-top: 2px;
+}
+
+.heuristic-content { min-width: 0; }
+
+.heuristic-category {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-soft);
+  margin-bottom: 4px;
+}
+
+.heuristic-name {
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+
+.heuristic-description {
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  line-height: 1.65;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 56px 0 24px;
+  font-size: 11px;
+  color: var(--muted-soft);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border-top: 1px solid var(--border);
+  margin-top: 80px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 720px) {
+  .container { padding: 32px 16px 80px; }
+  .header { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .toc { gap: 14px; padding: 16px 18px; }
+  .section { margin-bottom: 56px; }
+  .section h2 { font-size: 28px; }
+  .severity-row {
+    grid-template-columns: 48px 1fr;
+    gap: 16px;
+    padding: 18px 20px;
+  }
+  .severity-num { font-size: 36px; }
+  .severity-label-block { grid-column: 2; }
+  .severity-desc { grid-column: 1 / -1; margin-top: 8px; }
+  .heuristic-card {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 22px 22px;
+  }
+  .heuristic-code { font-size: 18px; }
+  .heuristic-name { font-size: 17px; }
+}
+
+/* PRINT */
+@media print {
+  body {
+    background: white !important;
+    color: black;
+    background-image: none !important;
+  }
+  .container { padding: 0; max-width: 100%; }
+  .btn-print, .toc { display: none; }
+  .header { page-break-after: avoid; }
+  .section { page-break-inside: avoid; margin-bottom: 32px; }
+  .heuristic-card,
+  .severity-row {
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  .heuristic-card::before { opacity: 1 !important; }
+  h1 { font-size: 36px; }
+  .section h2 { font-size: 24px; }
+  .footer { border-top: 1px solid #ccc; padding-top: 16px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="header">
+  <div class="header-text">
+    <div class="eyebrow">Guía de referencia</div>
+    <h1>Heurísticas <em>y</em> Severidad</h1>
+    <p class="lead">Material de consulta para la evaluación heurística del sistema de visualización de indicadores. Incluye las heurísticas de Nielsen, las heurísticas específicas para mapas web interactivos y la escala de severidad.</p>
+  </div>
+  <button class="btn-print" onclick="window.print()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+    <span>Imprimir</span>
+  </button>
+</header>
+
+<nav class="toc">
+  <span class="toc-label">Índice</span>
+  <a href="#severidad">Escala de severidad</a>
+  <a href="#nielsen">Heurísticas de Nielsen</a>
+  <a href="#mapas">Heurísticas para mapas web</a>
+</nav>
+
+<!-- ============ SEVERIDAD ============ -->
+<section class="section" id="severidad">
+  <div class="section-header">
+    <div class="section-eyebrow">§ 01 — Escala de severidad</div>
+    <h2>Cómo <em>graduar</em> los problemas</h2>
+    <p class="section-desc">Escala de cinco niveles para clasificar la gravedad de cada problema detectado y orientar la prioridad de corrección.</p>
+  </div>
+
+  <div class="severity-grid">
+    <div class="severity-row" style="--sev-color: var(--severity-0);">
+      <div class="severity-num">0</div>
+      <div class="severity-label-block">
+        <div class="severity-label">Sin problema</div>
+        <div class="severity-tag">Ningún ajuste necesario</div>
+      </div>
+      <div class="severity-desc">
+        No es un problema de usabilidad. El elemento funciona correctamente y no requiere intervención.
+        <div class="sev-bar">
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="severity-row" style="--sev-color: var(--severity-1);">
+      <div class="severity-num">1</div>
+      <div class="severity-label-block">
+        <div class="severity-label">Cosmético</div>
+        <div class="severity-tag">Prioridad opcional</div>
+      </div>
+      <div class="severity-desc">
+        Problema cosmético: no es necesario corregirlo salvo que haya tiempo extra disponible. No afecta a la realización de la tarea.
+        <div class="sev-bar">
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="severity-row" style="--sev-color: var(--severity-2);">
+      <div class="severity-num">2</div>
+      <div class="severity-label-block">
+        <div class="severity-label">Menor</div>
+        <div class="severity-tag">Prioridad baja</div>
+      </div>
+      <div class="severity-desc">
+        Problema menor de usabilidad: la corrección puede recibir baja prioridad. Genera molestias o ineficiencias puntuales sin bloquear al usuario.
+        <div class="sev-bar">
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="severity-row" style="--sev-color: var(--severity-3);">
+      <div class="severity-num">3</div>
+      <div class="severity-label-block">
+        <div class="severity-label">Importante</div>
+        <div class="severity-tag">Prioridad alta</div>
+      </div>
+      <div class="severity-desc">
+        Problema importante de usabilidad: la corrección debe recibir alta prioridad. Dificulta seriamente la realización de tareas o genera errores frecuentes.
+        <div class="sev-bar">
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment"></div>
+          <div class="sev-bar-segment"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="severity-row" style="--sev-color: var(--severity-4);">
+      <div class="severity-num">4</div>
+      <div class="severity-label-block">
+        <div class="severity-label">Catástrofe</div>
+        <div class="severity-tag">Crítico · Bloquea uso</div>
+      </div>
+      <div class="severity-desc">
+        Catástrofe de usabilidad: imprescindible corregirlo antes de cualquier despliegue. Impide completar tareas esenciales o provoca pérdida de datos o confianza.
+        <div class="sev-bar">
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment filled"></div>
+          <div class="sev-bar-segment filled"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NIELSEN ============ -->
+<section class="section" id="nielsen">
+  <div class="section-header">
+    <div class="section-eyebrow">§ 02 — Diez principios generales</div>
+    <h2>Heurísticas de <em>Nielsen</em></h2>
+    <p class="section-desc">Principios generales de diseño de interfaces formulados por Jakob Nielsen, aplicables a cualquier sistema interactivo.</p>
+  </div>
+
+  <div class="heuristic-grid">
+    <div class="heuristic-card">
+      <div class="heuristic-code">N1</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Visibilidad del estado del sistema</div>
+        <div class="heuristic-description">El sistema debe mantener informado al usuario sobre lo que está sucediendo, mediante retroalimentación adecuada y en un tiempo razonable.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N2</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Concordancia entre el sistema y el mundo real</div>
+        <div class="heuristic-description">El sistema debe hablar el lenguaje del usuario, con palabras, frases y conceptos familiares, en lugar de términos técnicos. Debe seguir convenciones del mundo real, mostrando la información en un orden natural y lógico.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N3</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Control y libertad del usuario</div>
+        <div class="heuristic-description">Los usuarios suelen elegir funciones por error y necesitan una salida claramente marcada. Debe ofrecerse la posibilidad de deshacer y rehacer acciones sin tener que pasar por diálogos extensos.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N4</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Consistencia y estándares</div>
+        <div class="heuristic-description">Los usuarios no deberían tener que preguntarse si distintas palabras, situaciones o acciones significan lo mismo. Conviene seguir las convenciones de la plataforma y mantener la coherencia interna.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N5</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Prevención de errores</div>
+        <div class="heuristic-description">Mejor que un buen mensaje de error es un diseño cuidadoso que prevenga la aparición del problema. Eliminar condiciones propensas al error o detectarlas y presentar al usuario una opción de confirmación antes de comprometerse con la acción.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N6</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Reconocer en lugar de recordar</div>
+        <div class="heuristic-description">Minimizar la carga de memoria del usuario haciendo visibles los objetos, acciones y opciones. El usuario no debería recordar información de una parte del diálogo a otra. Las instrucciones de uso deben estar visibles o ser fácilmente recuperables.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N7</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Flexibilidad y eficiencia de uso</div>
+        <div class="heuristic-description">Los aceleradores —invisibles para el usuario novato— pueden acelerar la interacción del experto, de modo que el sistema sirva tanto a usuarios inexpertos como experimentados. Permitir personalizar las acciones frecuentes.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N8</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Diseño estético y minimalista</div>
+        <div class="heuristic-description">Los diálogos no deben contener información irrelevante o rara vez necesaria. Cada unidad extra de información compite con las unidades relevantes y reduce su visibilidad relativa.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N9</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Ayudar al usuario a reconocer, diagnosticar y recuperarse de errores</div>
+        <div class="heuristic-description">Los mensajes de error deben expresarse en un lenguaje claro (sin códigos), indicar con precisión el problema y sugerir una solución constructiva.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">N10</div>
+      <div class="heuristic-content">
+        <div class="heuristic-name">Ayuda y documentación</div>
+        <div class="heuristic-description">Aunque es preferible que el sistema pueda usarse sin documentación, puede ser necesario proporcionar ayuda. Esta debe ser fácil de buscar, centrada en la tarea del usuario, presentar pasos concretos y no resultar excesivamente extensa.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MAPAS ============ -->
+<section class="section" id="mapas">
+  <div class="section-header">
+    <div class="section-eyebrow">§ 03 — Heurísticas específicas</div>
+    <h2>Heurísticas para <em>mapas</em> web interactivos</h2>
+    <p class="section-desc">Heurísticas específicas para evaluar los elementos cartográficos y de interacción propios de los sistemas de visualización geográfica.</p>
+  </div>
+
+  <div class="heuristic-grid">
+    <div class="heuristic-card">
+      <div class="heuristic-code">M1</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Interfaz de usuario</div>
+        <div class="heuristic-name">Concordancia y amigabilidad de la interfaz</div>
+        <div class="heuristic-description">La aplicación debe ser fácil de usar, funcional e intuitiva a primera vista. Hay que evitar que el usuario se pierda, minimizar la sobrecarga de información y organizar los datos y herramientas de forma sencilla.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M2</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Visualización del mapa</div>
+        <div class="heuristic-name">Indicación del estado del mapa</div>
+        <div class="heuristic-description">El mapa debe contener únicamente información relevante para la aplicación, ser intuitivo y agradable de usar, y emplear elementos accesibles con una paleta de colores armónica.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M3</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Escala</div>
+        <div class="heuristic-name">Compatibilidad en los niveles de representación</div>
+        <div class="heuristic-description">El mapa debe diseñarse de forma diferenciada para los distintos niveles de visualización, manteniendo la legibilidad de los elementos y la coherencia de la representación a cualquier escala.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M4</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Simbología</div>
+        <div class="heuristic-name">Consistencia y estandarización de elementos cartográficos</div>
+        <div class="heuristic-description">Los símbolos deben usarse de forma orgánica, siguiendo las taxonomías primitivas aplicadas a los mapas, y mantener una coherencia visual que facilite su interpretación.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M5</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Interactividad</div>
+        <div class="heuristic-name">Aproximación accesible al entorno interactivo</div>
+        <div class="heuristic-description">La interacción debe estar diseñada para dar soporte tanto al usuario más básico como al más experimentado, contemplando los distintos objetivos de exploración.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M6</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Búsqueda</div>
+        <div class="heuristic-name">Asistencia y reconocimiento en los patrones de búsqueda</div>
+        <div class="heuristic-description">Los motores de búsqueda deben presentarse de forma intuitiva, dejando claros los criterios empleados y la relación entre la consulta y los resultados mostrados.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M7</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Diseño responsivo</div>
+        <div class="heuristic-name">Adaptabilidad a distintos dispositivos y navegadores</div>
+        <div class="heuristic-description">La presentación del mapa no debe verse afectada por el dispositivo, la pantalla o la configuración del navegador empleado por el usuario.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M8</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Metadatos</div>
+        <div class="heuristic-name">Nombre y estructuración de los metadatos cartográficos</div>
+        <div class="heuristic-description">Los datos geográficos deben proporcionarse de forma estructurada y documentada, indicando aspectos como su precisión, validez, fuente, responsables y proyección.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M9</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Información complementaria</div>
+        <div class="heuristic-name">Consistencia en la presentación de la información y el contenido</div>
+        <div class="heuristic-description">El usuario debe poder acceder fácilmente a información complementaria, pero esta no debe superponerse ni competir visualmente con la información principal del mapa.</div>
+      </div>
+    </div>
+
+    <div class="heuristic-card">
+      <div class="heuristic-code">M10</div>
+      <div class="heuristic-content">
+        <div class="heuristic-category">Salida de datos</div>
+        <div class="heuristic-name">Permitir la exportación de mapas y resultados</div>
+        <div class="heuristic-description">El usuario debe disponer de funciones que permitan exportar, imprimir o compartir el mapa y los resultados obtenidos a través de su interacción con el sistema.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  Guía de referencia · v1.0
+</footer>
+
+</div>
+</body>
+</html>

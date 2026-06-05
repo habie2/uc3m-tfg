@@ -1,0 +1,1147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluación Heurística</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root {
+  --bg: #f6f1e6;
+  --surface: #ffffff;
+  --surface-warm: #fdfaf3;
+  --ink: #1a1a2e;
+  --ink-soft: #2d2d44;
+  --muted: #6b6b80;
+  --muted-soft: #a8a8b8;
+  --accent: #b8451a;
+  --accent-hover: #963a16;
+  --accent-soft: #f4e4d9;
+  --border: #e5dccc;
+  --border-strong: #c9bca7;
+  --success: #2d5e3f;
+  --error: #a83232;
+  --severity-0: #c9bca7;
+  --severity-1: #d4a574;
+  --severity-2: #c47d44;
+  --severity-3: #b8451a;
+  --severity-4: #7d1e1e;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(184, 69, 26, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(26, 26, 46, 0.025) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 56px 32px 120px;
+}
+
+/* HEADER */
+.header {
+  margin-bottom: 56px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 500;
+  font-variation-settings: "SOFT" 30;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
+
+h1 em {
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: "SOFT" 100;
+  color: var(--accent);
+}
+
+.lead {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+/* SECTIONS */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 36px 36px 32px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  position: absolute;
+  top: -10px;
+  left: 28px;
+  background: var(--bg);
+  padding: 0 14px;
+}
+
+.section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: -0.015em;
+}
+
+.section-desc {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+  max-width: 580px;
+  line-height: 1.6;
+}
+
+/* FIELDS */
+.field {
+  margin-bottom: 22px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  letter-spacing: 0.005em;
+}
+
+.required::after {
+  content: ' *';
+  color: var(--accent);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--muted-soft);
+  font-size: 12px;
+  margin-left: 4px;
+  font-style: italic;
+}
+
+input[type="text"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%236b6b80' stroke-width='1.5' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* PROBLEM CARDS */
+.problem-card {
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 28px;
+  margin-bottom: 18px;
+  position: relative;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.problem-card:hover {
+  border-color: var(--border-strong);
+}
+
+.problem-card.error-flash {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(168, 50, 50, 0.1);
+}
+
+.problem-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.problem-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.problem-number strong {
+  color: var(--accent);
+  font-weight: 500;
+  margin-left: 6px;
+}
+
+.btn-remove {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  width: 30px;
+  height: 30px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.btn-remove:hover {
+  border-color: var(--error);
+  color: var(--error);
+  background: rgba(168, 50, 50, 0.04);
+}
+
+/* SEVERITY SCALE */
+.severity-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.severity-option {
+  position: relative;
+}
+
+.severity-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.severity-option label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  margin: 0;
+  min-height: 70px;
+}
+
+.severity-option label:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.severity-option .sev-num {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.severity-option .sev-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.severity-option input:checked + label {
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.15);
+}
+
+.severity-option input:checked + label .sev-num,
+.severity-option input:checked + label .sev-label {
+  color: var(--surface) !important;
+}
+
+.severity-option[data-sev="0"] .sev-num { color: var(--severity-0); }
+.severity-option[data-sev="1"] .sev-num { color: var(--severity-1); }
+.severity-option[data-sev="2"] .sev-num { color: var(--severity-2); }
+.severity-option[data-sev="3"] .sev-num { color: var(--severity-3); }
+.severity-option[data-sev="4"] .sev-num { color: var(--severity-4); }
+
+/* BUTTONS */
+.btn-add {
+  width: 100%;
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  color: var(--accent);
+  padding: 18px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.btn-add:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 24px;
+  margin-top: 32px;
+  box-shadow: 0 6px 28px rgba(26, 26, 46, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--surface);
+  border: none;
+  padding: 12px 28px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-primary:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-primary svg { width: 14px; height: 14px; }
+
+.btn-secondary {
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 11px 20px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.btn-secondary:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
+.problem-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.problem-count strong {
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.actions-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--surface);
+  padding: 14px 24px;
+  border-radius: 3px;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  max-width: 90vw;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error { background: var(--error); }
+.toast.success { background: var(--success); }
+
+/* Reference */
+.ref-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 18px;
+  padding: 4px 0;
+}
+
+.ref-toggle:hover { text-decoration: underline; }
+
+.ref-arrow {
+  display: inline-block;
+  transition: transform 0.2s;
+  font-size: 9px;
+}
+
+.ref-toggle.open .ref-arrow {
+  transform: rotate(90deg);
+}
+
+.ref-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  margin-bottom: 0;
+}
+
+.ref-content.open {
+  max-height: 800px;
+  margin-bottom: 24px;
+}
+
+.ref-inner {
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 22px 24px;
+}
+
+.ref-group:not(:last-child) { margin-bottom: 20px; }
+
+.ref-group h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 10px;
+  color: var(--ink);
+  font-style: italic;
+}
+
+.ref-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 14px;
+  padding: 5px 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+.ref-item .code {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--accent);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 56px 0 24px;
+  font-size: 11px;
+  color: var(--muted-soft);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .container { padding: 32px 16px 80px; }
+  .section { padding: 28px 20px 24px; }
+  .section-label { left: 16px; padding: 0 10px; }
+  .field-row { grid-template-columns: 1fr; gap: 18px; }
+  .severity-option label { padding: 10px 4px; min-height: 60px; }
+  .severity-option .sev-num { font-size: 19px; }
+  .severity-option .sev-label { font-size: 9px; letter-spacing: 0.04em; }
+  .problem-card { padding: 22px 18px; }
+  .actions-bar {
+    flex-direction: column;
+    padding: 16px;
+    bottom: 12px;
+  }
+  .actions-group { width: 100%; justify-content: space-between; }
+  .btn-primary { flex: 1; justify-content: center; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="header">
+  <div class="eyebrow">Fase 1 — Inspección heurística</div>
+  <h1>Evaluación <em>Heurística</em></h1>
+  <p class="lead">Registro de problemas de usabilidad detectados durante la evaluación heurística del sistema de visualización de indicadores. Al finalizar, descargue el Excel con todos los problemas y un resumen estadístico.</p>
+</header>
+
+<section class="section">
+  <span class="section-label">01 · Evaluador</span>
+  <h2>Datos del evaluador</h2>
+  <p class="section-desc">Información común que se asociará a todos los problemas registrados en esta sesión.</p>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="evaluador" class="required">Nombre del evaluador</label>
+      <input type="text" id="evaluador" placeholder="Nombre y apellidos">
+    </div>
+    <div class="field">
+      <label for="fecha" class="required">Fecha de evaluación</label>
+      <input type="date" id="fecha">
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <span class="section-label">02 · Problemas</span>
+  <h2>Problemas detectados</h2>
+  <p class="section-desc">Añada un registro por cada problema detectado. Puede combinar libremente heurísticas (Nielsen o de mapas web) e indicadores.</p>
+
+  <button class="ref-toggle" id="ref-toggle">
+    <span class="ref-arrow">▶</span>
+    <span>Tabla de heurísticas de referencia</span>
+  </button>
+  <div class="ref-content" id="ref-content">
+    <div class="ref-inner">
+      <div class="ref-group">
+        <h4>Heurísticas de Nielsen</h4>
+        <div id="nielsen-ref"></div>
+      </div>
+      <div class="ref-group">
+        <h4>Heurísticas para mapas web interactivos</h4>
+        <div id="mapas-ref"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="problems-list"></div>
+
+  <button class="btn-add" id="add-problem">
+    + Añadir problema
+  </button>
+</section>
+
+<div class="actions-bar">
+  <div class="problem-count">
+    <strong id="count-num">0</strong> problema(s) registrado(s)
+  </div>
+  <div class="actions-group">
+    <button class="btn-secondary" id="btn-clear">Limpiar todo</button>
+    <button class="btn-primary" id="btn-submit">
+      <span>Descargar Excel</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+  </div>
+</div>
+
+<footer class="footer">
+  Evaluación Heurística · v1.0
+</footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// HEURISTICS DATA
+// ============================================
+const HEURISTICS = {
+  nielsen: [
+    { code: 'N1', name: 'Visibilidad del estado del sistema' },
+    { code: 'N2', name: 'Concordancia entre el sistema y el mundo real' },
+    { code: 'N3', name: 'Control y libertad del usuario' },
+    { code: 'N4', name: 'Consistencia y estándares' },
+    { code: 'N5', name: 'Prevención de errores' },
+    { code: 'N6', name: 'Reconocer en lugar de recordar' },
+    { code: 'N7', name: 'Flexibilidad y eficiencia de uso' },
+    { code: 'N8', name: 'Diseño estético y minimalista' },
+    { code: 'N9', name: 'Ayudar al usuario a reconocer, diagnosticar y recuperarse de errores' },
+    { code: 'N10', name: 'Ayuda y documentación' }
+  ],
+  mapas: [
+    { code: 'M1', name: 'Concordancia y amigabilidad de la interfaz' },
+    { code: 'M2', name: 'Indicación del estado del mapa' },
+    { code: 'M3', name: 'Compatibilidad en los niveles de representación' },
+    { code: 'M4', name: 'Consistencia y estandarización de elementos cartográficos' },
+    { code: 'M5', name: 'Aproximación accesible al entorno interactivo' },
+    { code: 'M6', name: 'Asistencia y reconocimiento en los patrones de búsqueda' },
+    { code: 'M7', name: 'Adaptabilidad a distintos dispositivos y navegadores' },
+    { code: 'M8', name: 'Nombre y estructuración de los metadatos cartográficos' },
+    { code: 'M9', name: 'Consistencia en la presentación de la información y el contenido' },
+    { code: 'M10', name: 'Permitir la exportación de mapas y resultados' }
+  ]
+};
+
+const SEVERITY_LABELS = {
+  0: 'No problema',
+  1: 'Cosmético',
+  2: 'Menor',
+  3: 'Importante',
+  4: 'Catástrofe'
+};
+
+const SEVERITY_FULL = {
+  0: 'No es un problema de usabilidad',
+  1: 'Problema cosmético',
+  2: 'Problema menor de usabilidad',
+  3: 'Problema importante de usabilidad',
+  4: 'Catástrofe de usabilidad'
+};
+
+// ============================================
+// STATE
+// ============================================
+let problemCounter = 0;
+
+// ============================================
+// INIT
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fecha').valueAsDate = new Date();
+  populateReference();
+  addProblem();
+
+  document.getElementById('add-problem').addEventListener('click', addProblem);
+  document.getElementById('btn-submit').addEventListener('click', handleSubmit);
+  document.getElementById('btn-clear').addEventListener('click', handleClear);
+  document.getElementById('ref-toggle').addEventListener('click', toggleReference);
+});
+
+// ============================================
+// REFERENCE TABLE
+// ============================================
+function populateReference() {
+  const nRef = document.getElementById('nielsen-ref');
+  HEURISTICS.nielsen.forEach(h => {
+    nRef.innerHTML += `<div class="ref-item"><span class="code">${h.code}</span><span>${h.name}</span></div>`;
+  });
+  const mRef = document.getElementById('mapas-ref');
+  HEURISTICS.mapas.forEach(h => {
+    mRef.innerHTML += `<div class="ref-item"><span class="code">${h.code}</span><span>${h.name}</span></div>`;
+  });
+}
+
+function toggleReference() {
+  const content = document.getElementById('ref-content');
+  const toggle = document.getElementById('ref-toggle');
+  content.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+// ============================================
+// PROBLEM CARDS
+// ============================================
+function addProblem() {
+  problemCounter++;
+  const id = problemCounter;
+
+  let heuristicOptions = '<option value="">Seleccione una heurística…</option>';
+  heuristicOptions += '<optgroup label="── Heurísticas de Nielsen ──">';
+  HEURISTICS.nielsen.forEach(h => {
+    heuristicOptions += `<option value="${h.code}">${h.code} – ${h.name}</option>`;
+  });
+  heuristicOptions += '</optgroup>';
+  heuristicOptions += '<optgroup label="── Heurísticas para mapas web ──">';
+  HEURISTICS.mapas.forEach(h => {
+    heuristicOptions += `<option value="${h.code}">${h.code} – ${h.name}</option>`;
+  });
+  heuristicOptions += '</optgroup>';
+
+  let severityHtml = '';
+  for (let s = 0; s <= 4; s++) {
+    severityHtml += `
+      <div class="severity-option" data-sev="${s}">
+        <input type="radio" name="sev-${id}" id="sev-${id}-${s}" value="${s}">
+        <label for="sev-${id}-${s}">
+          <span class="sev-num">${s}</span>
+          <span class="sev-label">${SEVERITY_LABELS[s]}</span>
+        </label>
+      </div>
+    `;
+  }
+
+  const card = document.createElement('div');
+  card.className = 'problem-card';
+  card.dataset.id = id;
+  card.innerHTML = `
+    <div class="problem-header">
+      <div class="problem-number">Problema<strong class="num-display">N°${String(id).padStart(2, '0')}</strong></div>
+      <button class="btn-remove" data-remove="${id}" title="Eliminar problema" aria-label="Eliminar problema">×</button>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label class="required">Indicador evaluado</label>
+        <select class="f-indicador">
+          <option value="">Seleccione un indicador…</option>
+          <option value="Indicador 1">Indicador 1</option>
+          <option value="Indicador 2">Indicador 2</option>
+          <option value="Indicador 3">Indicador 3</option>
+        </select>
+      </div>
+      <div class="field">
+        <label class="required">Heurística incumplida</label>
+        <select class="f-heuristica">
+          ${heuristicOptions}
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="required">Elemento problemático</label>
+      <input type="text" class="f-elemento" placeholder="Ej. botón de exportar, leyenda, control de zoom…">
+    </div>
+
+    <div class="field">
+      <label class="required">Descripción del problema</label>
+      <textarea class="f-descripcion" placeholder="Describa con detalle el problema de usabilidad detectado…"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="required">Severidad</label>
+      <div class="severity-scale">${severityHtml}</div>
+    </div>
+
+    <div class="field" style="margin-bottom: 0;">
+      <label>Observaciones <span class="optional">(opcional)</span></label>
+      <textarea class="f-observaciones" placeholder="Notas adicionales…"></textarea>
+    </div>
+  `;
+
+  document.getElementById('problems-list').appendChild(card);
+
+  card.querySelector('.btn-remove').addEventListener('click', (e) => {
+    removeProblem(parseInt(e.currentTarget.dataset.remove));
+  });
+
+  updateCount();
+
+  if (document.querySelectorAll('.problem-card').length > 1) {
+    setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  }
+}
+
+function removeProblem(id) {
+  const card = document.querySelector(`.problem-card[data-id="${id}"]`);
+  if (card) card.remove();
+  renumberProblems();
+  updateCount();
+  if (document.querySelectorAll('.problem-card').length === 0) {
+    addProblem();
+  }
+}
+
+function renumberProblems() {
+  document.querySelectorAll('.problem-card').forEach((card, idx) => {
+    card.querySelector('.num-display').textContent = `N°${String(idx + 1).padStart(2, '0')}`;
+  });
+}
+
+function updateCount() {
+  document.getElementById('count-num').textContent = document.querySelectorAll('.problem-card').length;
+}
+
+// ============================================
+// DATA COLLECTION + VALIDATION
+// ============================================
+function collectData() {
+  const evaluador = document.getElementById('evaluador').value.trim();
+  const fecha = document.getElementById('fecha').value;
+
+  if (!evaluador) {
+    document.getElementById('evaluador').focus();
+    return { error: 'Indique el nombre del evaluador.' };
+  }
+  if (!fecha) {
+    document.getElementById('fecha').focus();
+    return { error: 'Indique la fecha de evaluación.' };
+  }
+
+  const cards = document.querySelectorAll('.problem-card');
+  if (cards.length === 0) return { error: 'Añada al menos un problema antes de descargar.' };
+
+  const problems = [];
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const indicador = card.querySelector('.f-indicador').value;
+    const heuristicaCode = card.querySelector('.f-heuristica').value;
+    const elemento = card.querySelector('.f-elemento').value.trim();
+    const descripcion = card.querySelector('.f-descripcion').value.trim();
+    const sevInput = card.querySelector('input[type="radio"]:checked');
+    const observaciones = card.querySelector('.f-observaciones').value.trim();
+
+    if (!indicador || !heuristicaCode || !elemento || !descripcion || !sevInput) {
+      card.classList.add('error-flash');
+      setTimeout(() => card.classList.remove('error-flash'), 2500);
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return { error: `El problema N°${String(i + 1).padStart(2, '0')} tiene campos obligatorios sin completar.` };
+    }
+
+    let tipo, name;
+    let h = HEURISTICS.nielsen.find(x => x.code === heuristicaCode);
+    if (h) { tipo = 'Nielsen'; name = h.name; }
+    else {
+      h = HEURISTICS.mapas.find(x => x.code === heuristicaCode);
+      tipo = 'Mapas'; name = h ? h.name : '';
+    }
+
+    const sev = parseInt(sevInput.value);
+
+    problems.push({
+      id: `P-${String(i + 1).padStart(3, '0')}`,
+      indicador,
+      tipo,
+      code: heuristicaCode,
+      name,
+      elemento,
+      descripcion,
+      severidad: sev,
+      severidadLabel: SEVERITY_FULL[sev],
+      observaciones
+    });
+  }
+
+  return { evaluador, fecha, problems };
+}
+
+// ============================================
+// SUBMIT + EXCEL
+// ============================================
+function handleSubmit() {
+  const data = collectData();
+  if (data.error) {
+    showToast(data.error, 'error');
+    return;
+  }
+
+  generateExcel(data);
+  showToast(`Excel descargado correctamente (${data.problems.length} problema${data.problems.length > 1 ? 's' : ''}).`, 'success');
+}
+
+function generateExcel(data) {
+  const { evaluador, fecha, problems } = data;
+  const now = new Date();
+  const timestamp = now.toLocaleString('es-ES');
+
+  // ===== SHEET 1: PROBLEMAS =====
+  const problemasHeader = [
+    'ID_Problema',
+    'Timestamp',
+    'Evaluador',
+    'Fecha_Evaluacion',
+    'Indicador',
+    'Tipo_Heuristica',
+    'Codigo_Heuristica',
+    'Nombre_Heuristica',
+    'Elemento_Problematico',
+    'Descripcion_Problema',
+    'Severidad',
+    'Severidad_Etiqueta',
+    'Observaciones'
+  ];
+
+  const problemasRows = problems.map(p => [
+    p.id,
+    timestamp,
+    evaluador,
+    fecha,
+    p.indicador,
+    p.tipo,
+    p.code,
+    p.name,
+    p.elemento,
+    p.descripcion,
+    p.severidad,
+    p.severidadLabel,
+    p.observaciones
+  ]);
+
+  const ws1Data = [problemasHeader, ...problemasRows];
+  const ws1 = XLSX.utils.aoa_to_sheet(ws1Data);
+
+  ws1['!cols'] = [
+    { wch: 12 }, { wch: 20 }, { wch: 24 }, { wch: 14 },
+    { wch: 14 }, { wch: 14 }, { wch: 10 }, { wch: 42 },
+    { wch: 32 }, { wch: 55 }, { wch: 11 }, { wch: 26 }, { wch: 32 }
+  ];
+
+  // Enable autofilter on header row
+  ws1['!autofilter'] = { ref: `A1:M${problemasRows.length + 1}` };
+
+  // Freeze top row
+  ws1['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  // ===== SHEET 2: RESUMEN =====
+  const resumen = buildSummary(data);
+  const ws2 = XLSX.utils.aoa_to_sheet(resumen.rows);
+  ws2['!cols'] = [{ wch: 48 }, { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+  if (resumen.merges.length > 0) ws2['!merges'] = resumen.merges;
+
+  // ===== WORKBOOK =====
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, 'Problemas');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+
+  // Filename
+  const safeName = evaluador
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '_');
+  const filename = `Evaluacion_Heuristica_${safeName || 'evaluador'}_${fecha}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+}
+
+function buildSummary(data) {
+  const { evaluador, fecha, problems } = data;
+  const rows = [];
+  const merges = [];
+
+  function addTitle(text) {
+    rows.push([text]);
+    merges.push({ s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 4 } });
+  }
+
+  // Header block
+  addTitle('RESUMEN DE LA EVALUACIÓN HEURÍSTICA');
+  rows.push([]);
+  rows.push(['Evaluador', evaluador]);
+  rows.push(['Fecha de evaluación', fecha]);
+  rows.push(['Total de problemas detectados', problems.length]);
+  rows.push([]);
+
+  // Por tipo
+  addTitle('▸ PROBLEMAS POR TIPO DE HEURÍSTICA');
+  rows.push(['Tipo', 'Conteo', 'Severidad media', 'Severidad máxima', '% del total']);
+  ['Nielsen', 'Mapas'].forEach(tipo => {
+    const filtered = problems.filter(p => p.tipo === tipo);
+    if (filtered.length > 0) {
+      const sevs = filtered.map(p => p.severidad);
+      const mean = +(sevs.reduce((a, b) => a + b, 0) / sevs.length).toFixed(2);
+      const max = Math.max(...sevs);
+      const pct = +((filtered.length / problems.length) * 100).toFixed(1);
+      rows.push([tipo, filtered.length, mean, max, pct + '%']);
+    } else {
+      rows.push([tipo, 0, '–', '–', '0%']);
+    }
+  });
+  rows.push([]);
+
+  // Por código de heurística
+  addTitle('▸ PROBLEMAS POR HEURÍSTICA');
+  rows.push(['Código', 'Heurística', 'Conteo', 'Severidad media', 'Severidad máxima']);
+  [...HEURISTICS.nielsen, ...HEURISTICS.mapas].forEach(h => {
+    const filtered = problems.filter(p => p.code === h.code);
+    if (filtered.length > 0) {
+      const sevs = filtered.map(p => p.severidad);
+      const mean = +(sevs.reduce((a, b) => a + b, 0) / sevs.length).toFixed(2);
+      const max = Math.max(...sevs);
+      rows.push([h.code, h.name, filtered.length, mean, max]);
+    }
+  });
+  rows.push([]);
+
+  // Por severidad
+  addTitle('▸ PROBLEMAS POR NIVEL DE SEVERIDAD');
+  rows.push(['Nivel', 'Etiqueta', 'Conteo', '% del total']);
+  for (let s = 0; s <= 4; s++) {
+    const count = problems.filter(p => p.severidad === s).length;
+    const pct = problems.length > 0 ? +((count / problems.length) * 100).toFixed(1) + '%' : '0%';
+    rows.push([s, SEVERITY_FULL[s], count, pct]);
+  }
+  rows.push([]);
+
+  // Por indicador
+  addTitle('▸ PROBLEMAS POR INDICADOR');
+  rows.push(['Indicador', 'Conteo', 'Severidad media', 'Severidad máxima', '% del total']);
+  ['Indicador 1', 'Indicador 2', 'Indicador 3'].forEach(ind => {
+    const filtered = problems.filter(p => p.indicador === ind);
+    if (filtered.length > 0) {
+      const sevs = filtered.map(p => p.severidad);
+      const mean = +(sevs.reduce((a, b) => a + b, 0) / sevs.length).toFixed(2);
+      const max = Math.max(...sevs);
+      const pct = +((filtered.length / problems.length) * 100).toFixed(1);
+      rows.push([ind, filtered.length, mean, max, pct + '%']);
+    } else {
+      rows.push([ind, 0, '–', '–', '0%']);
+    }
+  });
+  rows.push([]);
+
+  // Cruz: Indicador x Tipo
+  addTitle('▸ TABLA CRUZADA: INDICADOR × TIPO DE HEURÍSTICA (conteo)');
+  rows.push(['', 'Nielsen', 'Mapas', 'Total']);
+  ['Indicador 1', 'Indicador 2', 'Indicador 3'].forEach(ind => {
+    const nN = problems.filter(p => p.indicador === ind && p.tipo === 'Nielsen').length;
+    const nM = problems.filter(p => p.indicador === ind && p.tipo === 'Mapas').length;
+    rows.push([ind, nN, nM, nN + nM]);
+  });
+  rows.push([]);
+
+  // Stats globales
+  if (problems.length > 0) {
+    const sevs = problems.map(p => p.severidad);
+    const mean = +(sevs.reduce((a, b) => a + b, 0) / sevs.length).toFixed(2);
+    const sorted = [...sevs].sort((a, b) => a - b);
+    const median = sorted.length % 2 === 0
+      ? +((sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2).toFixed(2)
+      : sorted[Math.floor(sorted.length / 2)];
+
+    addTitle('▸ ESTADÍSTICAS GLOBALES DE SEVERIDAD');
+    rows.push(['Severidad media', mean]);
+    rows.push(['Severidad mediana', median]);
+    rows.push(['Severidad máxima', Math.max(...sevs)]);
+    rows.push(['Severidad mínima', Math.min(...sevs)]);
+    rows.push(['Problemas severos (≥ 3)', problems.filter(p => p.severidad >= 3).length]);
+    rows.push(['Problemas críticos (= 4)', problems.filter(p => p.severidad === 4).length]);
+  }
+
+  return { rows, merges };
+}
+
+// ============================================
+// HELPERS
+// ============================================
+function handleClear() {
+  if (!confirm('¿Seguro que desea borrar todo el formulario?')) return;
+  document.getElementById('evaluador').value = '';
+  document.getElementById('fecha').valueAsDate = new Date();
+  document.getElementById('problems-list').innerHTML = '';
+  problemCounter = 0;
+  addProblem();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showToast(msg, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type || ''}`;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.className = 'toast', 4000);
+}
+</script>
+</body>
+</html>
