@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionario SUS — Evaluación de usabilidad</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root {
+  --bg: #f6f1e6;
+  --surface: #ffffff;
+  --surface-warm: #fdfaf3;
+  --ink: #1a1a2e;
+  --ink-soft: #2d2d44;
+  --muted: #6b6b80;
+  --muted-soft: #a8a8b8;
+  --accent: #b8451a;
+  --accent-hover: #963a16;
+  --accent-soft: #f4e4d9;
+  --border: #e5dccc;
+  --border-strong: #c9bca7;
+  --success: #2d5e3f;
+  --warning: #b07d2b;
+  --error: #a83232;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(184, 69, 26, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(26, 26, 46, 0.025) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 56px 32px 140px;
+}
+
+/* HEADER */
+.header {
+  margin-bottom: 56px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 500;
+  font-variation-settings: "SOFT" 30;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
+
+h1 em {
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: "SOFT" 100;
+  color: var(--accent);
+}
+
+.lead {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+/* INSTRUCTIONS CALLOUT */
+.instructions {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 4px 4px 0;
+  padding: 24px 28px;
+  margin-bottom: 36px;
+}
+
+.instructions-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+}
+
+.instructions-text {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  font-variation-settings: "SOFT" 50;
+}
+
+/* SECTIONS */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 36px 36px 32px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  position: absolute;
+  top: -10px;
+  left: 28px;
+  background: var(--bg);
+  padding: 0 14px;
+}
+
+.section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: -0.015em;
+}
+
+.section-desc {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+  max-width: 580px;
+  line-height: 1.6;
+}
+
+/* FIELDS */
+.field { margin-bottom: 22px; }
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  letter-spacing: 0.005em;
+}
+
+.required::after {
+  content: ' *';
+  color: var(--accent);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--muted-soft);
+  font-size: 12px;
+  margin-left: 4px;
+  font-style: italic;
+}
+
+input[type="text"],
+input[type="date"],
+select,
+textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 90px;
+  line-height: 1.5;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%236b6b80' stroke-width='1.5' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+/* SUS ITEM CARDS */
+.sus-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 28px 32px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 28px;
+  align-items: start;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.sus-item:hover { border-color: var(--border-strong); }
+
+.sus-item.answered {
+  border-color: var(--success);
+  background: linear-gradient(to right, rgba(45, 94, 63, 0.025), transparent 50%);
+}
+
+.sus-item.error-flash {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(168, 50, 50, 0.1);
+}
+
+.sus-number {
+  font-family: 'Fraunces', serif;
+  font-size: 42px;
+  font-weight: 500;
+  font-variation-settings: "SOFT" 80;
+  color: var(--accent);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  padding-top: 4px;
+}
+
+.sus-content { min-width: 0; }
+
+.sus-statement {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
+  color: var(--ink);
+  margin-bottom: 24px;
+}
+
+/* LIKERT SCALE */
+.likert-wrapper { position: relative; }
+
+.likert-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.likert-option {
+  position: relative;
+}
+
+.likert-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.likert-option label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 4px;
+  background: var(--surface-warm);
+  border: 1.5px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  margin: 0;
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.likert-option label:hover {
+  border-color: var(--border-strong);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+
+.likert-option input:checked + label {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.18);
+}
+
+.likert-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+
+.likert-axis-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  max-width: 140px;
+}
+
+.likert-axis-label.left { text-align: left; }
+.likert-axis-label.right { text-align: right; }
+
+/* ACTIONS BAR */
+.actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 24px;
+  margin-top: 32px;
+  box-shadow: 0 6px 28px rgba(26, 26, 46, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.progress-bar {
+  width: 160px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.progress-text strong {
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--surface);
+  border: none;
+  padding: 12px 28px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-primary:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-primary svg { width: 14px; height: 14px; }
+
+.btn-secondary {
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 11px 20px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.btn-secondary:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
+.actions-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* SCORE PREVIEW MODAL */
+.score-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 26, 46, 0.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.score-modal.show {
+  display: flex;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.score-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  max-width: 540px;
+  width: 100%;
+  padding: 48px 48px 36px;
+  position: relative;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.score-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--accent);
+}
+
+.score-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.score-value {
+  font-family: 'Fraunces', serif;
+  font-size: 96px;
+  font-weight: 500;
+  font-variation-settings: "SOFT" 80;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.score-value .of {
+  font-size: 28px;
+  color: var(--muted-soft);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.score-grade {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 500;
+  font-style: italic;
+  text-align: center;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.score-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+.score-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
+  background: var(--accent);
+}
+
+.score-bar-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 1px;
+  background: var(--ink-soft);
+}
+
+.score-bar-marker::after {
+  content: 'media';
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-soft);
+}
+
+.score-bar-axis {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--muted-soft);
+  margin-bottom: 28px;
+}
+
+.score-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: white;
+  padding: 14px 24px;
+  border-radius: 3px;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  max-width: 90vw;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error { background: var(--error); }
+.toast.success { background: var(--success); }
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 56px 0 24px;
+  font-size: 11px;
+  color: var(--muted-soft);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* RESPONSIVE */
+@media (max-width: 720px) {
+  .container { padding: 32px 16px 100px; }
+  .section { padding: 28px 20px 24px; }
+  .section-label { left: 16px; padding: 0 10px; }
+  .field-row { grid-template-columns: 1fr; gap: 18px; }
+  .instructions { padding: 18px 20px; }
+  .sus-item {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 22px 22px;
+  }
+  .sus-number { font-size: 32px; padding-top: 0; }
+  .sus-statement { font-size: 16px; margin-bottom: 18px; }
+  .likert-option label { padding: 12px 2px; font-size: 18px; }
+  .likert-axis-label { font-size: 9px; max-width: 100px; }
+  .actions-bar {
+    flex-direction: column;
+    padding: 14px;
+    bottom: 12px;
+  }
+  .progress-info { width: 100%; justify-content: space-between; }
+  .actions-group { width: 100%; justify-content: space-between; }
+  .btn-primary { flex: 1; justify-content: center; }
+  .progress-bar { width: 100px; }
+  .score-card { padding: 36px 28px 28px; }
+  .score-value { font-size: 76px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="header">
+  <div class="eyebrow">Fase 3 — System Usability Scale</div>
+  <h1>Cuestionario de <em>Usabilidad</em></h1>
+  <p class="lead">Diez afirmaciones sobre el sistema. Para cada una, indique su grado de acuerdo en una escala del 1 al 5. La puntuación SUS final (0–100) se calcula automáticamente.</p>
+</header>
+
+<div class="instructions">
+  <div class="instructions-label">Instrucciones</div>
+  <div class="instructions-text">
+    Responda con su primera impresión, sin pensarlo demasiado. Tenga en cuenta que algunas afirmaciones están redactadas en positivo y otras en negativo. No hay respuestas correctas o incorrectas: lo que nos interesa es su experiencia personal con el sistema.
+  </div>
+</div>
+
+<section class="section">
+  <span class="section-label">01 · Participante</span>
+  <h2>Datos del participante</h2>
+  <p class="section-desc">Información que se asociará a esta respuesta del cuestionario.</p>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="fecha" class="required">Fecha</label>
+      <input type="date" id="fecha">
+    </div>
+    <div class="field">
+      <label for="participante" class="required">Identificador del participante</label>
+      <input type="text" id="participante" placeholder="P01, P02… o nombre">
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="perfil" class="required">Perfil del participante</label>
+    <select id="perfil">
+      <option value="">Seleccione un perfil…</option>
+      <option value="tecnico">Técnico (administración)</option>
+      <option value="analista">Analista (empresa)</option>
+      <option value="usuario">Usuario general (ciudadano)</option>
+    </select>
+  </div>
+</section>
+
+<section class="section">
+  <span class="section-label">02 · Cuestionario</span>
+  <h2>Diez afirmaciones</h2>
+  <p class="section-desc">Marque para cada afirmación su grado de acuerdo: 1 (totalmente en desacuerdo) a 5 (totalmente de acuerdo).</p>
+
+  <div id="items-container"></div>
+</section>
+
+<section class="section">
+  <span class="section-label">03 · Comentarios</span>
+  <h2>Observaciones adicionales</h2>
+  <p class="section-desc">Si desea añadir cualquier comentario sobre su experiencia con el sistema, hágalo aquí.</p>
+
+  <div class="field" style="margin-bottom: 0;">
+    <label for="comentarios">Comentarios <span class="optional">opcional</span></label>
+    <textarea id="comentarios" placeholder="¿Hubo algo que le resultó especialmente fácil o difícil? ¿Alguna sugerencia?"></textarea>
+  </div>
+</section>
+
+<div class="actions-bar">
+  <div class="progress-info">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <span class="progress-text"><strong id="progress-num">0</strong> / 10 ítems</span>
+  </div>
+  <div class="actions-group">
+    <button class="btn-secondary" id="btn-clear">Limpiar todo</button>
+    <button class="btn-primary" id="btn-submit">
+      <span>Calcular y descargar</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+  </div>
+</div>
+
+<footer class="footer">
+  Cuestionario SUS · v1.0
+</footer>
+
+</div>
+
+<!-- SCORE MODAL -->
+<div class="score-modal" id="score-modal">
+  <div class="score-card">
+    <div class="score-eyebrow">Puntuación SUS</div>
+    <div class="score-value"><span id="score-num">0</span><span class="of"> / 100</span></div>
+    <div class="score-grade" id="score-grade">—</div>
+    <div class="score-tag" id="score-tag">—</div>
+    <div class="score-bar">
+      <div class="score-bar-fill" id="score-bar-fill"></div>
+      <div class="score-bar-marker" style="left: 68%;"></div>
+    </div>
+    <div class="score-bar-axis">
+      <span>0</span>
+      <span>25</span>
+      <span>50</span>
+      <span>75</span>
+      <span>100</span>
+    </div>
+    <div class="score-modal-actions">
+      <button class="btn-secondary" id="modal-close">Cerrar</button>
+      <button class="btn-primary" id="modal-download">
+        <span>Descargar Excel</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// SUS ITEMS (Spanish, standard)
+// ============================================
+const SUS_ITEMS = [
+  'Creo que me gustaría usar este sistema con frecuencia.',
+  'Encuentro este sistema innecesariamente complejo.',
+  'Creo que el sistema es fácil de usar.',
+  'Creo que necesitaría el apoyo de una persona con conocimientos técnicos para poder usar este sistema.',
+  'Considero que las diversas funciones del sistema están bien integradas.',
+  'Pienso que hay demasiada inconsistencia en este sistema.',
+  'Imagino que la mayoría de la gente aprendería a usar este sistema con rapidez.',
+  'Encuentro el sistema muy complicado de usar.',
+  'Me sentí muy seguro al usar el sistema.',
+  'Necesité aprender muchas cosas antes de poder utilizar el sistema.'
+];
+
+const PROFILES = {
+  tecnico: 'Técnico (administración)',
+  analista: 'Analista (empresa)',
+  usuario: 'Usuario general (ciudadano)'
+};
+
+// SUS interpretation tiers (Sauro/Lewis curved grading + Bangor adjectives)
+function interpretSUS(score) {
+  if (score >= 84.1) return { grade: 'Excepcional', tag: 'A+ · Mejor que el 96 % de los sistemas', percentile: '> 96' };
+  if (score >= 80.8) return { grade: 'Excelente', tag: 'A · Mejor que el 90 % de los sistemas', percentile: '90 – 96' };
+  if (score >= 78.9) return { grade: 'Muy bueno', tag: 'A− · Mejor que el 85 % de los sistemas', percentile: '85 – 90' };
+  if (score >= 77.2) return { grade: 'Bueno', tag: 'B+ · Mejor que el 80 % de los sistemas', percentile: '80 – 85' };
+  if (score >= 74.1) return { grade: 'Bueno', tag: 'B · Mejor que el 70 % de los sistemas', percentile: '70 – 80' };
+  if (score >= 72.6) return { grade: 'Aceptable alto', tag: 'B− · Mejor que el 65 % de los sistemas', percentile: '65 – 70' };
+  if (score >= 71.1) return { grade: 'Aceptable', tag: 'C+ · Mejor que el 60 % de los sistemas', percentile: '60 – 65' };
+  if (score >= 65.0) return { grade: 'Promedio', tag: 'C · Mejor que el 40 % de los sistemas', percentile: '40 – 60' };
+  if (score >= 62.7) return { grade: 'Por debajo de la media', tag: 'C− · Mejor que el 35 % de los sistemas', percentile: '35 – 40' };
+  if (score >= 51.7) return { grade: 'Mediocre', tag: 'D · Mejor que el 15 % de los sistemas', percentile: '15 – 35' };
+  return { grade: 'Pobre', tag: 'F · Por debajo del 15 % de los sistemas', percentile: '< 15' };
+}
+
+// ============================================
+// INIT
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fecha').valueAsDate = new Date();
+  renderItems();
+
+  document.getElementById('btn-submit').addEventListener('click', handleSubmit);
+  document.getElementById('btn-clear').addEventListener('click', handleClear);
+  document.getElementById('modal-close').addEventListener('click', closeModal);
+  document.getElementById('modal-download').addEventListener('click', () => {
+    const data = collectData();
+    if (data.error) return;
+    generateExcel(data);
+    closeModal();
+    showToast('Excel descargado correctamente.', 'success');
+  });
+  document.getElementById('score-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'score-modal') closeModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+});
+
+function renderItems() {
+  const container = document.getElementById('items-container');
+  let html = '';
+
+  SUS_ITEMS.forEach((statement, idx) => {
+    const num = idx + 1;
+    const numStr = String(num).padStart(2, '0');
+
+    let scaleHtml = '';
+    for (let v = 1; v <= 5; v++) {
+      scaleHtml += `
+        <div class="likert-option">
+          <input type="radio" name="item-${num}" id="item-${num}-${v}" value="${v}">
+          <label for="item-${num}-${v}">${v}</label>
+        </div>
+      `;
+    }
+
+    html += `
+      <div class="sus-item" data-item="${num}">
+        <div class="sus-number">${numStr}</div>
+        <div class="sus-content">
+          <div class="sus-statement">${statement}</div>
+          <div class="likert-wrapper">
+            <div class="likert-scale">${scaleHtml}</div>
+            <div class="likert-axis">
+              <span class="likert-axis-label left">Totalmente en desacuerdo</span>
+              <span class="likert-axis-label right">Totalmente de acuerdo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+
+  // Bind events
+  document.querySelectorAll('.sus-item input[type="radio"]').forEach(input => {
+    input.addEventListener('change', (e) => {
+      const card = e.target.closest('.sus-item');
+      card.classList.add('answered');
+      updateProgress();
+    });
+  });
+}
+
+function updateProgress() {
+  const total = SUS_ITEMS.length;
+  let answered = 0;
+  for (let i = 1; i <= total; i++) {
+    if (document.querySelector(`input[name="item-${i}"]:checked`)) answered++;
+  }
+  document.getElementById('progress-num').textContent = answered;
+  document.getElementById('progress-fill').style.width = ((answered / total) * 100) + '%';
+}
+
+// ============================================
+// DATA COLLECTION
+// ============================================
+function collectData() {
+  const fecha = document.getElementById('fecha').value;
+  const participante = document.getElementById('participante').value.trim();
+  const perfil = document.getElementById('perfil').value;
+  const comentarios = document.getElementById('comentarios').value.trim();
+
+  if (!fecha) { document.getElementById('fecha').focus(); return { error: 'Indique la fecha.' }; }
+  if (!participante) { document.getElementById('participante').focus(); return { error: 'Indique el identificador del participante.' }; }
+  if (!perfil) { document.getElementById('perfil').focus(); return { error: 'Seleccione un perfil.' }; }
+
+  const responses = [];
+  for (let i = 1; i <= SUS_ITEMS.length; i++) {
+    const input = document.querySelector(`input[name="item-${i}"]:checked`);
+    if (!input) {
+      const card = document.querySelector(`.sus-item[data-item="${i}"]`);
+      card.classList.add('error-flash');
+      setTimeout(() => card.classList.remove('error-flash'), 2500);
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return { error: `Falta responder al ítem ${String(i).padStart(2, '0')}.` };
+    }
+    responses.push(parseInt(input.value));
+  }
+
+  // SUS Scoring
+  // Odd items (1, 3, 5, 7, 9): score = response - 1
+  // Even items (2, 4, 6, 8, 10): score = 5 - response
+  const converted = responses.map((r, idx) => {
+    return (idx % 2 === 0) ? (r - 1) : (5 - r);
+  });
+  const sum = converted.reduce((a, b) => a + b, 0);
+  const susScore = sum * 2.5;
+  const interpretation = interpretSUS(susScore);
+
+  return {
+    fecha,
+    participante,
+    perfil,
+    perfilLabel: PROFILES[perfil],
+    comentarios,
+    responses,
+    converted,
+    sum,
+    susScore,
+    interpretation
+  };
+}
+
+// ============================================
+// SUBMIT
+// ============================================
+function handleSubmit() {
+  const data = collectData();
+  if (data.error) { showToast(data.error, 'error'); return; }
+  showScoreModal(data);
+}
+
+function showScoreModal(data) {
+  const modal = document.getElementById('score-modal');
+  document.getElementById('score-num').textContent = data.susScore.toFixed(1);
+  document.getElementById('score-grade').textContent = data.interpretation.grade;
+  document.getElementById('score-tag').textContent = data.interpretation.tag;
+
+  // Reset bar then animate
+  const fill = document.getElementById('score-bar-fill');
+  fill.style.width = '0%';
+  modal.classList.add('show');
+  setTimeout(() => {
+    fill.style.width = data.susScore + '%';
+  }, 100);
+
+  // Store data for download
+  modal.dataset.payload = JSON.stringify(data);
+}
+
+function closeModal() {
+  document.getElementById('score-modal').classList.remove('show');
+}
+
+// ============================================
+// EXCEL
+// ============================================
+function generateExcel(data) {
+  const { fecha, participante, perfilLabel, comentarios, responses, converted, sum, susScore, interpretation } = data;
+  const timestamp = new Date().toLocaleString('es-ES');
+  const id = 'R-' + String(Date.now()).slice(-6);
+
+  // ===== SHEET 1: RESPUESTA =====
+  const header = [
+    'ID_Respuesta', 'Timestamp', 'Fecha', 'Participante', 'Perfil',
+    'Item_01', 'Item_02', 'Item_03', 'Item_04', 'Item_05',
+    'Item_06', 'Item_07', 'Item_08', 'Item_09', 'Item_10',
+    'Puntuacion_SUS', 'Grado', 'Percentil', 'Comentarios'
+  ];
+
+  const row = [
+    id, timestamp, fecha, participante, perfilLabel,
+    ...responses,
+    +susScore.toFixed(2),
+    interpretation.grade,
+    interpretation.percentile,
+    comentarios
+  ];
+
+  const ws1 = XLSX.utils.aoa_to_sheet([header, row]);
+  ws1['!cols'] = [
+    { wch: 12 }, { wch: 20 }, { wch: 12 }, { wch: 18 }, { wch: 26 },
+    { wch: 9 }, { wch: 9 }, { wch: 9 }, { wch: 9 }, { wch: 9 },
+    { wch: 9 }, { wch: 9 }, { wch: 9 }, { wch: 9 }, { wch: 9 },
+    { wch: 16 }, { wch: 22 }, { wch: 14 }, { wch: 40 }
+  ];
+  ws1['!autofilter'] = { ref: 'A1:S2' };
+  ws1['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  // ===== SHEET 2: CÁLCULO SUS =====
+  const calcRows = [];
+  const calcMerges = [];
+
+  function addCalcTitle(text) {
+    calcRows.push([text]);
+    calcMerges.push({ s: { r: calcRows.length - 1, c: 0 }, e: { r: calcRows.length - 1, c: 4 } });
+  }
+
+  addCalcTitle('CÁLCULO DETALLADO DE LA PUNTUACIÓN SUS');
+  calcRows.push([]);
+  calcRows.push(['Participante', participante]);
+  calcRows.push(['Perfil', perfilLabel]);
+  calcRows.push(['Fecha', fecha]);
+  calcRows.push([]);
+
+  addCalcTitle('▸ PUNTUACIÓN FINAL');
+  calcRows.push(['Puntuación SUS (0–100)', +susScore.toFixed(2)]);
+  calcRows.push(['Grado', interpretation.grade]);
+  calcRows.push(['Percentil estimado', interpretation.percentile]);
+  calcRows.push(['Suma de puntuaciones convertidas (0–40)', sum]);
+  calcRows.push([]);
+
+  addCalcTitle('▸ DESGLOSE POR ÍTEM');
+  calcRows.push(['Ítem', 'Afirmación', 'Polaridad', 'Respuesta (1–5)', 'Puntuación convertida (0–4)']);
+  SUS_ITEMS.forEach((stmt, idx) => {
+    const polarity = (idx % 2 === 0) ? 'Positivo' : 'Negativo';
+    calcRows.push([
+      String(idx + 1).padStart(2, '0'),
+      stmt,
+      polarity,
+      responses[idx],
+      converted[idx]
+    ]);
+  });
+  calcRows.push([]);
+
+  addCalcTitle('▸ FÓRMULA DE CÁLCULO');
+  calcRows.push(['Ítems positivos (1, 3, 5, 7, 9):', 'puntuación = respuesta − 1']);
+  calcRows.push(['Ítems negativos (2, 4, 6, 8, 10):', 'puntuación = 5 − respuesta']);
+  calcRows.push(['Puntuación SUS final:', '(suma de puntuaciones convertidas) × 2,5']);
+  calcRows.push([]);
+
+  addCalcTitle('▸ INTERPRETACIÓN DE REFERENCIA');
+  calcRows.push(['Rango', 'Grado', 'Significado']);
+  calcRows.push(['≥ 84,1', 'A+ Excepcional', 'Mejor que el 96 % de los sistemas']);
+  calcRows.push(['80,8 – 84,0', 'A Excelente', 'Mejor que el 90 % de los sistemas']);
+  calcRows.push(['74,1 – 80,7', 'B Bueno', 'Mejor que el 70 % de los sistemas']);
+  calcRows.push(['65,0 – 74,0', 'C Promedio', 'Alrededor de la media (68)']);
+  calcRows.push(['51,7 – 64,9', 'D Mediocre', 'Por debajo de la media']);
+  calcRows.push(['< 51,7', 'F Pobre', 'Sistema con problemas serios de usabilidad']);
+
+  const ws2 = XLSX.utils.aoa_to_sheet(calcRows);
+  ws2['!cols'] = [{ wch: 18 }, { wch: 56 }, { wch: 14 }, { wch: 18 }, { wch: 32 }];
+  if (calcMerges.length > 0) ws2['!merges'] = calcMerges;
+
+  // ===== WORKBOOK =====
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, 'Respuesta');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Cálculo SUS');
+
+  const safePart = sanitize(participante);
+  const filename = `Cuestionario_SUS_${safePart}_${fecha}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+}
+
+function sanitize(str) {
+  return str
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '_') || 'sn';
+}
+
+// ============================================
+// HELPERS
+// ============================================
+function handleClear() {
+  if (!confirm('¿Seguro que desea borrar todo el formulario?')) return;
+  document.getElementById('fecha').valueAsDate = new Date();
+  document.getElementById('participante').value = '';
+  document.getElementById('perfil').value = '';
+  document.getElementById('comentarios').value = '';
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.querySelectorAll('.sus-item').forEach(c => c.classList.remove('answered'));
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showToast(msg, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type || ''}`;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.className = 'toast', 4000);
+}
+</script>
+</body>
+</html>

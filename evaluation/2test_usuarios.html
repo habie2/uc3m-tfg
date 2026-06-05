@@ -1,0 +1,1476 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Test con usuarios — Pensamiento en voz alta</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,400;9..144,500;9..144,600;9..144,700&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root {
+  --bg: #f6f1e6;
+  --surface: #ffffff;
+  --surface-warm: #fdfaf3;
+  --ink: #1a1a2e;
+  --ink-soft: #2d2d44;
+  --muted: #6b6b80;
+  --muted-soft: #a8a8b8;
+  --accent: #b8451a;
+  --accent-hover: #963a16;
+  --accent-soft: #f4e4d9;
+  --border: #e5dccc;
+  --border-strong: #c9bca7;
+  --success: #2d5e3f;
+  --success-soft: #dfe9e0;
+  --warning: #b07d2b;
+  --warning-soft: #f0e4cd;
+  --error: #a83232;
+  --error-soft: #f0d8d8;
+  --info: #2c5e7a;
+  --info-soft: #d8e5ec;
+  --ease-1: #c9bca7;
+  --ease-2: #d4a574;
+  --ease-3: #c4a444;
+  --ease-4: #6b8e4e;
+  --ease-5: #2d5e3f;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(circle at 15% 20%, rgba(184, 69, 26, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 85% 80%, rgba(26, 26, 46, 0.025) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 56px 32px 140px;
+}
+
+/* HEADER */
+.header {
+  margin-bottom: 56px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+
+.header::before {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 80px;
+  height: 2px;
+  background: var(--accent);
+}
+
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+
+h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 5vw, 54px);
+  font-weight: 500;
+  font-variation-settings: "SOFT" 30;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  margin-bottom: 18px;
+}
+
+h1 em {
+  font-style: italic;
+  font-weight: 400;
+  font-variation-settings: "SOFT" 100;
+  color: var(--accent);
+}
+
+.lead {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 620px;
+  line-height: 1.65;
+}
+
+/* SECTIONS */
+.section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 36px 36px 32px;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  position: absolute;
+  top: -10px;
+  left: 28px;
+  background: var(--bg);
+  padding: 0 14px;
+}
+
+.section h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  letter-spacing: -0.015em;
+}
+
+.section-desc {
+  color: var(--muted);
+  font-size: 14px;
+  margin-bottom: 28px;
+  max-width: 580px;
+  line-height: 1.6;
+}
+
+/* FIELDS */
+.field {
+  margin-bottom: 22px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+}
+
+.field-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 22px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+  letter-spacing: 0.005em;
+}
+
+.required::after {
+  content: ' *';
+  color: var(--accent);
+}
+
+.optional {
+  font-weight: 400;
+  color: var(--muted-soft);
+  font-size: 12px;
+  margin-left: 4px;
+  font-style: italic;
+}
+
+input[type="text"],
+input[type="date"],
+input[type="number"],
+select,
+textarea {
+  width: 100%;
+  padding: 11px 14px;
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%236b6b80' stroke-width='1.5' d='M2.5 4.5L6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* TIME INPUT */
+.time-input-group {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.time-input-group .time-sep {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  color: var(--muted-soft);
+  padding: 0 4px;
+}
+
+.time-input-group input {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.time-input-group .time-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-soft);
+  text-align: center;
+  margin-top: 4px;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  background: var(--surface);
+  border: 1px dashed var(--border-strong);
+  border-radius: 4px;
+  padding: 64px 32px;
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.empty-state-icon {
+  font-family: 'Fraunces', serif;
+  font-size: 56px;
+  font-style: italic;
+  color: var(--border-strong);
+  margin-bottom: 16px;
+  font-variation-settings: "SOFT" 100;
+}
+
+.empty-state-text {
+  font-family: 'Fraunces', serif;
+  font-size: 19px;
+  font-style: italic;
+  color: var(--muted);
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+}
+
+.empty-state-sub {
+  font-size: 13px;
+  color: var(--muted-soft);
+}
+
+/* INDICATOR DIVIDER */
+.indicator-divider {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin: 40px 0 22px;
+}
+
+.indicator-divider:first-child { margin-top: 4px; }
+
+.indicator-divider-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+
+.indicator-divider-text {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 500;
+  font-variation-settings: "SOFT" 60;
+  letter-spacing: -0.01em;
+}
+
+.indicator-divider-text em {
+  font-style: italic;
+  color: var(--accent);
+  font-weight: 400;
+  font-variation-settings: "SOFT" 100;
+}
+
+.indicator-divider-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* TASK CARDS */
+.task-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.task-card.complete {
+  border-color: var(--success);
+  background: linear-gradient(to right, rgba(45, 94, 63, 0.02), transparent 60%);
+}
+
+.task-card.error-flash {
+  border-color: var(--error) !important;
+  box-shadow: 0 0 0 3px rgba(168, 50, 50, 0.1);
+}
+
+.task-header {
+  background: var(--surface-warm);
+  padding: 18px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.task-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.01em;
+}
+
+.task-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.task-status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--border-strong);
+  transition: background 0.2s;
+}
+
+.task-card.complete .task-status-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 3px var(--success-soft);
+}
+
+.task-statement {
+  padding: 24px 28px;
+  font-family: 'Fraunces', serif;
+  font-size: 17px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.55;
+  letter-spacing: -0.005em;
+  color: var(--ink-soft);
+  border-bottom: 1px dashed var(--border);
+  position: relative;
+}
+
+.task-statement::before {
+  content: '"';
+  position: absolute;
+  left: 12px;
+  top: 8px;
+  font-size: 48px;
+  color: var(--accent-soft);
+  font-family: 'Fraunces', serif;
+  line-height: 1;
+}
+
+.task-statement-inner {
+  padding-left: 24px;
+}
+
+.task-fields {
+  padding: 24px 28px 22px;
+}
+
+/* CHIP RADIO GROUPS (estado) */
+.chip-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.chip-option {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.chip-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chip-option label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.chip-option label::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--chip-color, var(--muted-soft));
+  flex-shrink: 0;
+}
+
+.chip-option label:hover { border-color: var(--border-strong); }
+
+.chip-option input:checked + label {
+  background: var(--chip-bg, var(--ink));
+  border-color: var(--chip-color, var(--ink));
+  color: var(--chip-text, white);
+}
+
+.chip-option input:checked + label::before {
+  background: var(--chip-text, white);
+}
+
+.chip-option[data-state="completada"] { --chip-color: var(--success); --chip-bg: var(--success); --chip-text: white; }
+.chip-option[data-state="parcial"] { --chip-color: var(--warning); --chip-bg: var(--warning); --chip-text: white; }
+.chip-option[data-state="no"] { --chip-color: var(--error); --chip-bg: var(--error); --chip-text: white; }
+.chip-option[data-state="ayuda"] { --chip-color: var(--info); --chip-bg: var(--info); --chip-text: white; }
+
+/* EASE SCALE 1-5 */
+.ease-scale {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+}
+
+.ease-option {
+  position: relative;
+}
+
+.ease-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ease-option label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  margin: 0;
+  min-height: 56px;
+}
+
+.ease-option label:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.ease-option .ease-num {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.ease-option .ease-label {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.ease-option[data-ease="1"] .ease-num { color: var(--ease-1); }
+.ease-option[data-ease="2"] .ease-num { color: var(--ease-2); }
+.ease-option[data-ease="3"] .ease-num { color: var(--ease-3); }
+.ease-option[data-ease="4"] .ease-num { color: var(--ease-4); }
+.ease-option[data-ease="5"] .ease-num { color: var(--ease-5); }
+
+.ease-option input:checked + label {
+  background: var(--ink);
+  border-color: var(--ink);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26, 26, 46, 0.15);
+}
+
+.ease-option input:checked + label .ease-num,
+.ease-option input:checked + label .ease-label {
+  color: white !important;
+}
+
+.ease-axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding: 0 4px;
+}
+
+.ease-axis span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-soft);
+}
+
+/* COLLAPSIBLE OBSERVATIONS */
+.observations-toggle {
+  width: 100%;
+  background: var(--surface-warm);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  padding: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 3px;
+  margin-top: 6px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.observations-toggle:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.observations-toggle .toggle-arrow {
+  font-size: 9px;
+  transition: transform 0.2s;
+}
+
+.observations-toggle.open .toggle-arrow {
+  transform: rotate(90deg);
+}
+
+.observations-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.observations-content.open {
+  max-height: 1200px;
+  margin-top: 18px;
+}
+
+.observations-inner {
+  background: var(--surface-warm);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 20px 22px;
+}
+
+.observations-inner .field:last-child { margin-bottom: 0; }
+
+/* ACTIONS BAR */
+.actions-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  position: sticky;
+  bottom: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 24px;
+  margin-top: 32px;
+  box-shadow: 0 6px 28px rgba(26, 26, 46, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.progress-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.progress-bar {
+  width: 140px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.progress-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+}
+
+.progress-text strong {
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--surface);
+  border: none;
+  padding: 12px 28px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-primary:hover {
+  background: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-primary svg { width: 14px; height: 14px; }
+
+.btn-secondary {
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 11px 20px;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.btn-secondary:hover {
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+
+.actions-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: white;
+  padding: 14px 24px;
+  border-radius: 3px;
+  font-size: 14px;
+  opacity: 0;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  pointer-events: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  max-width: 90vw;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.error { background: var(--error); }
+.toast.success { background: var(--success); }
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  padding: 56px 0 24px;
+  font-size: 11px;
+  color: var(--muted-soft);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+/* RESPONSIVE */
+@media (max-width: 720px) {
+  .container { padding: 32px 16px 100px; }
+  .section { padding: 28px 20px 24px; }
+  .section-label { left: 16px; padding: 0 10px; }
+  .field-row, .field-row-3 { grid-template-columns: 1fr; gap: 18px; }
+  .task-header { padding: 14px 18px; }
+  .task-statement { padding: 20px 22px; font-size: 16px; }
+  .task-statement-inner { padding-left: 18px; }
+  .task-fields { padding: 20px 22px 18px; }
+  .indicator-divider { margin: 32px 0 18px; gap: 12px; }
+  .indicator-divider-text { font-size: 18px; }
+  .chip-group { gap: 6px; }
+  .chip-option label { padding: 9px 8px; font-size: 12px; }
+  .ease-option label { min-height: 50px; padding: 8px 2px; }
+  .ease-option .ease-num { font-size: 17px; }
+  .ease-option .ease-label { font-size: 8px; }
+  .actions-bar {
+    flex-direction: column;
+    padding: 14px;
+    bottom: 12px;
+  }
+  .progress-info { width: 100%; justify-content: space-between; }
+  .actions-group { width: 100%; justify-content: space-between; }
+  .btn-primary { flex: 1; justify-content: center; }
+  .progress-bar { width: 100px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="header">
+  <div class="eyebrow">Fase 2 — Test con usuarios</div>
+  <h1>Pensamiento en <em>voz alta</em></h1>
+  <p class="lead">Registro de las tareas realizadas por el participante durante el test de pensamiento en voz alta. Al seleccionar un perfil aparecerán las 9 tareas correspondientes (3 por indicador).</p>
+</header>
+
+<section class="section">
+  <span class="section-label">01 · Sesión</span>
+  <h2>Datos de la sesión</h2>
+  <p class="section-desc">Información común que se asociará a todas las tareas registradas. El perfil determina qué tareas aparecerán.</p>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="evaluador" class="required">Nombre del evaluador</label>
+      <input type="text" id="evaluador" placeholder="Nombre y apellidos">
+    </div>
+    <div class="field">
+      <label for="fecha" class="required">Fecha de la sesión</label>
+      <input type="date" id="fecha">
+    </div>
+  </div>
+
+  <div class="field-row">
+    <div class="field">
+      <label for="participante" class="required">Identificador del participante</label>
+      <input type="text" id="participante" placeholder="P01, P02… o nombre">
+    </div>
+    <div class="field">
+      <label for="perfil" class="required">Perfil del participante</label>
+      <select id="perfil">
+        <option value="">Seleccione un perfil…</option>
+        <option value="tecnico">Técnico (administración)</option>
+        <option value="analista">Analista (empresa)</option>
+        <option value="usuario">Usuario general (ciudadano)</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <span class="section-label">02 · Tareas</span>
+  <h2>Registro de tareas</h2>
+  <p class="section-desc">Lea el enunciado al participante y vaya rellenando los campos a medida que la sesión avanza. Los campos detallados de observaciones pueden expandirse desde cada tarea.</p>
+
+  <div id="tasks-container">
+    <div class="empty-state">
+      <div class="empty-state-icon">⌛</div>
+      <div class="empty-state-text">Esperando selección de perfil</div>
+      <div class="empty-state-sub">Elija el perfil del participante arriba para ver sus 9 tareas asignadas.</div>
+    </div>
+  </div>
+</section>
+
+<div class="actions-bar">
+  <div class="progress-info">
+    <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+    <span class="progress-text"><strong id="progress-num">0</strong> / <span id="progress-total">9</span> tareas</span>
+  </div>
+  <div class="actions-group">
+    <button class="btn-secondary" id="btn-clear">Limpiar todo</button>
+    <button class="btn-primary" id="btn-submit">
+      <span>Descargar Excel</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    </button>
+  </div>
+</div>
+
+<footer class="footer">
+  Test con usuarios · v1.0
+</footer>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================
+// TASKS DATA
+// ============================================
+const PROFILES = {
+  tecnico: 'Técnico (administración)',
+  analista: 'Analista (empresa)',
+  usuario: 'Usuario general (ciudadano)'
+};
+
+const TASKS = {
+  tecnico: [
+    { code: 'T-1', indicator: 'Indicador 1', text: 'Identifique la estación más saturada durante las horas punta de la mañana (entre las 8:00 y las 9:00) en un día laborable típico de octubre de 2021. Explique en qué zona se concentra más saturación y qué implicación tendría esta información a la hora de planificar la redistribución matinal del servicio.' },
+    { code: 'T-2', indicator: 'Indicador 1', text: 'Compare la saturación de la zona centro entre días laborables y festivos durante los meses de verano. Indique si detecta un patrón distinto y qué decisión sobre el dimensionamiento estacional podría apoyarse en él.' },
+    { code: 'T-3', indicator: 'Indicador 1', text: 'Describa dos situaciones reales de su trabajo en las que habría consultado este indicador de saturación para tomar una decisión. Para cada una, indique qué información concreta habría buscado y qué acción habría tomado con ella.' },
+    { code: 'T-10', indicator: 'Indicador 2', text: 'Identifique la celda con mayor intensidad de tránsito en bicicleta y determine qué tipo de vía concentra el mayor uso. Indique cómo usaría esta información en una decisión de inversión en infraestructura ciclista.' },
+    { code: 'T-11', indicator: 'Indicador 2', text: 'Compare el porcentaje de uso de los carriles bici frente al de las vías primarias. Razone si los datos justifican una ampliación de la red ciclista y en qué zonas la priorizaría.' },
+    { code: 'T-12', indicator: 'Indicador 2', text: 'Cite un proyecto o decisión en el que estos datos le hubieran resultado útiles.' },
+    { code: 'T-19', indicator: 'Indicador 3', text: 'Identifique las cinco estaciones de metro que generan mayor demanda de BiciMad en un radio de 300 metros. Explique cómo utilizaría esta información para priorizar la ampliación o redistribución de estaciones BiciMad cercanas.' },
+    { code: 'T-20', indicator: 'Indicador 3', text: 'Detecte estaciones de metro con una asimetría direccional pronunciada, es decir, que se usan claramente más como origen que como destino o viceversa. Razone qué tipo de intervención logística sugeriría ese desequilibrio.' },
+    { code: 'T-21', indicator: 'Indicador 3', text: 'Describa dos situaciones de planificación de transporte público para las que habría consultado estos datos.' }
+  ],
+  analista: [
+    { code: 'T-4', indicator: 'Indicador 1', text: 'Localice las estaciones que tienden a aparecer vacías de bicicletas en torno a las 7:00 de la mañana en días laborables. Qué oportunidad de negocio podría derivarse de esa información.' },
+    { code: 'T-5', indicator: 'Indicador 1', text: 'Compare la saturación media del centro de Madrid frente a la periferia en horas de tarde de un día concreto. Indique las distinciones de cada zona a partir de lo observado.' },
+    { code: 'T-6', indicator: 'Indicador 1', text: 'Imagine dos escenarios en los que podría haber hecho uso de estos datos de saturación para generar valor, mejorando un sistema o creando uno nuevo o como base para apoyar una decisión comercial.' },
+    { code: 'T-13', indicator: 'Indicador 2', text: 'Determine en qué teselas del centro el uso de vías rápidas supera al de las calles tranquilas. Explique qué conclusiones podría plantear un negocio a partir de esa observación.' },
+    { code: 'T-14', indicator: 'Indicador 2', text: 'Identifique los tipos de vía que concentran el mayor uso ciclista e indique qué perfil de cliente potencial podría inferirse de esta información.' },
+    { code: 'T-15', indicator: 'Indicador 2', text: 'Plantee dos oportunidades de negocio en las que su organización podría haber explorado a partir de estos datos de distribución del tránsito ciclista por tipo de vía.' },
+    { code: 'T-22', indicator: 'Indicador 3', text: 'Identifique, con un radio de 500 metros, la estación de metro con mayor cobertura, entendida como el porcentaje del total de viajes de BiciMad que se originan o terminan en su entorno. Comente qué valor tendría esa estación como ubicación de referencia para una hipotética actividad comercial.' },
+    { code: 'T-23', indicator: 'Indicador 3', text: 'Compare cómo varía la captación de viajes al modificar el radio de análisis de 150 a 500 metros para una estación grande como Sol. Explique qué le indica esa diferencia sobre la sensibilidad del indicador al parámetro de la distancia.' },
+    { code: 'T-24', indicator: 'Indicador 3', text: '¿En qué sectores cree que este indicador tendría más valor? ¿Qué perfil puede estar dispuesto a pagar por acceso continuado a estos datos?' }
+  ],
+  usuario: [
+    { code: 'T-7', indicator: 'Indicador 1', text: 'Imagine que necesita coger una bicicleta cerca de Puerta del Sol a las 18:00 de un viernes. Compruebe en el sistema si las estaciones de esa zona suelen tener bicicletas disponibles o si están saturadas a esa hora.' },
+    { code: 'T-8', indicator: 'Indicador 1', text: 'Observe cómo cambia la disponibilidad de bicicletas a lo largo del día (mañana, mediodía, tarde, noche) en una estación de su elección. Explique cuándo le resultaría más fácil encontrar bicicleta y cuándo encontrar hueco para dejarla.' },
+    { code: 'T-9', indicator: 'Indicador 1', text: 'Piense en dos momentos de su vida cotidiana en los que la información sobre la saturación del sistema de bicicletas le habría resultado útil. Cuéntenos qué habría buscado y cómo le habría ayudado.' },
+    { code: 'T-16', indicator: 'Indicador 2', text: 'Explore el mapa e identifique la zona de Madrid con mayor actividad ciclista. Indique qué tipos de calles se utilizan más en esa zona.' },
+    { code: 'T-17', indicator: 'Indicador 2', text: 'Compruebe en la zona donde vive, o en una zona de su interés, si los desplazamientos en bicicleta se realizan principalmente por carriles bici o por calles compartidas con tráfico motorizado.' },
+    { code: 'T-18', indicator: 'Indicador 2', text: 'Piense en dos ocasiones en las que saber por qué tipo de calles circulan más ciclistas le habría sido útil para planificar un desplazamiento u otra decisión.' },
+    { code: 'T-25', indicator: 'Indicador 3', text: 'Explore el mapa e identifique cerca de qué estaciones de metro hay más movimiento de BiciMad. Indique cuál destaca por encima del resto.' },
+    { code: 'T-26', indicator: 'Indicador 3', text: 'Elija una estación de metro que utilice habitualmente y compruebe cuántas estaciones de BiciMad hay cerca y qué cantidad de viajes generan.' },
+    { code: 'T-27', indicator: 'Indicador 3', text: '¿Combina actualmente metro y bici en sus desplazamientos? ¿Cambiaría algo este indicador en sus hábitos?' }
+  ]
+};
+
+const STATES = [
+  { value: 'completada', label: 'Completada', full: 'Completada con éxito', state: 'completada' },
+  { value: 'parcial', label: 'Parcial', full: 'Completada parcialmente', state: 'parcial' },
+  { value: 'no', label: 'No completada', full: 'No completada', state: 'no' },
+  { value: 'ayuda', label: 'Con ayuda', full: 'Completada con ayuda del evaluador', state: 'ayuda' }
+];
+
+const EASE_LABELS = {
+  1: 'Muy difícil',
+  2: 'Difícil',
+  3: 'Regular',
+  4: 'Fácil',
+  5: 'Muy fácil'
+};
+
+// ============================================
+// STATE
+// ============================================
+let currentProfile = null;
+
+// ============================================
+// INIT
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('fecha').valueAsDate = new Date();
+
+  document.getElementById('perfil').addEventListener('change', handleProfileChange);
+  document.getElementById('btn-submit').addEventListener('click', handleSubmit);
+  document.getElementById('btn-clear').addEventListener('click', handleClear);
+});
+
+// ============================================
+// PROFILE / TASKS RENDERING
+// ============================================
+function handleProfileChange(e) {
+  const newProfile = e.target.value;
+
+  if (currentProfile && currentProfile !== newProfile && hasAnyData()) {
+    if (!confirm('Si cambia de perfil se perderán los datos introducidos en las tareas actuales. ¿Desea continuar?')) {
+      e.target.value = currentProfile;
+      return;
+    }
+  }
+
+  currentProfile = newProfile;
+  renderTasks(newProfile);
+}
+
+function hasAnyData() {
+  const cards = document.querySelectorAll('.task-card');
+  for (const card of cards) {
+    if (card.querySelector('input[type="radio"]:checked')) return true;
+    const inputs = card.querySelectorAll('input[type="number"], input[type="text"], textarea');
+    for (const inp of inputs) {
+      if (inp.value.trim()) return true;
+    }
+  }
+  return false;
+}
+
+function renderTasks(profile) {
+  const container = document.getElementById('tasks-container');
+
+  if (!profile) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">⌛</div>
+        <div class="empty-state-text">Esperando selección de perfil</div>
+        <div class="empty-state-sub">Elija el perfil del participante arriba para ver sus 9 tareas asignadas.</div>
+      </div>
+    `;
+    updateProgress();
+    return;
+  }
+
+  const tasks = TASKS[profile];
+
+  // Group by indicator
+  const byIndicator = {};
+  tasks.forEach(t => {
+    if (!byIndicator[t.indicator]) byIndicator[t.indicator] = [];
+    byIndicator[t.indicator].push(t);
+  });
+
+  let html = '';
+  const indicators = Object.keys(byIndicator);
+  indicators.forEach((ind, idx) => {
+    html += `
+      <div class="indicator-divider">
+        <span class="indicator-divider-num">§ ${String(idx + 1).padStart(2, '0')}</span>
+        <span class="indicator-divider-text"><em>${ind}</em></span>
+        <span class="indicator-divider-line"></span>
+      </div>
+    `;
+    byIndicator[ind].forEach((t, taskIdx) => {
+      html += buildTaskCard(t, taskIdx + 1, byIndicator[ind].length);
+    });
+  });
+
+  container.innerHTML = html;
+  bindTaskEvents();
+  updateProgress();
+}
+
+function buildTaskCard(task, taskIdx, totalInIndicator) {
+  const codeSafe = task.code.replace('-', '');
+
+  let statesHtml = '';
+  STATES.forEach(s => {
+    statesHtml += `
+      <div class="chip-option" data-state="${s.state}">
+        <input type="radio" name="state-${codeSafe}" id="state-${codeSafe}-${s.value}" value="${s.value}" data-full="${s.full}">
+        <label for="state-${codeSafe}-${s.value}">${s.label}</label>
+      </div>
+    `;
+  });
+
+  let easeHtml = '';
+  for (let e = 1; e <= 5; e++) {
+    easeHtml += `
+      <div class="ease-option" data-ease="${e}">
+        <input type="radio" name="ease-${codeSafe}" id="ease-${codeSafe}-${e}" value="${e}">
+        <label for="ease-${codeSafe}-${e}">
+          <span class="ease-num">${e}</span>
+          <span class="ease-label">${EASE_LABELS[e]}</span>
+        </label>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="task-card" data-code="${task.code}" data-indicator="${task.indicator}">
+      <div class="task-header">
+        <div class="task-header-left">
+          <span class="task-code">${task.code}</span>
+          <span class="task-meta">${task.indicator} · ${taskIdx} de ${totalInIndicator}</span>
+        </div>
+        <div class="task-status-dot" title="Estado del registro"></div>
+      </div>
+
+      <div class="task-statement">
+        <div class="task-statement-inner">${escapeHtml(task.text)}</div>
+      </div>
+
+      <div class="task-fields">
+        <div class="field">
+          <label class="required">Estado de la tarea</label>
+          <div class="chip-group">${statesHtml}</div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="required">Tiempo de completado</label>
+            <div class="time-input-group">
+              <div>
+                <input type="number" class="f-min" min="0" max="59" placeholder="00">
+                <div class="time-label">Minutos</div>
+              </div>
+              <span class="time-sep">:</span>
+              <div>
+                <input type="number" class="f-sec" min="0" max="59" placeholder="00">
+                <div class="time-label">Segundos</div>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label class="required">Facilidad percibida</label>
+            <div class="ease-scale">${easeHtml}</div>
+            <div class="ease-axis">
+              <span>Muy difícil</span>
+              <span>Muy fácil</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="required">Resultado / Respuesta del participante</label>
+          <textarea class="f-resultado" placeholder="Resuma la respuesta o conclusión que dio el participante al finalizar la tarea…"></textarea>
+        </div>
+
+        <button class="observations-toggle" data-toggle="${codeSafe}">
+          <span class="toggle-arrow">▶</span>
+          <span>Observaciones detalladas (opcional)</span>
+        </button>
+        <div class="observations-content" id="obs-${codeSafe}">
+          <div class="observations-inner">
+            <div class="field">
+              <label>Dificultades observadas <span class="optional">opcional</span></label>
+              <textarea class="f-dificultades" placeholder="Problemas, confusiones o bloqueos observados durante la tarea…"></textarea>
+            </div>
+            <div class="field">
+              <label>Verbalizaciones destacadas <span class="optional">opcional</span></label>
+              <textarea class="f-verbalizaciones" placeholder="Frases o comentarios significativos del participante…"></textarea>
+            </div>
+            <div class="field">
+              <label>Estrategia seguida <span class="optional">opcional</span></label>
+              <textarea class="f-estrategia" placeholder="Camino o secuencia de pasos que siguió el participante…"></textarea>
+            </div>
+            <div class="field">
+              <label>Otras observaciones <span class="optional">opcional</span></label>
+              <textarea class="f-observaciones" placeholder="Cualquier otra nota relevante…"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function bindTaskEvents() {
+  // Toggle observations
+  document.querySelectorAll('.observations-toggle').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = document.getElementById('obs-' + btn.dataset.toggle);
+      btn.classList.toggle('open');
+      target.classList.toggle('open');
+    });
+  });
+
+  // Track changes to update completion status
+  document.querySelectorAll('.task-card').forEach(card => {
+    card.querySelectorAll('input, textarea').forEach(input => {
+      input.addEventListener('input', () => updateCardStatus(card));
+      input.addEventListener('change', () => updateCardStatus(card));
+    });
+  });
+}
+
+function isCardComplete(card) {
+  const state = card.querySelector('input[name^="state-"]:checked');
+  const ease = card.querySelector('input[name^="ease-"]:checked');
+  const min = card.querySelector('.f-min').value;
+  const sec = card.querySelector('.f-sec').value;
+  const resultado = card.querySelector('.f-resultado').value.trim();
+  return state && ease && (min !== '' || sec !== '') && resultado;
+}
+
+function updateCardStatus(card) {
+  if (isCardComplete(card)) card.classList.add('complete');
+  else card.classList.remove('complete');
+  updateProgress();
+}
+
+function updateProgress() {
+  const cards = document.querySelectorAll('.task-card');
+  const total = cards.length;
+  const complete = document.querySelectorAll('.task-card.complete').length;
+  document.getElementById('progress-num').textContent = complete;
+  document.getElementById('progress-total').textContent = total;
+  const pct = total > 0 ? (complete / total) * 100 : 0;
+  document.getElementById('progress-fill').style.width = pct + '%';
+}
+
+// ============================================
+// DATA COLLECTION + VALIDATION
+// ============================================
+function collectData() {
+  const evaluador = document.getElementById('evaluador').value.trim();
+  const fecha = document.getElementById('fecha').value;
+  const participante = document.getElementById('participante').value.trim();
+  const perfil = document.getElementById('perfil').value;
+
+  if (!evaluador) { document.getElementById('evaluador').focus(); return { error: 'Indique el nombre del evaluador.' }; }
+  if (!fecha) { document.getElementById('fecha').focus(); return { error: 'Indique la fecha de la sesión.' }; }
+  if (!participante) { document.getElementById('participante').focus(); return { error: 'Indique el identificador del participante.' }; }
+  if (!perfil) { document.getElementById('perfil').focus(); return { error: 'Seleccione un perfil para cargar las tareas.' }; }
+
+  const cards = document.querySelectorAll('.task-card');
+  if (cards.length === 0) return { error: 'No hay tareas que registrar.' };
+
+  const tasks = [];
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const code = card.dataset.code;
+    const indicator = card.dataset.indicator;
+    const taskData = TASKS[perfil].find(t => t.code === code);
+
+    const stateInput = card.querySelector('input[name^="state-"]:checked');
+    const easeInput = card.querySelector('input[name^="ease-"]:checked');
+    const min = card.querySelector('.f-min').value;
+    const sec = card.querySelector('.f-sec').value;
+    const resultado = card.querySelector('.f-resultado').value.trim();
+    const dificultades = card.querySelector('.f-dificultades').value.trim();
+    const verbalizaciones = card.querySelector('.f-verbalizaciones').value.trim();
+    const estrategia = card.querySelector('.f-estrategia').value.trim();
+    const observaciones = card.querySelector('.f-observaciones').value.trim();
+
+    if (!stateInput || !easeInput || (min === '' && sec === '') || !resultado) {
+      card.classList.add('error-flash');
+      setTimeout(() => card.classList.remove('error-flash'), 2500);
+      card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return { error: `La tarea ${code} tiene campos obligatorios sin completar.` };
+    }
+
+    const minNum = parseInt(min) || 0;
+    const secNum = parseInt(sec) || 0;
+    const totalSec = minNum * 60 + secNum;
+    const mmss = String(minNum).padStart(2, '0') + ':' + String(secNum).padStart(2, '0');
+
+    tasks.push({
+      id: `R-${String(i + 1).padStart(3, '0')}`,
+      code,
+      indicator,
+      text: taskData.text,
+      timeSec: totalSec,
+      timeMmss: mmss,
+      stateValue: stateInput.value,
+      stateLabel: stateInput.dataset.full,
+      resultado,
+      ease: parseInt(easeInput.value),
+      easeLabel: EASE_LABELS[parseInt(easeInput.value)],
+      dificultades,
+      verbalizaciones,
+      estrategia,
+      observaciones
+    });
+  }
+
+  return { evaluador, fecha, participante, perfil, tasks };
+}
+
+// ============================================
+// SUBMIT + EXCEL
+// ============================================
+function handleSubmit() {
+  const data = collectData();
+  if (data.error) { showToast(data.error, 'error'); return; }
+  generateExcel(data);
+  showToast(`Excel descargado correctamente (${data.tasks.length} tareas registradas).`, 'success');
+}
+
+function generateExcel(data) {
+  const { evaluador, fecha, participante, perfil, tasks } = data;
+  const perfilLabel = PROFILES[perfil];
+  const timestamp = new Date().toLocaleString('es-ES');
+
+  // ===== SHEET 1: TAREAS =====
+  const header = [
+    'ID_Registro', 'Timestamp', 'Evaluador', 'Fecha_Sesion', 'Participante', 'Perfil',
+    'Indicador', 'Codigo_Tarea', 'Enunciado_Tarea',
+    'Tiempo_Seg', 'Tiempo_mmss', 'Estado_Tarea', 'Resultado_Participante',
+    'Facilidad_Percibida', 'Dificultades_Observadas', 'Verbalizaciones_Destacadas',
+    'Estrategia_Seguida', 'Observaciones_Adicionales'
+  ];
+
+  const rows = tasks.map(t => [
+    t.id, timestamp, evaluador, fecha, participante, perfilLabel,
+    t.indicator, t.code, t.text,
+    t.timeSec, t.timeMmss, t.stateLabel, t.resultado,
+    t.ease, t.dificultades, t.verbalizaciones,
+    t.estrategia, t.observaciones
+  ]);
+
+  const ws1 = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  ws1['!cols'] = [
+    { wch: 12 }, { wch: 20 }, { wch: 22 }, { wch: 14 }, { wch: 16 }, { wch: 26 },
+    { wch: 14 }, { wch: 12 }, { wch: 60 },
+    { wch: 12 }, { wch: 12 }, { wch: 28 }, { wch: 55 },
+    { wch: 14 }, { wch: 40 }, { wch: 40 },
+    { wch: 40 }, { wch: 40 }
+  ];
+  ws1['!autofilter'] = { ref: `A1:R${rows.length + 1}` };
+  ws1['!freeze'] = { xSplit: 0, ySplit: 1 };
+
+  // ===== SHEET 2: RESUMEN =====
+  const resumen = buildSummary(data);
+  const ws2 = XLSX.utils.aoa_to_sheet(resumen.rows);
+  ws2['!cols'] = [{ wch: 44 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+  if (resumen.merges.length > 0) ws2['!merges'] = resumen.merges;
+
+  // ===== WORKBOOK =====
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws1, 'Tareas');
+  XLSX.utils.book_append_sheet(wb, ws2, 'Resumen');
+
+  // Filename
+  const safeName = sanitize(evaluador);
+  const safePart = sanitize(participante);
+  const filename = `Test_Usuarios_${safeName}_${safePart}_${fecha}.xlsx`;
+
+  XLSX.writeFile(wb, filename);
+}
+
+function sanitize(str) {
+  return str
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9 ]/g, '')
+    .trim()
+    .replace(/\s+/g, '_') || 'sn';
+}
+
+function buildSummary(data) {
+  const { evaluador, fecha, participante, perfil, tasks } = data;
+  const perfilLabel = PROFILES[perfil];
+  const rows = [];
+  const merges = [];
+
+  function addTitle(text) {
+    rows.push([text]);
+    merges.push({ s: { r: rows.length - 1, c: 0 }, e: { r: rows.length - 1, c: 4 } });
+  }
+
+  // Header block
+  addTitle('RESUMEN DE LA SESIÓN — TEST CON USUARIOS');
+  rows.push([]);
+  rows.push(['Evaluador', evaluador]);
+  rows.push(['Fecha de la sesión', fecha]);
+  rows.push(['Participante', participante]);
+  rows.push(['Perfil del participante', perfilLabel]);
+  rows.push(['Total de tareas registradas', tasks.length]);
+  rows.push([]);
+
+  // Distribución de estado
+  addTitle('▸ DISTRIBUCIÓN DE ESTADO DE LAS TAREAS');
+  rows.push(['Estado', 'Conteo', '% del total']);
+  const stateOrder = ['Completada con éxito', 'Completada parcialmente', 'No completada', 'Completada con ayuda del evaluador'];
+  stateOrder.forEach(st => {
+    const count = tasks.filter(t => t.stateLabel === st).length;
+    const pct = tasks.length > 0 ? ((count / tasks.length) * 100).toFixed(1) + '%' : '0%';
+    rows.push([st, count, pct]);
+  });
+  rows.push([]);
+
+  // Tiempo
+  if (tasks.length > 0) {
+    const times = tasks.map(t => t.timeSec);
+    const total = times.reduce((a, b) => a + b, 0);
+    const mean = +(total / times.length).toFixed(1);
+    const sorted = [...times].sort((a, b) => a - b);
+    const median = sorted.length % 2 === 0
+      ? +((sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2).toFixed(1)
+      : sorted[Math.floor(sorted.length / 2)];
+
+    addTitle('▸ ESTADÍSTICAS DE TIEMPO');
+    rows.push(['Métrica', 'Segundos', 'mm:ss']);
+    rows.push(['Tiempo total', total, secToMmss(total)]);
+    rows.push(['Tiempo medio por tarea', mean, secToMmss(Math.round(mean))]);
+    rows.push(['Tiempo mediano', median, secToMmss(Math.round(median))]);
+    rows.push(['Tiempo máximo', Math.max(...times), secToMmss(Math.max(...times))]);
+    rows.push(['Tiempo mínimo', Math.min(...times), secToMmss(Math.min(...times))]);
+    rows.push([]);
+  }
+
+  // Facilidad percibida
+  if (tasks.length > 0) {
+    const eases = tasks.map(t => t.ease);
+    const mean = +(eases.reduce((a, b) => a + b, 0) / eases.length).toFixed(2);
+    const sorted = [...eases].sort((a, b) => a - b);
+    const median = sorted.length % 2 === 0
+      ? +((sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2).toFixed(2)
+      : sorted[Math.floor(sorted.length / 2)];
+
+    addTitle('▸ FACILIDAD PERCIBIDA (1–5)');
+    rows.push(['Métrica', 'Valor']);
+    rows.push(['Media', mean]);
+    rows.push(['Mediana', median]);
+    rows.push(['Máxima', Math.max(...eases)]);
+    rows.push(['Mínima', Math.min(...eases)]);
+    rows.push([]);
+
+    // Distribución
+    rows.push(['Nivel', 'Etiqueta', 'Conteo', '% del total']);
+    for (let lvl = 1; lvl <= 5; lvl++) {
+      const count = eases.filter(e => e === lvl).length;
+      const pct = ((count / eases.length) * 100).toFixed(1) + '%';
+      rows.push([lvl, EASE_LABELS[lvl], count, pct]);
+    }
+    rows.push([]);
+  }
+
+  // Por indicador
+  addTitle('▸ DESGLOSE POR INDICADOR');
+  rows.push(['Indicador', 'Tareas', 'Tiempo medio (s)', 'Facilidad media', '% éxito']);
+  ['Indicador 1', 'Indicador 2', 'Indicador 3'].forEach(ind => {
+    const filtered = tasks.filter(t => t.indicator === ind);
+    if (filtered.length > 0) {
+      const meanTime = +(filtered.reduce((a, b) => a + b.timeSec, 0) / filtered.length).toFixed(1);
+      const meanEase = +(filtered.reduce((a, b) => a + b.ease, 0) / filtered.length).toFixed(2);
+      const exito = filtered.filter(t => t.stateLabel === 'Completada con éxito').length;
+      const pctExito = ((exito / filtered.length) * 100).toFixed(1) + '%';
+      rows.push([ind, filtered.length, meanTime, meanEase, pctExito]);
+    } else {
+      rows.push([ind, 0, '–', '–', '0%']);
+    }
+  });
+  rows.push([]);
+
+  // Detalle por tarea
+  addTitle('▸ DETALLE POR TAREA');
+  rows.push(['Código', 'Indicador', 'Estado', 'Tiempo (mm:ss)', 'Facilidad']);
+  tasks.forEach(t => {
+    rows.push([t.code, t.indicator, t.stateLabel, t.timeMmss, t.ease]);
+  });
+
+  return { rows, merges };
+}
+
+function secToMmss(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+}
+
+// ============================================
+// HELPERS
+// ============================================
+function handleClear() {
+  if (!confirm('¿Seguro que desea borrar todo el formulario? Esto vaciará también los datos del evaluador y participante.')) return;
+  document.getElementById('evaluador').value = '';
+  document.getElementById('fecha').valueAsDate = new Date();
+  document.getElementById('participante').value = '';
+  document.getElementById('perfil').value = '';
+  currentProfile = null;
+  renderTasks(null);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function showToast(msg, type) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast show ${type || ''}`;
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => toast.className = 'toast', 4000);
+}
+</script>
+</body>
+</html>
