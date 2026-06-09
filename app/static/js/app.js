@@ -400,6 +400,25 @@ function Ind1View() {
       h(
         "div",
         { className: "sb-sec" },
+        h("div", { className: "sb-lbl" }, "Indicador"),
+        h(
+          "div",
+          { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } },
+          "\u00CDndice de saturaci\u00F3n de estaciones",
+        ),
+        h(
+          "div",
+          { className: "mode-caption" },
+          "Muestra el nivel de ocupaci\u00F3n (ratio bicis/anclajes) de cada estaci\u00F3n BiciMAD a lo largo del d\u00EDa. Permite identificar estaciones ",
+          h("strong", null, "llenas"),
+          " (sin anclajes libres) o ",
+          h("strong", null, "vac\u00EDas"),
+          " (sin bicis disponibles) y analizar patrones temporales en modo agregado o desagregado.",
+        ),
+      ),
+      h(
+        "div",
+        { className: "sb-sec" },
         h("div", { className: "sb-lbl" }, "Tipo de datos"),
         h(
           "div",
@@ -824,6 +843,32 @@ function App() {
             tab.label,
           );
         }),
+      ),
+      h(
+        "button",
+        {
+          className: "download-btn",
+          title: "Descargar datos en crudo del indicador actual",
+          onClick: function () {
+            downloadRawData(ind);
+          },
+        },
+        h(
+          "svg",
+          {
+            width: 16,
+            height: 16,
+            viewBox: "0 0 16 16",
+            fill: "none",
+            stroke: "currentColor",
+            strokeWidth: 1.8,
+            strokeLinecap: "round",
+            strokeLinejoin: "round",
+          },
+          h("path", { d: "M8 2v8m0 0l-3-3m3 3l3-3" }),
+          h("path", { d: "M2 12v1.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V12" }),
+        ),
+        h("span", null, "Datos"),
       ),
     ),
     ind === 1 ? h(Ind1View) : null,

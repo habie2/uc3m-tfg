@@ -71,7 +71,24 @@ function Ind2View() {
       h(
         "div",
         { className: "sb-sec" },
-        h("div", { className: "sb-lbl" }, "Modo de visualización"),
+        h("div", { className: "sb-lbl" }, "Indicador"),
+        h(
+          "div",
+          { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } },
+          "Tr\u00E1nsito por tipo de v\u00EDa",
+        ),
+        h(
+          "div",
+          { className: "mode-caption" },
+          "Analiza los kil\u00F3metros recorridos por los usuarios de BiciMAD clasificados seg\u00FAn el ",
+          h("strong", null, "tipo de v\u00EDa"),
+          " (primaria, secundaria, ciclable, residencial\u2026). En modo global muestra la distribuci\u00F3n agregada; en modo celda permite explorar las v\u00EDas OSM y las rutas origen-destino m\u00E1s frecuentes de cada zona.",
+        ),
+      ),
+      h(
+        "div",
+        { className: "sb-sec" },
+        h("div", { className: "sb-lbl" }, "Modo de visualizaci\u00F3n"),
         h(
           "div",
           { className: "mode-row" },
@@ -214,51 +231,14 @@ function Ind2GlobalPanel() {
           : null,
       ),
     ),
-  );
-}
-
-/* ─── Panel celda (sidebar) ───────────────────────────── */
-function Ind2CellPanel(props) {
-  var cell = props.cell;
-  var cats = _ind2Categories.slice().sort(function (a, b) {
-    return b.meters - a.meters;
-  });
-  var max = Math.max.apply(
-    null,
-    cats.map(function (c) {
-      return c.meters;
-    }),
-  );
-
-  return h(
-    React.Fragment,
-    null,
     h(
       "div",
       { className: "sb-sec" },
-      h("div", { className: "sb-lbl" }, "Modo análisis de celda"),
-      cell
-        ? h(
-            "div",
-            { className: "mode-caption" },
-            "Mostrando vías OSM y rutas OD de la celda ",
-            h(
-              "strong",
-              null,
-              cell.label || "C-" + String(cell.cell_id).padStart(3, "0"),
-            ),
-            ". Las líneas coloreadas representan tramos de calle, las bandas azules las rutas más frecuentes.",
-          )
-        : h(
-            "div",
-            { className: "mode-caption" },
-            "Haz clic sobre cualquier celda del mapa para ver metros por tipo de vía, distribución porcentual y vías OSM diferenciadas por color.",
-          ),
-    ),
-    h(
-      "div",
-      { className: "sb-sec" },
-      h("div", { className: "sb-lbl" }, "Intensidad global por tipo de vía"),
+      h(
+        "div",
+        { className: "sb-lbl" },
+        "Intensidad global por tipo de v\u00EDa",
+      ),
       h(
         "div",
         { className: "via-list" },
@@ -295,6 +275,38 @@ function Ind2CellPanel(props) {
           );
         }),
       ),
+    ),
+  );
+}
+
+/* ─── Panel celda (sidebar) ───────────────────────────── */
+function Ind2CellPanel(props) {
+  var cell = props.cell;
+
+  return h(
+    React.Fragment,
+    null,
+    h(
+      "div",
+      { className: "sb-sec" },
+      h("div", { className: "sb-lbl" }, "Modo análisis de celda"),
+      cell
+        ? h(
+            "div",
+            { className: "mode-caption" },
+            "Mostrando vías OSM y rutas OD de la celda ",
+            h(
+              "strong",
+              null,
+              cell.label || "C-" + String(cell.cell_id).padStart(3, "0"),
+            ),
+            ". Las líneas coloreadas representan tramos de calle, las bandas azules las rutas más frecuentes.",
+          )
+        : h(
+            "div",
+            { className: "mode-caption" },
+            "Haz clic sobre cualquier celda del mapa para ver metros por tipo de vía, distribución porcentual y vías OSM diferenciadas por color.",
+          ),
     ),
   );
 }

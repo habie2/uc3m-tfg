@@ -265,6 +265,49 @@ function fmt(n) {
   return Number(n || 0).toLocaleString("es-ES");
 }
 
+// ═══════════════════════════════════════════════════════
+// Descarga de datos en crudo
+// ═══════════════════════════════════════════════════════
+async function downloadRawData(indicatorId) {
+  var endpoints = {
+    1: [
+      { url: API_IND1 + "/stations", name: "ind1_estaciones" },
+      { url: API_IND1 + "/saturation", name: "ind1_saturacion" },
+    ],
+    2: [
+      { url: API_IND2 + "/cells", name: "ind2_celdas" },
+      { url: API_IND2 + "/categories/intensity", name: "ind2_categorias" },
+      { url: API_IND2 + "/stats", name: "ind2_estadisticas" },
+    ],
+    3: [
+      { url: API_IND3 + "/capture?radius=300", name: "ind3_captura" },
+      { url: API_IND3 + "/stats?radius=300", name: "ind3_estadisticas" },
+    ],
+  };
+
+  var items = endpoints[indicatorId] || [];
+  var bundle = {};
+  for (var i = 0; i < items.length; i++) {
+    try {
+      var res = await fetch(items[i].url);
+      if (res.ok) bundle[items[i].name] = await res.json();
+    } catch (e) {
+      bundle[items[i].name] = { error: e.message };
+    }
+  }
+
+  var blob = new Blob([JSON.stringify(bundle, null, 2)], {
+    type: "application/json",
+  });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "bicimad_indicador" + indicatorId + "_datos.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
 function capColor(value, max) {
   var t = Math.min(1, value / (max || 1));
   var stops = [
