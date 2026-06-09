@@ -83,7 +83,7 @@ function Ind3View() {
       "div",
       { className: "loading-overlay" },
       h("div", { className: "loading-spinner" }),
-      h("div", { className: "loading-text" }, "Cargando captura intermodal…"),
+      h("div", { className: "loading-text" }, "Cargando…"),
     );
   if (error)
     return h(
@@ -107,13 +107,13 @@ function Ind3View() {
         h(
           "div",
           { style: { fontSize: 13, fontWeight: 600, marginBottom: 6 } },
-          "\u00CDndice de captura intermodal",
+          "Actividad de las estaciones cercanas al Metro",
         ),
         h(
           "div",
           { className: "mode-caption" },
           "Viajes BiciMAD que se originan o terminan en el radio de influencia de cada ",
-          h("strong", null, "estaci\u00F3n de Metro / Cercan\u00EDas"),
+          h("strong", null, "estación de Metro"),
           ".",
         ),
       ),
@@ -341,7 +341,7 @@ function Ind3GlobalStats(props) {
   return h(
     "div",
     { className: "sb-sec" },
-    h("div", { className: "sb-lbl" }, "Estad\u00EDsticas globales"),
+    h("div", { className: "sb-lbl" }, "Estadísticas globales"),
     h(
       "div",
       { className: "stat-list" },
@@ -351,7 +351,7 @@ function Ind3GlobalStats(props) {
         h(
           "div",
           { className: "stat-info" },
-          h("span", { className: "stat-lbl" }, "Viajes intermodales"),
+          h("span", { className: "stat-lbl" }, "Viajes cercanos a estaciones"),
           h("span", { className: "stat-sub" }, "radio " + radius + " m"),
         ),
         h(
@@ -367,7 +367,7 @@ function Ind3GlobalStats(props) {
             h(
               "div",
               { className: "stat-info" },
-              h("span", { className: "stat-lbl" }, "Nodo l\u00EDder"),
+              h("span", { className: "stat-lbl" }, "Nodo líder"),
               h("span", { className: "stat-sub" }, stats.top_node.name),
             ),
             h(
@@ -377,21 +377,21 @@ function Ind3GlobalStats(props) {
             ),
           )
         : null,
-      h(
-        "div",
-        { className: "stat-row2" },
-        h(
-          "div",
-          { className: "stat-info" },
-          h("span", { className: "stat-lbl" }, "% del hist\u00F3rico BiciMAD"),
-          h("span", { className: "stat-sub" }, "cobertura intermodal"),
-        ),
-        h(
-          "span",
-          { className: "stat-val", style: { color: "var(--blue)" } },
-          (stats.share_pct != null ? stats.share_pct : "\u2014") + "%",
-        ),
-      ),
+      // h(
+      //   "div",
+      //   { className: "stat-row2" },
+      //   h(
+      //     "div",
+      //     { className: "stat-info" },
+      //     h("span", { className: "stat-lbl" }, "% del histórico BiciMAD"),
+      //     h("span", { className: "stat-sub" }, "cobertura intermodal"),
+      //   ),
+      //   h(
+      //     "span",
+      //     { className: "stat-val", style: { color: "var(--blue)" } },
+      //     (stats.share_pct != null ? stats.share_pct : "\u2014") + "%",
+      //   ),
+      // ),
     ),
   );
 }
@@ -1052,7 +1052,7 @@ function Ind3GlobalBar(props) {
   return h(
     "div",
     { className: "sb-sec" },
-    h("div", { className: "sb-lbl" }, "Cobertura intermodal"),
+    h("div", { className: "sb-lbl" }, "Cobertura"),
 
     // Viajes intermodales
     h(
@@ -1066,7 +1066,7 @@ function Ind3GlobalBar(props) {
           marginBottom: 4,
         },
       },
-      h("span", { style: { color: "var(--muted)" } }, "Viajes intermodales"),
+      h("span", { style: { color: "var(--muted)" } }, "Viajes cercanos a estaciones"),
       h(
         "span",
         {

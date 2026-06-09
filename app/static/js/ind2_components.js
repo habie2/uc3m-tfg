@@ -53,7 +53,7 @@ function Ind2View() {
       "div",
       { className: "loading-overlay" },
       h("div", { className: "loading-spinner" }),
-      h("div", { className: "loading-text" }, "Cargando tránsito…"),
+      h("div", { className: "loading-text" }, "Cargando…"),
     );
   if (error)
     return h(
@@ -82,7 +82,7 @@ function Ind2View() {
           { className: "mode-caption" },
           "Analiza los kil\u00F3metros recorridos por los usuarios de BiciMAD clasificados seg\u00FAn el ",
           h("strong", null, "tipo de v\u00EDa"),
-          " (primaria, secundaria, ciclable, residencial\u2026). En modo global muestra la distribuci\u00F3n agregada; en modo celda permite explorar las v\u00EDas OSM y las rutas origen-destino m\u00E1s frecuentes de cada zona.",
+          " (primaria, secundaria, ciclable, residencial\u2026). En modo global muestra la distribuci\u00F3n agregada; en modo celda permite explorar los distintos tipos de vía y las rutas origen-destino más frecuentes de cada zona.",
         ),
       ),
       h(
@@ -294,7 +294,7 @@ function Ind2CellPanel(props) {
         ? h(
             "div",
             { className: "mode-caption" },
-            "Mostrando vías OSM y rutas OD de la celda ",
+            "Mostrando vías los tipos de vías y rutas origen-destino de la celda ",
             h(
               "strong",
               null,
