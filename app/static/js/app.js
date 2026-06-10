@@ -48,32 +48,32 @@ function App() {
           );
         }),
       ),
-      h(
-        "button",
-        {
-          className: "download-btn",
-          title: "Descargar datos en crudo del indicador actual",
-          onClick: function () {
-            downloadRawData(ind);
-          },
-        },
-        h(
-          "svg",
-          {
-            width: 16,
-            height: 16,
-            viewBox: "0 0 16 16",
-            fill: "none",
-            stroke: "currentColor",
-            strokeWidth: 1.8,
-            strokeLinecap: "round",
-            strokeLinejoin: "round",
-          },
-          h("path", { d: "M8 2v8m0 0l-3-3m3 3l3-3" }),
-          h("path", { d: "M2 12v1.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V12" }),
-        ),
-        h("span", null, "Datos"),
-      ),
+      // h(
+      //   "button",
+      //   {
+      //     className: "download-btn",
+      //     title: "Descargar datos en crudo del indicador actual",
+      //     onClick: function () {
+      //       downloadRawData(ind);
+      //     },
+      //   },
+      //   h(
+      //     "svg",
+      //     {
+      //       width: 16,
+      //       height: 16,
+      //       viewBox: "0 0 16 16",
+      //       fill: "none",
+      //       stroke: "currentColor",
+      //       strokeWidth: 1.8,
+      //       strokeLinecap: "round",
+      //       strokeLinejoin: "round",
+      //     },
+      //     h("path", { d: "M8 2v8m0 0l-3-3m3 3l3-3" }),
+      //     h("path", { d: "M2 12v1.5a.5.5 0 00.5.5h11a.5.5 0 00.5-.5V12" }),
+      //   ),
+      //   h("span", null, "Datos"),
+      // ),
     ),
     ind === 1 ? h(Ind1View) : null,
     ind === 2 ? h(Ind2View) : null,

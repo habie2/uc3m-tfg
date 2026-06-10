@@ -84,6 +84,11 @@ function Ind2View() {
           h("strong", null, "tipo de v\u00EDa"),
           " (primaria, secundaria, ciclable, residencial\u2026). En modo global muestra la distribuci\u00F3n agregada; en modo celda permite explorar los distintos tipos de vía y las rutas origen-destino más frecuentes de cada zona.",
         ),
+        h(
+          "div",
+          { className: "mode-caption" },
+          "Los datos utilizados son de Enero de 2018",
+        ),
       ),
       h(
         "div",

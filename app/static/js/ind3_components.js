@@ -116,6 +116,11 @@ function Ind3View() {
           h("strong", null, "estación de Metro"),
           ".",
         ),
+        h(
+          "div",
+          { className: "mode-caption" },
+          "Los datos utilizados son de Enero de 2018",
+        ),
       ),
 
       // Radio de influencia
